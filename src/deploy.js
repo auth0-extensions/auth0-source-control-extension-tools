@@ -49,7 +49,7 @@ module.exports = (progressData, context, client, storage) => {
     .then(() => auth0.updateRules(progress, client, context.rules))
     .then(() => progress.log('Done.'))
     .then(() => appendProgress(storage, progress))
-    .then(() => pushToSlack(progress, `${config('WT_URL')}/login`))
+    .then(() => pushToSlack(progress, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL')))
     .then(() => ({
       connections: {
         updated: progress.connectionsUpdated
@@ -68,7 +68,7 @@ module.exports = (progressData, context, client, storage) => {
       appendProgress(storage, progress);
 
       // Final attempt to push to slack.
-      pushToSlack(progress, `${config('WT_URL')}/login`);
+      pushToSlack(progress, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL'));
 
       // Continue.
       throw err;

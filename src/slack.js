@@ -1,6 +1,5 @@
 const Promise = require('bluebird');
 const request = require('request-promise');
-const config = require('auth0-extension-tools').config();
 
 
 const createPayload = (progress, extensionUrl) => {
@@ -56,13 +55,13 @@ const createPayload = (progress, extensionUrl) => {
   return msg;
 };
 
-module.exports = (progress, extensionUrl) => {
-  if (!config('SLACK_INCOMING_WEBHOOK_URL')) {
+module.exports = (progress, extensionUrl, hook) => {
+  if (!hook) {
     return Promise.resolve();
   }
 
   progress.log('Sending progress to Slack.');
 
   const msg = createPayload(progress, extensionUrl);
-  return request({ uri: config('SLACK_INCOMING_WEBHOOK_URL'), method: 'POST', form: { payload: JSON.stringify(msg) } });
+  return request({ uri: hook, method: 'POST', form: { payload: JSON.stringify(msg) } });
 };
