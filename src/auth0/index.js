@@ -1,18 +1,18 @@
 const rules = require('./rules');
-const connections = require('./connections');
 const pages = require('./pages');
+const connections = require('./connections');
 
 module.exports = {
   /* Connection and database operations */
   validateDatabases: connections.validateDatabases,
   updateDatabases: connections.updateDatabases,
 
-  /* rules operations */
+  /* Rule operations */
   validateRules: rules.validateRules,
   deleteRules: rules.deleteRules,
   updateRules: rules.updateRules,
 
-  /* pages operations */
+  /* Page operations */
   updatePasswordResetPage: pages.updatePasswordResetPage,
   updateLoginPage: pages.updateLoginPage
 };

@@ -52,7 +52,7 @@ pages.getPage = function(files, pageName) {
 /*
  * Update the password reset page.
  */
-module.exports.updatePasswordResetPage = function(progress, client, files) {
+pages.updatePasswordResetPage = function(progress, client, files) {
   const page = pages.getPage(files, constants.PAGE_PASSWORD_RESET);
   if (!page) {
     return Promise.resolve(true);
@@ -67,7 +67,7 @@ module.exports.updatePasswordResetPage = function(progress, client, files) {
 /*
  * Update the guardian mfa page.
  */
-module.exports.updateGuardianMultifactorPage = function(progress, client, files) {
+pages.updateGuardianMultifactorPage = function(progress, client, files) {
   const page = pages.getPage(files, constants.PAGE_GUARDIAN_MULTIFACTOR);
   if (!page) {
     return Promise.resolve(true);
@@ -82,7 +82,7 @@ module.exports.updateGuardianMultifactorPage = function(progress, client, files)
 /*
  * Update the custom login page.
  */
-module.exports.updateLoginPage = function(progress, auth0, files) {
+pages.updateLoginPage = function(progress, auth0, files) {
   const page = pages.getPage(files, constants.PAGE_LOGIN);
   if (!page) {
     return Promise.resolve(true);

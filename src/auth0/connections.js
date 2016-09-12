@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
-
 const ValidationError = require('auth0-extension-tools').ValidationError;
+
 const constants = require('../constants');
 
 /*
@@ -28,7 +28,7 @@ const getDatabaseConnections = function(progress, client, databases) {
 /*
  * Update a database.
  */
-const updateDatabase = (progress, client, connections, database) => {
+const updateDatabase = function(progress, client, connections, database) {
   progress.log('Processing connection ' + database.name);
 
   const connection = _.find(connections, { name: database.name });
@@ -42,19 +42,22 @@ const updateDatabase = (progress, client, connections, database) => {
   options.customScripts = {};
 
   // Set all custom scripts
-  database.scripts.forEach(function(script) {
-    options.customScripts[script.stage] = script.contents;
+  _.keys(database.scripts).forEach(function(scriptName) {
+    if (!database.scripts[scriptName].scriptFile || database.scripts[scriptName].scriptFile.length === 0) {
+      throw new ValidationError('The ' + scriptName + ' script for ' + database.name + ' is empty.');
+    }
+    options.customScripts[scriptName] = database.scripts[scriptName].scriptFile;
   });
 
   progress.connectionsUpdated++;
   progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, null, 2));
-  return client.connections.update({ id: connection.id }, { options });
+  return client.connections.update({ id: connection.id }, { options: options });
 };
 
 /*
  * Update all databases.
  */
-module.exports.updateDatabases = (progress, client, databases) => {
+const updateDatabases = function(progress, client, databases) {
   if (databases.length === 0) {
     return Promise.resolve(true);
   }
@@ -71,7 +74,7 @@ module.exports.updateDatabases = (progress, client, databases) => {
 /*
  * Validates that all databases included in the repository exist in the tenant.
  */
-module.exports.validateDatabases = (progress, client, databases) => {
+const validateDatabases = function(progress, client, databases) {
   if (databases.length === 0) {
     return Promise.resolve(true);
   }
@@ -92,4 +95,11 @@ module.exports.validateDatabases = (progress, client, databases) => {
 
       return true;
     });
+};
+
+module.exports = {
+  getDatabaseConnections: getDatabaseConnections,
+  updateDatabase: updateDatabase,
+  updateDatabases: updateDatabases,
+  validateDatabases: validateDatabases
 };
