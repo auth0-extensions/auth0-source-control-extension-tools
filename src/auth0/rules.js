@@ -4,12 +4,13 @@ const Promise = require('bluebird');
 const ValidationError = require('auth0-extension-tools').ValidationError;
 const constants = require('../constants');
 
-
 /*
  * Get all rules in all stages.
  */
 const getRules = (progress, client) => {
-  if (progress.rules) return Promise.resolve(progress.rules);
+  if (progress.rules) {
+    return Promise.resolve(progress.rules);
+  }
 
   return Promise.all(constants.RULES_STAGES.map(stage => client.rules.getAll({ stage })))
     .then((...rules) => {

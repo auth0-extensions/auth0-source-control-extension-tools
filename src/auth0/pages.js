@@ -1,90 +1,100 @@
+const _ = require('lodash');
 const Promise = require('bluebird');
+const ValidationError = require('auth0-extension-tools').ValidationError;
 
+const constants = require('../constants');
+
+const pages = module.exports = { };
 
 /*
- * Get current client id.
+ * Get global client.
  */
-const getClient = (progress, client) => {
-  if (progress.client_id) return Promise.resolve(progress.client_id);
+pages.getGlobalClientId = function(progress, auth0) {
+  if (progress.globalClientId) {
+    return Promise.resolve(progress.globalClientId);
+  }
 
-  return Promise.all(client.clients.getAll())
-    .then(apps => {
-      apps.map(app => {
-        if (app.global === true) {
-          progress.client_id = app.client_id;
-        }
+  return Promise.all(auth0.clients.getAll())
+    .then(function(apps) {
+      const globalClient = _.find(apps, { global: true });
+      progress.globalClientId = globalClient.client_id;
+      return progress.globalClientId;
+    });
+};
 
-        return app;
+/*
+ * Get the page by its name.
+ *
+ */
+pages.getPage = function(files, pageName) {
+  const file = files[pageName];
+  if (!file) {
+    return null;
+  }
+
+  const page = {
+    html: file.htmlFile,
+    enabled: true
+  };
+
+  if (file.metadata) {
+    try {
+      const metadata = JSON.parse(file.metadataFile);
+      page.enabled = metadata.enabled;
+    } catch (e) {
+      throw new ValidationError('Error parsing JSON from metadata file: ' + pageName);
+    }
+  }
+
+  return page;
+};
+
+/*
+ * Update the password reset page.
+ */
+module.exports.updatePasswordResetPage = function(progress, client, files) {
+  const page = pages.getPage(files, constants.PAGE_PASSWORD_RESET);
+  if (!page) {
+    return Promise.resolve(true);
+  }
+
+  progress.log('Updating change password page...');
+  return client.updateTenantSettings({
+    change_password: page
+  });
+};
+
+/*
+ * Update the guardian mfa page.
+ */
+module.exports.updateGuardianMultifactorPage = function(progress, client, files) {
+  const page = pages.getPage(files, constants.PAGE_GUARDIAN_MULTIFACTOR);
+  if (!page) {
+    return Promise.resolve(true);
+  }
+
+  progress.log('Updating guardian multifactor page...');
+  return client.updateTenantSettings({
+    guardian_mfa_page: page
+  });
+};
+
+/*
+ * Update the custom login page.
+ */
+module.exports.updateLoginPage = function(progress, auth0, files) {
+  const page = pages.getPage(files, constants.PAGE_LOGIN);
+  if (!page) {
+    return Promise.resolve(true);
+  }
+
+  progress.log('Updating login page...');
+  return pages.getGlobalClientId(progress, auth0).then(
+    function(clientId) {
+      return auth0.clients.update({ client_id: clientId }, {
+        custom_login_page: page.html,
+        custom_login_page_on: page.enabled
       });
-
-      return progress.client_id;
-    });
-};
-
-/**
- * get current html template is enabled
- * @param currentFile
- * @param files
- * @returns {boolean}
- */
-const getIsEnabled = (currentFile, files) => {
-  let isEnabled = true;
-
-  files.map(file => {
-    if (file.name === currentFile.meta) {
-      isEnabled = (typeof file.contents === 'object') ? file.contents.enabled : JSON.parse(file.contents).enabled;
     }
-
-    return file;
-  });
-
-  return isEnabled;
-};
-
-module.exports.updatePasswordResetPage = (progress, client, data) => {
-  const payload = {};
-
-  data.map(file => {
-    if (file.name === 'password_reset.html') {
-      payload.change_password = {
-        enabled: getIsEnabled(file, data),
-        html: file.contents
-      };
-    }
-
-    return file;
-  });
-
-  if (payload.change_password) {
-    progress.log('Updating change password page...');
-
-    return getClient(progress, client).then((clientId) => {
-      client.tenant.tenant.patch({ client_id: clientId }, payload);
-    });
-  }
-
-  return Promise.resolve(true);
-};
-
-module.exports.updateLoginPage = (progress, client, data) => {
-  const payload = {};
-
-  data.map(file => {
-    if (file.name === 'login.html') {
-      payload.custom_login_page = file.contents;
-      payload.custom_login_page_on = getIsEnabled(file, data);
-    }
-
-    return file;
-  });
-
-  if (payload.custom_login_page) {
-    progress.log('Updating login page...');
-
-    return getClient(progress, client).then((clientId) => {
-      client.clients.update({ client_id: clientId }, payload);
-    });
-  }
-
-  return Promise.resolve(true);
+  );
 };

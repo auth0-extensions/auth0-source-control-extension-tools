@@ -10,11 +10,17 @@ constants.RULES_STAGES = [
 constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];
 
 constants.PAGES_DIRECTORY = 'pages';
+constants.PAGE_LOGIN = 'login';
+constants.PAGE_PASSWORD_RESET = 'password_reset';
+constants.PAGE_GUARDIAN_MULTIFACTOR = 'guardian_multifactor';
+
 constants.PAGE_NAMES = [
-  'password_reset.html',
-  'password_reset.json',
-  'login.html',
-  'login.json'
+  constants.PAGE_GUARDIAN_MULTIFACTOR + '.html',
+  constants.PAGE_GUARDIAN_MULTIFACTOR + '.json',
+  constants.PAGE_PASSWORD_RESET + '.html',
+  constants.PAGE_PASSWORD_RESET + '.json',
+  constants.PAGE_LOGIN + '.html',
+  constants.PAGE_LOGIN + '.json'
 ];
 
 constants.DATABASE_CONNECTIONS_DIRECTORY = 'database-connections';
