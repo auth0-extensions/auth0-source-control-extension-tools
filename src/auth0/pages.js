@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
-const ValidationError = require('auth0-extension-tools').ValidationError;
 
+const utils = require('../utils');
 const constants = require('../constants');
 
 const pages = module.exports = { };
@@ -38,12 +38,8 @@ pages.getPage = function(files, pageName) {
   };
 
   if (file.metadata) {
-    try {
-      const metadata = JSON.parse(file.metadataFile);
-      page.enabled = metadata.enabled;
-    } catch (e) {
-      throw new ValidationError('Error parsing JSON from metadata file: ' + pageName);
-    }
+    const metadata = utils.parseJsonFile(pageName, file.metadataFile);
+    page.enabled = metadata.enabled;
   }
 
   return page;

@@ -14,5 +14,6 @@ module.exports = {
 
   /* Page operations */
   updatePasswordResetPage: pages.updatePasswordResetPage,
-  updateLoginPage: pages.updateLoginPage
+  updateLoginPage: pages.updateLoginPage,
+  updateGuardianMultifactorPage: pages.updateGuardianMultifactorPage
 };

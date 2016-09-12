@@ -1,20 +1,25 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
-
 const ValidationError = require('auth0-extension-tools').ValidationError;
+
+const utils = require('../utils');
 const constants = require('../constants');
+
+const mapToName = function(rule) {
+  return rule.name;
+};
 
 /*
  * Get all rules in all stages.
  */
-const getRules = (progress, client) => {
+const getRules = function(progress, client) {
   if (progress.rules) {
     return Promise.resolve(progress.rules);
   }
 
-  return Promise.all(constants.RULES_STAGES.map(stage => client.rules.getAll({ stage })))
-    .then((...rules) => {
-      progress.rules = _.chain(rules)
+  return Promise.all(constants.RULES_STAGES.map(function(stage) { return client.rules.getAll({ stage: stage }); }))
+    .then(function(allRules) {
+      progress.rules = _.chain(allRules)
         .flattenDeep()
         .union()
         .value();
@@ -25,28 +30,31 @@ const getRules = (progress, client) => {
 /*
  * Delete a rule.
  */
-const deleteRule = (progress, client, rules, existingRule, excluded) => {
-  const rule = _.find(rules, { name: existingRule.name });
-  const isExcluded = excluded.indexOf(existingRule.name) >= 0;
-
-  if (!rule && !isExcluded) {
-    progress.rulesDeleted++;
-    progress.log(`Deleting rule ${existingRule.name} (${existingRule.id})`);
-    return client.rules.delete({ id: existingRule.id });
+const deleteRule = function(progress, client, rules, existingRule, excluded) {
+  const ruleExists = _.keys(rules).indexOf(existingRule.name) > -1;
+  if (ruleExists) {
+    return Promise.resolve(true);
   }
 
-  return null;
+  const isExcluded = excluded.indexOf(existingRule.name) >= 0;
+  if (isExcluded) {
+    return Promise.resolve(true);
+  }
+
+  progress.rulesDeleted++;
+  progress.log('Deleting rule ' + existingRule.name + ' (' + existingRule.id + ')');
+  return client.rules.delete({ id: existingRule.id });
 };
 
 /*
  * Delete all rules.
  */
-module.exports.deleteRules = (progress, client, rules, excluded) => {
+const deleteRules = function(progress, client, rules, excluded) {
   progress.log('Deleting rules that no longer exist in the repository...');
 
   return getRules(progress, client)
     .then(existingRules => {
-      progress.log(`Existing rules: ${JSON.stringify(existingRules.map(rule => ({ id: rule.id, name: rule.name, stage: rule.stage, order: rule.order })), null, 2)}`);
+      progress.log('Existing rules: ' + JSON.stringify(existingRules.map(function(rule) { return { id: rule.id, name: rule.name, stage: rule.stage, order: rule.order }; }), null, 2));
       return Promise.map(existingRules, (rule) => deleteRule(progress, client, rules, rule, excluded), { concurrency: constants.CONCURRENT_CALLS });
     });
 };
@@ -54,53 +62,63 @@ module.exports.deleteRules = (progress, client, rules, excluded) => {
 /*
  * Update a single rule.
  */
-const updateRule = (progress, client, existingRules, ruleName, ruleData) => {
-  progress.log(`Processing rule '${ruleName}'`);
+const updateRule = function(progress, client, existingRules, ruleName, ruleData) {
+  progress.log('Processing rule ' + ruleName);
 
-  const rule = _.find(existingRules, { name: ruleName });
-
-  if (!rule) {
-    const payload = {
-      name: ruleName,
-      script: ruleData.script,
-      stage: 'login_success',
-      enabled: ruleData.metadata.enabled
-    };
-
-    if (ruleData.metadata.order) {
-      payload.order = ruleData.metadata.order;
+  // If a metadata file is provided, we'll apply these values to the rule.
+  const applyMetadata = function(payload, metadata) {
+    if (metadata.enabled !== undefined) {
+      payload.enabled = metadata.enabled;
     }
 
+    if (metadata.order) {
+      payload.order = metadata.order;
+    }
+  };
+
+  let metadata = {
+    enabled: true
+  };
+
+  if (ruleData.metadata) {
+    metadata = utils.parseJsonFile(ruleName, ruleData.metadataFile);
+  }
+
+  const existingRule = _.find(existingRules, { name: ruleName });
+  if (!existingRule) {
+    const payload = {
+      name: ruleName,
+      script: ruleData.scriptFile,
+      stage: 'login_success',
+      enabled: true
+    };
+    applyMetadata(payload, metadata);
+
     progress.rulesCreated++;
-    progress.log(`Creating rule ${ruleName}: ${JSON.stringify(payload, null, 2)}`);
+    progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, null, 2));
 
     return client.rules.create(payload);
   }
 
   const payload = {
-    script: ruleData.script || rule.script,
-    enabled: ruleData.metadata.enabled,
-    order: ruleData.metadata.order
+    name: ruleName,
+    script: ruleData.scriptFile || existingRule.script,
+    enabled: true
   };
-
-  if (ruleData.metadata.order) {
-    payload.order = ruleData.metadata.order;
-  }
-
-  // Remove properties that are not allowed during update.
-  delete payload.stage;
+  applyMetadata(payload, metadata);
 
   // Update the rule.
   progress.rulesUpdated++;
-  progress.log(`Updating rule ${ruleName} (${rule.id}): ${JSON.stringify(payload, null, 2)}`);
-  return client.rules.update({ id: rule.id }, payload);
+  progress.log('Updating rule ' + ruleName + ' (' + existingRule.id + '):' + JSON.stringify(payload, null, 2));
+  return client.rules.update({ id: existingRule.id }, payload);
 };
 
 /*
  * Update all rules.
  */
-module.exports.updateRules = (progress, client, rules) => {
-  if (rules.length === 0) {
+const updateRules = function(progress, client, rules) {
+  const ruleNames = _.keys(rules);
+  if (ruleNames.length === 0) {
     return Promise.resolve(true);
   }
 
@@ -108,78 +126,157 @@ module.exports.updateRules = (progress, client, rules) => {
 
   return getRules(progress, client)
     .then(existingRules => {
-      progress.log(`Existing rules: ${JSON.stringify(existingRules.map(rule => ({ id: rule.id, name: rule.name, stage: rule.stage, order: rule.order })), null, 2)}`);
-      return Promise.map(rules, (rule) => updateRule(progress, client, existingRules, rule.name, rule), { concurrency: constants.CONCURRENT_CALLS });
+      progress.log('Existing rules: ' + JSON.stringify(existingRules.map(function(rule) { return { id: rule.id, name: rule.name, stage: rule.stage, order: rule.order }; }), null, 2));
+      return Promise.map(ruleNames, (ruleName) => updateRule(progress, client, existingRules, ruleName, rules[ruleName]), { concurrency: constants.CONCURRENT_CALLS });
     });
 };
 
-const validateRulesExistence = (progress, client, rules, existingRules, excluded) => new Promise((resolve, reject) => {
-  // Metadata without rules
-  const invalidRules = _.filter(rules, (rule) => excluded.indexOf(rule.name) < 0 && rule.metadata && !rule.script)
-    .map(rule => rule.name);
+/*
+ * Metadata cannot exist without rules unless the rule is excluded (manual rule);
+ */
+const validateRulesExistence = function(progress, client, rules, excluded) {
+  const invalidRules = _(rules)
+    .keys()
+    .filter(function(ruleName) {
+      return excluded.indexOf(ruleName) < 0 && rules[ruleName].metadata && !rules[ruleName].script;
+    })
+    .value();
 
-  if (invalidRules.length > 0) return reject(new ValidationError(`The following rules have metadata files, but have no script files: ${invalidRules}.`));
+  if (invalidRules.length) {
+    return Promise.reject(
+      new ValidationError('The following rules have metadata files, but have no script files: ' + invalidRules.join())
+    );
+  }
 
-  return resolve(existingRules);
-});
+  return Promise.resolve(true);
+};
 
-const validateRulesStages = (progress, client, rules, existingRules) => new Promise((resolve, reject) => {
-  // Rules with invalid state
-  const invalidStages = _.filter(rules, (rule) =>
-  rule.metadata && rule.metadata.stage && constants.RULES_STAGES.indexOf(rule.metadata.stage) < 0)
-    .map(rule => rule.name);
+/*
+ * Detect stage errors.
+ */
+const validateRulesStages = function(progress, client, rules, existingRules) {
+  // Invalid stages.
+  const invalidStages = _(rules)
+    .keys()
+    .filter(function(ruleName) {
+      if (!rules[ruleName].metadata) {
+        return false;
+      }
 
-  if (invalidStages.length > 0) {
-    return reject(new ValidationError(`The following rules have invalid stages set in their metadata files: ${invalidStages}. Go to https://auth0.com/docs/api/management/v2#!/Rules/post_rules to find the valid stage names.`));
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      return metadata.stage && constants.RULES_STAGES.indexOf(metadata.stage) < 0;
+    })
+    .value();
+  if (invalidStages.length) {
+    return Promise.reject(
+      new ValidationError('The following rules have invalid stages set in their metadata files: ' + invalidStages.join() +
+        '. Go to https://auth0.com/docs/api/management/v2#!/Rules/post_rules to find the valid stage names.'));
   }
 
   // Rules that changed state
-  const changeStages = _.filter(rules, (rule) =>
-  rule.metadata && rule.metadata.stage && _.some(existingRules, (existing) => existing.name === rule.name && existing.stage !== rule.metadata.stage))
-    .map(rule => rule.name);
+  const changeStages = _(rules)
+    .keys()
+    .filter(function(ruleName) {
+      if (!rules[ruleName].metadata) {
+        return false;
+      }
 
-  if (changeStages.length > 0) {
-    return reject(new ValidationError(`The following rules changed stage which is not allowed: ${changeStages}. Rename the rules to recreate them and avoid this error.`));
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      return metadata.stage && _.some(existingRules, function(existing) {
+        return existing.name === ruleName && existing.stage !== metadata.stage;
+      });
+    })
+    .value();
+
+  if (changeStages.length) {
+    return Promise.reject(
+      new ValidationError('The following rules changed stage which is not allowed: ' + changeStages.join() + '. Rename the rules to recreate them and avoid this error.'));
   }
 
-  return resolve(existingRules);
-});
+  return existingRules;
+};
 
-
-const validateRulesOrder = (progress, client, rules, existingRules) => new Promise((resolve, reject) => {
+/*
+ * Do not allow rules with the same order.
+ */
+const validateRulesOrder = function(progress, client, rules, existingRules) {
   const rulesWithOrder = _(rules)
-    .filter(rule => rule.metadata && rule.metadata.order)
-    .map(rule => ({ name: rule.name, stage: (rule.metadata.stage || constants.DEFAULT_RULE_STAGE), order: rule.metadata.order }));
+    .keys()
+    .filter(function(ruleName) {
+      if (!rules[ruleName].metadata) {
+        return false;
+      }
+
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      return metadata.order;
+    })
+    .map(function(ruleName) {
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      return {
+        name: ruleName,
+        stage: metadata.stage || constants.DEFAULT_RULE_STAGE,
+        order: metadata.order
+      };
+    })
+    .value();
 
   // Rules with the same order number
-  const duplicatedStageOrder = rulesWithOrder
-    .countBy(rule => `Stage: '${rule.stage}' Order: ${rule.order}`)
-    .omit(count => count < 2)
+  const duplicatedStageOrder = _(rulesWithOrder)
+    .countBy(function(rule) { return 'Stage:' + rule.stage + '|Order:' + rule.order; })
+    .omitBy(function(count) {
+      return count < 2;
+    })
     .keys()
     .value();
-
-  if (duplicatedStageOrder.length > 0) return reject(new ValidationError(`There are multiple rules for the following stage-order combinations [${duplicatedStageOrder}]. Only one rule must be defined for the same order number in a stage.`));
+  if (duplicatedStageOrder.length > 0) {
+    return Promise.reject(
+      new ValidationError('There are multiple rules for the following stage-order combinations [' + duplicatedStageOrder.join() + ']. ' +
+        'Only one rule must be defined for the same order number in a stage.'
+      )
+    );
+  }
 
   // Rules with same order than existing rules
-  const rulesRepeatingOrder = rulesWithOrder
-    .filter(rule => _.some(existingRules, existing => existing.name !== rule.name && existing.stage === rule.stage && existing.order === rule.order))
-    .map(rule => rule.name)
+  const rulesRepeatingOrder = _(rulesWithOrder)
+    .filter(function(rule) {
+      return _.some(existingRules, function(existing) {
+        return existing.name !== rule.name && existing.stage === rule.stage && existing.order === rule.order && !_.find(rulesWithOrder, { name: existing.name });
+      });
+    })
+    .map(mapToName)
     .value();
+  if (rulesRepeatingOrder.length > 0) {
+    return Promise.reject(new ValidationError('The following rules have the same order number that other existing rule: ' + rulesRepeatingOrder.join() +
+      '. Updating them may cause a failure in deployment, use different order numbers to ensure a succesful deployment')
+    );
+  }
 
-  if (rulesRepeatingOrder.length > 0) return reject(new ValidationError(`The following rules have the same order number that other existing rule: ${rulesRepeatingOrder}. Updating them may cause a failure in deployment, use different order numbers to ensure a succesful deployment`));
+  return existingRules;
+};
 
-  return resolve(existingRules);
-});
-
-module.exports.validateRules = (progress, client, rules, excluded) => {
-  if (rules.length === 0) {
+/*
+ * Validate rules before touching anything.
+ */
+const validateRules = function(progress, client, rules, excluded) {
+  const ruleNames = _.keys(rules);
+  if (ruleNames.length === 0) {
     return Promise.resolve(true);
   }
 
   progress.log('Validating rules...');
 
   return getRules(progress, client)
-    .then(existingRules => validateRulesExistence(progress, client, rules, existingRules, excluded))
-    .then(existingRules => validateRulesStages(progress, client, rules, existingRules))
-    .then(existingRules => validateRulesOrder(progress, client, rules, existingRules));
+    .then(existingRules =>
+      validateRulesExistence(progress, client, rules, excluded)
+        .then(() => validateRulesStages(progress, client, rules, existingRules))
+        .then(() => validateRulesOrder(progress, client, rules, existingRules))
+        .then(() => existingRules)
+    );
+};
+
+module.exports = {
+  getRules: getRules,
+  updateRules: updateRules,
+  deleteRules: deleteRules,
+  validateRules: validateRules
 };

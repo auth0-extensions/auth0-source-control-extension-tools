@@ -1,11 +1,7 @@
 const constants = module.exports = { };
 constants.RULES_DIRECTORY = 'rules';
 constants.RULES_STAGES = [
-  'login_success',
-  'login_failure',
-  'pre_authorize',
-  'user_registration',
-  'user_blocked'
+  'login_success'
 ];
 constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];
 
