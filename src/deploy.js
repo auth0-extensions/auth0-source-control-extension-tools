@@ -4,9 +4,9 @@ const pushToSlack = require('./slack');
 const appendProgress = require('./storage');
 
 
-const trackProgress = function (progressData) {
+const trackProgress = function(progressData) {
   const logs = [];
-  const log = function (message) {
+  const log = function(message) {
     logs.push({ date: new Date(), message });
     logger.debug(message);
   };
@@ -28,7 +28,7 @@ const trackProgress = function (progressData) {
   };
 };
 
-module.exports = function (progressData, context, client, storage, config, slackTemplate) {
+module.exports = function(progressData, context, client, storage, config, slackTemplate) {
   const progress = trackProgress(progressData);
 
   progress.log(`Assets: ${JSON.stringify({
@@ -39,39 +39,39 @@ module.exports = function (progressData, context, client, storage, config, slack
   progress.log(`Getting access token for ${config('AUTH0_CLIENT_ID')}/${config('AUTH0_DOMAIN')}`);
 
   // Send all changes to Auth0.
-  storage.read()
+  return storage.read()
     .then(function(data) {
       context.excluded_rules = data.excluded_rules || [];
     })
     .then(function() {
-      auth0.updatePasswordResetPage(progress, client, context.pages);
+      return auth0.updatePasswordResetPage(progress, client, context.pages);
     })
     .then(function() {
-      auth0.updateLoginPage(progress, client, context.pages);
+      return auth0.updateLoginPage(progress, client, context.pages);
     })
     .then(function() {
-      auth0.validateDatabases(progress, client, context.databases);
+      return auth0.validateDatabases(progress, client, context.databases);
     })
     .then(function() {
-      auth0.validateRules(progress, client, context.rules, context.excluded_rules);
+      return auth0.validateRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
-      auth0.updateDatabases(progress, client, context.databases);
+      return auth0.updateDatabases(progress, client, context.databases);
     })
     .then(function() {
-      auth0.deleteRules(progress, client, context.rules, context.excluded_rules);
+      return auth0.deleteRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
-      auth0.updateRules(progress, client, context.rules);
+      return auth0.updateRules(progress, client, context.rules);
     })
     .then(function() {
-      progress.log('Done.');
+      return progress.log('Done.');
     })
     .then(function() {
-      appendProgress(storage, progress);
+      return appendProgress(storage, progress);
     })
     .then(function() {
-      pushToSlack(progress, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL'));
+      return pushToSlack(progress, slackTemplate, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL'));
     })
     .then(function() {
       return {
