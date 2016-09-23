@@ -1,13 +1,12 @@
-const config = require('auth0-extension-tools').config();
 const logger = require('./logger');
 const auth0 = require('./auth0');
 const pushToSlack = require('./slack');
 const appendProgress = require('./storage');
 
 
-const trackProgress = (progressData) => {
+const trackProgress = function (progressData) {
   const logs = [];
-  const log = (message) => {
+  const log = function (message) {
     logs.push({ date: new Date(), message });
     logger.debug(message);
   };
@@ -29,38 +28,64 @@ const trackProgress = (progressData) => {
   };
 };
 
-module.exports = (progressData, context, client, storage) => {
+module.exports = function (progressData, context, client, storage, config, slackTemplate) {
   const progress = trackProgress(progressData);
 
-  progress.log(`Assets: ${JSON.stringify({ rules: context.rules, pages: context.pages, databases: context.databases }, null, 2)}`);
+  progress.log(`Assets: ${JSON.stringify({
+    rules: context.rules,
+    pages: context.pages,
+    databases: context.databases
+  }, null, 2)}`);
   progress.log(`Getting access token for ${config('AUTH0_CLIENT_ID')}/${config('AUTH0_DOMAIN')}`);
 
   // Send all changes to Auth0.
   storage.read()
-    .then(data => {
+    .then(function(data) {
       context.excluded_rules = data.excluded_rules || [];
     })
-    .then(() => auth0.updatePasswordResetPage(progress, client, context.pages))
-    .then(() => auth0.updateLoginPage(progress, client, context.pages))
-    .then(() => auth0.validateDatabases(progress, client, context.databases))
-    .then(() => auth0.validateRules(progress, client, context.rules, context.excluded_rules))
-    .then(() => auth0.updateDatabases(progress, client, context.databases))
-    .then(() => auth0.deleteRules(progress, client, context.rules, context.excluded_rules))
-    .then(() => auth0.updateRules(progress, client, context.rules))
-    .then(() => progress.log('Done.'))
-    .then(() => appendProgress(storage, progress))
-    .then(() => pushToSlack(progress, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL')))
-    .then(() => ({
-      connections: {
-        updated: progress.connectionsUpdated
-      },
-      rules: {
-        created: progress.rulesCreated,
-        updated: progress.rulesUpdated,
-        deleted: progress.rulesDeleted
-      }
-    }))
-    .catch(err => {
+    .then(function() {
+      auth0.updatePasswordResetPage(progress, client, context.pages);
+    })
+    .then(function() {
+      auth0.updateLoginPage(progress, client, context.pages);
+    })
+    .then(function() {
+      auth0.validateDatabases(progress, client, context.databases);
+    })
+    .then(function() {
+      auth0.validateRules(progress, client, context.rules, context.excluded_rules);
+    })
+    .then(function() {
+      auth0.updateDatabases(progress, client, context.databases);
+    })
+    .then(function() {
+      auth0.deleteRules(progress, client, context.rules, context.excluded_rules);
+    })
+    .then(function() {
+      auth0.updateRules(progress, client, context.rules);
+    })
+    .then(function() {
+      progress.log('Done.');
+    })
+    .then(function() {
+      appendProgress(storage, progress);
+    })
+    .then(function() {
+      pushToSlack(progress, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL'));
+    })
+    .then(function() {
+      return {
+        connections: {
+          updated: progress.connectionsUpdated
+        },
+        rules: {
+          created: progress.rulesCreated,
+          updated: progress.rulesUpdated,
+          deleted: progress.rulesDeleted
+        }
+      };
+    })
+    .catch(function(err) {
       // Log error and persist.
       progress.error = err;
       progress.log(`Error: ${err.message}`);
@@ -68,7 +93,7 @@ module.exports = (progressData, context, client, storage) => {
       appendProgress(storage, progress);
 
       // Final attempt to push to slack.
-      pushToSlack(progress, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL'));
+      pushToSlack(progress, slackTemplate, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL'));
 
       // Continue.
       throw err;

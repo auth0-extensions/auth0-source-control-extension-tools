@@ -33,7 +33,7 @@
     "no-param-reassign": 0,
     "no-multiple-empty-lines": 2,
     "no-unused-vars": 2,
-    "no-var": 2,
+    "no-var": 0,
     "object-curly-spacing": [2, "always"],
     "quotes": [2, "single", "avoid-escape"],
     "semi": [2, "always"],

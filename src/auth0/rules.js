@@ -17,7 +17,9 @@ const getRules = function(progress, client) {
     return Promise.resolve(progress.rules);
   }
 
-  return Promise.all(constants.RULES_STAGES.map(function(stage) { return client.rules.getAll({ stage: stage }); }))
+  return Promise.all(constants.RULES_STAGES.map(function(stage) {
+    return client.rules.getAll({ stage: stage });
+  }))
     .then(function(allRules) {
       progress.rules = _.chain(allRules)
         .flattenDeep()
@@ -53,9 +55,19 @@ const deleteRules = function(progress, client, rules, excluded) {
   progress.log('Deleting rules that no longer exist in the repository...');
 
   return getRules(progress, client)
-    .then(existingRules => {
-      progress.log('Existing rules: ' + JSON.stringify(existingRules.map(function(rule) { return { id: rule.id, name: rule.name, stage: rule.stage, order: rule.order }; }), null, 2));
-      return Promise.map(existingRules, (rule) => deleteRule(progress, client, rules, rule, excluded), { concurrency: constants.CONCURRENT_CALLS });
+    .then(function(existingRules) {
+      progress.log(
+        'Existing rules: ' + JSON.stringify(existingRules.map(
+          function(rule) {
+            return { id: rule.id, name: rule.name, stage: rule.stage, order: rule.order };
+          }), null, 2));
+
+      return Promise.map(
+        existingRules,
+        function(rule) {
+          return deleteRule(progress, client, rules, rule, excluded);
+        },
+        { concurrency: constants.CONCURRENT_CALLS });
     });
 };
 
@@ -63,10 +75,12 @@ const deleteRules = function(progress, client, rules, excluded) {
  * Update a single rule.
  */
 const updateRule = function(progress, client, existingRules, ruleName, ruleData) {
+  const metadata = (ruleData.metadata) ? utils.parseJsonFile(ruleName, ruleData.metadataFile) : { enabled: true };
+
   progress.log('Processing rule ' + ruleName);
 
   // If a metadata file is provided, we'll apply these values to the rule.
-  const applyMetadata = function(payload, metadata) {
+  const applyMetadata = function(payload) {
     if (metadata.enabled !== undefined) {
       payload.enabled = metadata.enabled;
     }
@@ -76,15 +90,8 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
     }
   };
 
-  let metadata = {
-    enabled: true
-  };
-
-  if (ruleData.metadata) {
-    metadata = utils.parseJsonFile(ruleName, ruleData.metadataFile);
-  }
-
   const existingRule = _.find(existingRules, { name: ruleName });
+
   if (!existingRule) {
     const payload = {
       name: ruleName,
@@ -92,7 +99,8 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
       stage: 'login_success',
       enabled: true
     };
-    applyMetadata(payload, metadata);
+
+    applyMetadata(payload);
 
     progress.rulesCreated++;
     progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, null, 2));
@@ -105,7 +113,8 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
     script: ruleData.scriptFile || existingRule.script,
     enabled: true
   };
-  applyMetadata(payload, metadata);
+
+  applyMetadata(payload);
 
   // Update the rule.
   progress.rulesUpdated++;
@@ -125,9 +134,21 @@ const updateRules = function(progress, client, rules) {
   progress.log('Updating rules...');
 
   return getRules(progress, client)
-    .then(existingRules => {
-      progress.log('Existing rules: ' + JSON.stringify(existingRules.map(function(rule) { return { id: rule.id, name: rule.name, stage: rule.stage, order: rule.order }; }), null, 2));
-      return Promise.map(ruleNames, (ruleName) => updateRule(progress, client, existingRules, ruleName, rules[ruleName]), { concurrency: constants.CONCURRENT_CALLS });
+    .then(function(existingRules) {
+      progress.log(
+        'Existing rules: ' + JSON.stringify(existingRules.map(
+          function(rule) {
+            return { id: rule.id, name: rule.name, stage: rule.stage, order: rule.order };
+          }),
+          null,
+          2));
+      return Promise.map(
+        ruleNames,
+        function(ruleName) {
+          updateRule(progress, client, existingRules, ruleName, rules[ruleName]);
+        },
+        { concurrency: constants.CONCURRENT_CALLS }
+      );
     });
 };
 
@@ -182,9 +203,12 @@ const validateRulesStages = function(progress, client, rules, existingRules) {
       }
 
       const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
-      return metadata.stage && _.some(existingRules, function(existing) {
-        return existing.name === ruleName && existing.stage !== metadata.stage;
-      });
+      return metadata.stage
+        && _.some(
+          existingRules,
+          function(existing) {
+            return existing.name === ruleName && existing.stage !== metadata.stage;
+          });
     })
     .value();
 
@@ -222,7 +246,9 @@ const validateRulesOrder = function(progress, client, rules, existingRules) {
 
   // Rules with the same order number
   const duplicatedStageOrder = _(rulesWithOrder)
-    .countBy(function(rule) { return 'Stage:' + rule.stage + '|Order:' + rule.order; })
+    .countBy(function(rule) {
+      return 'Stage:' + rule.stage + '|Order:' + rule.order;
+    })
     .omitBy(function(count) {
       return count < 2;
     })
@@ -266,12 +292,18 @@ const validateRules = function(progress, client, rules, excluded) {
   progress.log('Validating rules...');
 
   return getRules(progress, client)
-    .then(existingRules =>
-      validateRulesExistence(progress, client, rules, excluded)
-        .then(() => validateRulesStages(progress, client, rules, existingRules))
-        .then(() => validateRulesOrder(progress, client, rules, existingRules))
-        .then(() => existingRules)
-    );
+    .then(function(existingRules) {
+      return validateRulesExistence(progress, client, rules, excluded)
+        .then(function() {
+          return validateRulesStages(progress, client, rules, existingRules);
+        })
+        .then(function() {
+          return validateRulesOrder(progress, client, rules, existingRules);
+        })
+        .then(function() {
+          return existingRules;
+        });
+    });
 };
 
 module.exports = {

@@ -5,8 +5,9 @@ describe('#slack', () => {
   it('should ignore call without webhook url', (done) => {
     const url = 'http://127.0.0.1/';
     const progress = {};
+    const template = {};
 
-    slack(progress, url).then(() => done());
+    slack(progress, template, url).then(() => done());
   });
 
   it('should send success message (full) to slack', (done) => {
@@ -18,8 +19,9 @@ describe('#slack', () => {
       rulesUpdated: 1,
       rulesDeleted: 1
     };
+    const template = {};
 
-    slack(progress, url, url).catch((err) => {
+    slack(progress, template, url, url).catch((err) => {
       expect(err).toExist();
       done();
     });
@@ -30,8 +32,9 @@ describe('#slack', () => {
     const progress = {
       log: () => null
     };
+    const template = {};
 
-    slack(progress, url, url).catch((err) => {
+    slack(progress, template, url, url).catch((err) => {
       expect(err).toExist();
       done();
     });
@@ -43,8 +46,9 @@ describe('#slack', () => {
       log: () => null,
       error: { message: 'test' }
     };
+    const template = {};
 
-    slack(progress, url, url).catch((err) => {
+    slack(progress, template, url, url).catch((err) => {
       expect(err).toExist();
       done();
     });

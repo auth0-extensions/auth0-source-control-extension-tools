@@ -82,7 +82,7 @@ const validateDatabases = function(progress, client, databases) {
   progress.log('Validating that configured databases exist in Auth0...');
 
   return getDatabaseConnections(progress, client, databases)
-    .then(connections => {
+    .then(function(connections) {
       const missingDatabases = _.difference(
         _.map(databases, function(db) { return db.name; }),
         _.map(connections, function(conn) { return conn.name; }));
