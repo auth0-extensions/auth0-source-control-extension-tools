@@ -3,6 +3,8 @@ const request = require('request-promise');
 
 
 const createPayload = function(progress, template, extensionUrl) {
+  template = template || {};
+
   const msg = {
     username: 'auth0-deployments',
     icon_emoji: ':rocket:',
@@ -10,31 +12,29 @@ const createPayload = function(progress, template, extensionUrl) {
   };
 
   const defaultTemplate = {
-    fallback: 'Source-control to Auth0 Deployment ',
-    text: 'Source-control to Auth0 Deployment ',
+    fallback: template.fallback || 'Source-control to Auth0 Deployment',
+    text: template.text || 'Source-control to Auth0 Deployment',
     fields: [
-      { title: 'Repository', value: progress.repository, short: true },
-      { title: 'Branch', value: progress.branch, short: true },
-      { title: 'ID', value: progress.id, short: true },
-      { title: 'Commit', value: progress.sha, short: true }
+      { title: template.repository || 'Repository', value: progress.repository, short: true },
+      { title: template.branch || 'Branch', value: progress.branch, short: true },
+      { title: template.id || 'ID', value: progress.id, short: true },
+      { title: template.sha || 'Commit', value: progress.sha, short: true }
     ],
-    error_field: { title: 'Error', value: (progress.error) ? progress.error.message : null, short: false }
+    error_field: { title: template.error || 'Error', value: (progress.error) ? progress.error.message : null, short: false }
   };
 
-  template = template || {};
+  const details = '(<' + extensionUrl + '|Details>)';
 
-  const details = `(<${extensionUrl}|Details>)`;
-
-  const fields = template.fields || defaultTemplate.fields;
+  const fields = defaultTemplate.fields;
 
   if (progress.error) {
-    fields.push(template.error_field || defaultTemplate.error_field);
+    fields.push(defaultTemplate.error_field);
 
     msg.attachments.push({
       color: '#F35A00',
-      fallback: `${template.fallback || defaultTemplate.fallback} failed: ${progress.error.message}`,
-      text: `${template.text || defaultTemplate.text} failed ${details}`,
-      fields: template.fields || defaultTemplate.fields
+      fallback: defaultTemplate.fallback + ' failed: ' + progress.error.message,
+      text: defaultTemplate.text + ' failed: ' + details,
+      fields: defaultTemplate.fields
     });
   } else {
     if (progress.connectionsUpdated) {
@@ -52,9 +52,9 @@ const createPayload = function(progress, template, extensionUrl) {
 
     msg.attachments.push({
       color: '#7CD197',
-      fallback: template.fallback || defaultTemplate.fallback,
-      text: `${template.fallback || defaultTemplate.fallback} ${details}`,
-      fields
+      fallback: defaultTemplate.fallback,
+      text: defaultTemplate.fallback + ' ' + details,
+      fields: fields
     });
   }
 

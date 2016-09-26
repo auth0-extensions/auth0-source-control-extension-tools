@@ -7,7 +7,7 @@ module.exports = function() {
     credentialsRequired: false,
     clientName: 'TFS Deployments',
     audience: function() {
-      return `https://${config('AUTH0_DOMAIN')}/api/v2/`;
+      return 'https://' + config('AUTH0_DOMAIN') + '/api/v2/';
     }
   };
 
@@ -16,9 +16,9 @@ module.exports = function() {
     const protocol = 'https';
     const pathname = url.parse(req.originalUrl).pathname.replace(req.path, '');
     const baseUrl = url.format({
-      protocol,
+      protocol: protocol,
       host: req.get('host'),
-      pathname
+      pathname: pathname
     });
 
     options.clientId = baseUrl;
