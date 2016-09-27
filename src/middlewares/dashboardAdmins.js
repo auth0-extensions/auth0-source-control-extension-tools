@@ -1,14 +1,17 @@
 const url = require('url');
 const auth0 = require('auth0-oauth2-express');
-const config = require('auth0-extension-tools').config();
 
-module.exports = function() {
+module.exports = function(domain, clientName, rootTenantAuthority) {
+  if (!domain) throw new Error('Domain is required');
+  if (!clientName) throw new Error('clientName is required');
+
   const options = {
     credentialsRequired: false,
-    clientName: 'TFS Deployments',
+    clientName,
     audience: function() {
-      return 'https://' + config('AUTH0_DOMAIN') + '/api/v2/';
-    }
+      return 'https://' + domain + '/api/v2/';
+    },
+    rootTenantAuthority
   };
 
   const middleware = auth0(options);
