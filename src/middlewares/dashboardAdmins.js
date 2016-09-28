@@ -1,17 +1,17 @@
 const url = require('url');
 const auth0 = require('auth0-oauth2-express');
 
-module.exports = function(domain, clientName, rootTenantAuthority) {
+module.exports = function(domain, title, rta) {
   if (!domain) throw new Error('Domain is required');
-  if (!clientName) throw new Error('clientName is required');
+  if (!title) throw new Error('title is required');
 
   const options = {
     credentialsRequired: false,
-    clientName,
+    clientName: title,
     audience: function() {
       return 'https://' + domain + '/api/v2/';
     },
-    rootTenantAuthority
+    rootTenantAuthority: rta
   };
 
   const middleware = auth0(options);

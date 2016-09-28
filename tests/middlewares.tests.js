@@ -16,11 +16,11 @@ describe('#middlewares', function() {
       done();
     });
 
-    it('should throw "clientName is required" error', function(done) {
+    it('should throw "title is required" error', function(done) {
       expect(function() {
         middlewares.dashboardAdmins('domain');
       })
-        .toThrow(/clientName is required/);
+        .toThrow(/title is required/);
 
       done();
     });
