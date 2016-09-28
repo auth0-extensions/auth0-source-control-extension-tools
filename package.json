@@ -2,7 +2,7 @@
   "name": "auth0-source-control-extension-tools",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "lint:js": "eslint --ignore-path .gitignore --ignore-pattern webpack .",
     "test": "cross-env NODE_ENV=test nyc mocha tests/mocha.js ./tests/**/*.tests.js",
