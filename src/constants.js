@@ -9,6 +9,7 @@ constants.PAGES_DIRECTORY = 'pages';
 constants.PAGE_LOGIN = 'login';
 constants.PAGE_PASSWORD_RESET = 'password_reset';
 constants.PAGE_GUARDIAN_MULTIFACTOR = 'guardian_multifactor';
+constants.PAGE_ERROR = 'error_page';
 
 constants.PAGE_NAMES = [
   constants.PAGE_GUARDIAN_MULTIFACTOR + '.html',
@@ -16,7 +17,9 @@ constants.PAGE_NAMES = [
   constants.PAGE_PASSWORD_RESET + '.html',
   constants.PAGE_PASSWORD_RESET + '.json',
   constants.PAGE_LOGIN + '.html',
-  constants.PAGE_LOGIN + '.json'
+  constants.PAGE_LOGIN + '.json',
+  constants.PAGE_ERROR + '.html',
+  constants.PAGE_ERROR + '.json'
 ];
 
 constants.DATABASE_CONNECTIONS_DIRECTORY = 'database-connections';

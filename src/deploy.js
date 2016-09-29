@@ -47,10 +47,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
       context.excluded_rules = data.excluded_rules || [];
     })
     .then(function() {
-      return auth0.updatePasswordResetPage(progress, client, context.pages);
-    })
-    .then(function() {
-      return auth0.updateLoginPage(progress, client, context.pages);
+      return auth0.updatePages(progress, client, context.pages);
     })
     .then(function() {
       return auth0.validateDatabases(progress, client, context.databases);
@@ -71,10 +68,10 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return progress.log('Done.');
     })
     .then(function() {
-      return appendProgress(storage, progress);
+      return pushToSlack(progress, slackTemplate, config('WT_URL') + '/login', config('SLACK_INCOMING_WEBHOOK_URL'));
     })
     .then(function() {
-      return pushToSlack(progress, slackTemplate, config('WT_URL') + '/login', config('SLACK_INCOMING_WEBHOOK_URL'));
+      return appendProgress(storage, progress);
     })
     .then(function() {
       return {
@@ -93,10 +90,15 @@ module.exports = function(progressData, context, client, storage, config, slackT
       progress.error = err;
       progress.log('Error: ' + err.message);
       progress.log('StackTrace: ' + err.stack);
-      appendProgress(storage, progress);
 
       // Final attempt to push to slack.
-      pushToSlack(progress, slackTemplate, config('WT_URL') + '/login', config('SLACK_INCOMING_WEBHOOK_URL'));
+      pushToSlack(progress, slackTemplate, config('WT_URL') + '/login', config('SLACK_INCOMING_WEBHOOK_URL'))
+        .then(function() {
+          appendProgress(storage, progress);
+        })
+        .catch(function() {
+          appendProgress(storage, progress);
+        });
 
       // Continue.
       throw err;

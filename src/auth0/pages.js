@@ -60,6 +60,30 @@ pages.updatePasswordResetPage = function(progress, client, files) {
   });
 };
 
+
+/*
+ * Update the error page.
+ */
+pages.updateErrorPage = function(progress, client, files) {
+  const page = pages.getPage(files, constants.PAGE_ERROR);
+  if (!page) {
+    return Promise.resolve(true);
+  }
+
+  if (!page.enabled) {
+    page.html = '';
+  } else {
+    page.url = '';
+  }
+
+  delete page.enabled;
+
+  progress.log('Updating error page...');
+  return client.updateTenantSettings({
+    error_page: page
+  });
+};
+
 /*
  * Update the guardian mfa page.
  */
@@ -93,4 +117,20 @@ pages.updateLoginPage = function(progress, auth0, files) {
       });
     }
   );
+};
+
+/*
+ * Update all pages.
+ */
+pages.updatePages = function(progress, auth0, files) {
+  progress.log('Updating pages...');
+
+  const promises = [
+    pages.updateLoginPage(progress, auth0, files),
+    pages.updateGuardianMultifactorPage(progress, auth0, files),
+    pages.updateErrorPage(progress, auth0, files),
+    pages.updatePasswordResetPage(progress, auth0, files)
+  ];
+
+  return Promise.all(promises);
 };

@@ -69,5 +69,9 @@ module.exports = function(progress, template, extensionUrl, hook) {
   progress.log('Sending progress to Slack.');
 
   const msg = createPayload(progress, template, extensionUrl);
-  return request({ uri: hook, method: 'POST', form: { payload: JSON.stringify(msg) } });
+  return request({ uri: hook, method: 'POST', form: { payload: JSON.stringify(msg) } })
+    .catch(function(err) {
+      progress.log('Sending to Slack error:');
+      progress.log(err.message);
+    });
 };

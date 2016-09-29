@@ -13,6 +13,8 @@ module.exports = {
   updateRules: rules.updateRules,
 
   /* Page operations */
+  updatePages: pages.updatePages,
+  updateErrorPage: pages.updateErrorPage,
   updatePasswordResetPage: pages.updatePasswordResetPage,
   updateLoginPage: pages.updateLoginPage,
   updateGuardianMultifactorPage: pages.updateGuardianMultifactorPage
