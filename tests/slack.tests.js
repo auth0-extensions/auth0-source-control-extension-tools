@@ -21,8 +21,7 @@ describe('#slack', () => {
     };
     const template = {};
 
-    slack(progress, template, url, url).catch((err) => {
-      expect(err).toExist();
+    slack(progress, template, url, url).then(() => {
       done();
     });
   });
@@ -34,8 +33,7 @@ describe('#slack', () => {
     };
     const template = {};
 
-    slack(progress, template, url, url).catch((err) => {
-      expect(err).toExist();
+    slack(progress, template, url, url).then(() => {
       done();
     });
   });
@@ -48,8 +46,7 @@ describe('#slack', () => {
     };
     const template = {};
 
-    slack(progress, template, url, url).catch((err) => {
-      expect(err).toExist();
+    slack(progress, template, url, url).then(() => {
       done();
     });
   });

@@ -77,10 +77,16 @@ const deleteRules = function(progress, client, rules, excluded) {
 const updateRule = function(progress, client, existingRules, ruleName, ruleData) {
   const metadata = (ruleData.metadata) ? utils.parseJsonFile(ruleName, ruleData.metadataFile) : { enabled: true };
 
+  const payload = {
+    name: ruleName,
+    script: ruleData.scriptFile,
+    enabled: true
+  };
+
   progress.log('Processing rule ' + ruleName);
 
   // If a metadata file is provided, we'll apply these values to the rule.
-  const applyMetadata = function(payload) {
+  const applyMetadata = function() {
     if (metadata.enabled !== undefined) {
       payload.enabled = metadata.enabled;
     }
@@ -93,14 +99,10 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
   const existingRule = _.find(existingRules, { name: ruleName });
 
   if (!existingRule) {
-    const payload = {
-      name: ruleName,
-      script: ruleData.scriptFile,
-      stage: 'login_success',
-      enabled: true
-    };
+    payload.stage = 'login_success';
+    payload.enabled = true;
 
-    applyMetadata(payload);
+    applyMetadata();
 
     progress.rulesCreated++;
     progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, null, 2));
@@ -108,13 +110,11 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
     return client.rules.create(payload);
   }
 
-  const payload = {
-    name: ruleName,
-    script: ruleData.scriptFile || existingRule.script,
-    enabled: true
-  };
+  if (!payload.script) {
+    payload.script = existingRule.script;
+  }
 
-  applyMetadata(payload);
+  applyMetadata();
 
   // Update the rule.
   progress.rulesUpdated++;

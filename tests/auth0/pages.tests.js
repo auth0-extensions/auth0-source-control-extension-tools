@@ -26,6 +26,14 @@ describe('#pages', () => {
       htmlFile: '<html>this is pwd reset 3</html>',
       metadata: true,
       metadataFile: '{ "enabled: false }'
+    },
+    error_page: {
+      htmlFile: '<html>this is error page</html>'
+    },
+    error_page_disabled: {
+      htmlFile: '<html>this is error page</html>',
+      metadata: true,
+      metadataFile: '{ "enabled": false }'
     }
   };
 
@@ -126,6 +134,50 @@ describe('#pages', () => {
     });
   });
 
+  describe('#updateErrorPage', () => {
+    it('should continue if file does not exist', (done) => {
+      pages.updateErrorPage(progress, null, { })
+        .then(function(result) {
+          expect(result).toExist();
+          done();
+        });
+    });
+
+    it('should update tenant correctly', (done) => {
+      let payload = null;
+      const auth0 = {
+        updateTenantSettings(data) {
+          payload = data;
+          return Promise.resolve(true);
+        }
+      };
+
+      pages.updateErrorPage(progress, auth0, files)
+        .then(function() {
+          expect(payload.error_page).toExist();
+          expect(payload.error_page.html).toEqual('<html>this is error page</html>');
+          done();
+        });
+    });
+
+    it('should remove html if disabled', (done) => {
+      let payload = null;
+      const auth0 = {
+        updateTenantSettings(data) {
+          payload = data;
+          return Promise.resolve(true);
+        }
+      };
+
+      pages.updateErrorPage(progress, auth0, { error_page: files.error_page_disabled })
+        .then(function() {
+          expect(payload.error_page).toExist();
+          expect(payload.error_page.html).toEqual('');
+          done();
+        });
+    });
+  });
+
   describe('#updateLoginPage', () => {
     it('should continue if file does not exist', (done) => {
       pages.updateLoginPage(progress, null, { })
@@ -190,6 +242,16 @@ describe('#pages', () => {
           expect(payload.guardian_mfa_page).toExist();
           expect(payload.guardian_mfa_page.enabled).toEqual('foo');
           expect(payload.guardian_mfa_page.html).toEqual('<html>this is guardian</html>');
+          done();
+        });
+    });
+  });
+
+  describe('#updateAllPages', () => {
+    it('should run all update functions', (done) => {
+      pages.updatePages(progress, null, { })
+        .then(function(result) {
+          expect(result).toExist();
           done();
         });
     });
