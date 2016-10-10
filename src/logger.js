@@ -16,8 +16,3 @@ const logger = new winston.Logger({
 });
 
 module.exports = logger;
-module.exports.stream = {
-  write: (message) => {
-    logger.info(message.replace(/\n$/, ''));
-  }
-};
