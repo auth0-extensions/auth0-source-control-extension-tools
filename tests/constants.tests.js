@@ -1,5 +1,5 @@
 const expect = require('expect');
-const tools = require('../src');
+const tools = require('../src/index');
 
 describe('#constants', () => {
   it('should be exposed', () => {
