@@ -77,7 +77,7 @@ describe('#connections', () => {
   describe('#updateDatabase', () => {
     it('should throw if connection does not exist', (done) => {
       connections.updateDatabase(progress, null, { }, database)
-        .catch(err => {
+        .catch((err) => {
           expect(err).toExist();
           expect(err.message).toEqual('Unable to find connection named: ' + database.name);
           done();

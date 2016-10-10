@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "lint:js": "eslint --ignore-path .gitignore --ignore-pattern webpack .",
-    "test": "cross-env NODE_ENV=test nyc mocha tests/mocha.js ./tests/**/*.tests.js",
-    "test:watch": "cross-env NODE_ENV=test mocha tests/mocha.js ./tests/**/*.tests.js --watch",
+    "test": "npm run test:pre && cross-env NODE_ENV=test nyc mocha tests/mocha.js ./tests/**/*.tests.js ./tests/*.tests.js",
+    "test:watch": "cross-env NODE_ENV=test mocha tests/mocha.js ./tests/**/*.tests.js ./tests/*.tests.js --watch",
     "test:pre": "npm run test:clean && npm run lint:js",
     "test:clean": "rimraf ./coverage && rimraf ./.nyc_output"
   },
@@ -32,7 +32,7 @@
     "auth0-oauth2-express": "^1.1.8",
     "bluebird": "^3.4.6",
     "lodash": "^4.15.0",
-    "request-promise": "^4.1.1",
+    "superagent": "^2.3.0",
     "winston": "^2.2.0"
   }
 }

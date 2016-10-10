@@ -218,7 +218,7 @@ describe('#rules', () => {
       };
 
       rules.validateRules(progress, auth0, filesWithError, [ ])
-        .catch(err => {
+        .catch((err) => {
           expect(err).toExist();
           expect(err.message).toEqual('The following rules have metadata files, but have no script files: my-rule');
           done();

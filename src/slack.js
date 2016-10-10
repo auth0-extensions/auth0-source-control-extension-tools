@@ -1,5 +1,5 @@
 const Promise = require('bluebird');
-const request = require('request-promise');
+const request = require('superagent');
 
 const createPayload = function(progress, template, extensionUrl) {
   template = template || {};
@@ -68,9 +68,21 @@ module.exports = function(progress, template, extensionUrl, hook) {
   progress.log('Sending progress to Slack.');
 
   const msg = createPayload(progress, template, extensionUrl);
-  return request({ uri: hook, method: 'POST', form: { payload: JSON.stringify(msg) } })
-    .catch(function(err) {
-      progress.log('Sending to Slack error:');
-      progress.log(err.message);
-    });
+  return new Promise(function(resolve) {
+    request
+      .post(hook)
+      .send(msg)
+      .set('Accept', 'application/json')
+      .end(function(err, res) {
+        if (err && err.status === 401) {
+          progress.log('Error sending to Slack: ' + err.status);
+        } else if (err && res && res.body) {
+          progress.log('Error sending to Slack: ' + err.status + ' - ' + res.body);
+        } else if (err) {
+          progress.log('Error sending to Slack: ' + err.status + ' - ' + err.message);
+        }
+
+        return resolve();
+      });
+  });
 };

@@ -1,4 +1,3 @@
-const expect = require('expect');
 const slack = require('../src/slack');
 
 describe('#slack', () => {
@@ -51,4 +50,3 @@ describe('#slack', () => {
     });
   });
 });
-

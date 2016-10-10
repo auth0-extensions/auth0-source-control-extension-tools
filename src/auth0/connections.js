@@ -49,7 +49,7 @@ const updateDatabase = function(progress, client, connections, database) {
     options.customScripts[scriptName] = database.scripts[scriptName].scriptFile;
   });
 
-  progress.connectionsUpdated++;
+  progress.connectionsUpdated += 1;
   progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, null, 2));
   return client.connections.update({ id: connection.id }, { options: options });
 };
