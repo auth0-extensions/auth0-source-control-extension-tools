@@ -214,7 +214,11 @@ const validateRulesStages = function(progress, client, rules, existingRules) {
 
   if (changeStages.length) {
     return Promise.reject(
-      new ValidationError('The following rules changed stage which is not allowed: ' + changeStages.join() + '. Rename the rules to recreate them and avoid this error.'));
+      new ValidationError(
+        'The following rules changed stage which is not allowed: ' + changeStages.join() +
+        '. Rename the rules to recreate them and avoid this error.'
+      )
+    );
   }
 
   return existingRules;
@@ -272,8 +276,10 @@ const validateRulesOrder = function(progress, client, rules, existingRules) {
     .map(mapToName)
     .value();
   if (rulesRepeatingOrder.length > 0) {
-    return Promise.reject(new ValidationError('The following rules have the same order number that other existing rule: ' + rulesRepeatingOrder.join() +
-      '. Updating them may cause a failure in deployment, use different order numbers to ensure a succesful deployment')
+    return Promise.reject(
+      new ValidationError('The following rules have the same order number that other existing rule: ' + rulesRepeatingOrder.join() +
+        '. Updating them may cause a failure in deployment, use different order numbers to ensure a succesful deployment'
+      )
     );
   }
 

@@ -3,7 +3,6 @@ const auth0 = require('./auth0');
 const pushToSlack = require('./slack');
 const appendProgress = require('./storage');
 
-
 const trackProgress = function(progressData) {
   const logs = [];
   const log = function(message) {

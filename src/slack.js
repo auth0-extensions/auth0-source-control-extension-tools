@@ -1,7 +1,6 @@
 const Promise = require('bluebird');
 const request = require('request-promise');
 
-
 const createPayload = function(progress, template, extensionUrl) {
   template = template || {};
 
