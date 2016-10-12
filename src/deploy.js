@@ -29,16 +29,18 @@ const trackProgress = function(progressData) {
 
 module.exports = function(progressData, context, client, storage, config, slackTemplate) {
   const progress = trackProgress(progressData);
-
-  progress.log('Assets: ' + JSON.stringify({
-    rules: context.rules,
-    pages: context.pages,
-    databases: context.databases
-  }, null, 2));
   progress.log('Getting access token for ' + config('AUTH0_CLIENT_ID') + '/' + config('AUTH0_DOMAIN'));
 
   // Send all changes to Auth0.
   return context.init()
+    .then(function() {
+      var assets = JSON.stringify({
+        rules: context.rules,
+        pages: context.pages,
+        databases: context.databases
+      });
+      progress.log('Assets: ' + assets, null, 2);
+    })
     .then(function() {
       return storage.read();
     })
