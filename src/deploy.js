@@ -63,7 +63,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.deleteRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
-      return auth0.updateRules(progress, client, context.rules);
+      return auth0.updateRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
       return progress.log('Done.');

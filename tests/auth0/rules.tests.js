@@ -145,7 +145,7 @@ describe('#rules', () => {
     it('should create new rules correctly', (done) => {
       auth0.rules.getAll = () => Promise.resolve([ ]);
 
-      rules.updateRules(progress, auth0, files)
+      rules.updateRules(progress, auth0, files, [ 'foo' ])
         .then(() => {
           expect(progress.rulesCreated).toEqual(3);
           expect(updatePayloads.length).toEqual(3);
@@ -180,7 +180,7 @@ describe('#rules', () => {
           metadataFile: '{ "order": 30, "enabled": false }'
         }
       };
-      rules.updateRules(progress, auth0, filesForExistingRules)
+      rules.updateRules(progress, auth0, filesForExistingRules, [ 'foo' ])
         .then(() => {
           expect(progress.rulesCreated).toEqual(1);
           expect(progress.rulesUpdated).toEqual(2);
@@ -196,6 +196,62 @@ describe('#rules', () => {
           expect(updatePayloads[2].script).toEqual('function authz() { }');
           expect(updatePayloads[2].enabled).toEqual(false);
           expect(updatePayloads[2].order).toEqual(30);
+          done();
+        });
+    });
+
+    it('should update existing rules correctly and ignore manual rules', (done) => {
+      const filesForExistingRules = {
+        'log-to-console-2': {
+          script: true,
+          scriptFile: 'function logToConsole() { }',
+          metadata: false
+        },
+        'add-country': {
+          script: true,
+          scriptFile: 'function addCountry() { // ORIGINAL }',
+          metadata: true,
+          metadataFile: '{ "order": 20 }'
+        },
+        'authz-extension': {
+          script: false,
+          metadata: true,
+          metadataFile: '{ "order": 30, "enabled": false }'
+        }
+      };
+      rules.updateRules(progress, auth0, filesForExistingRules, [ 'add-country' ])
+        .then(() => {
+          expect(progress.rulesCreated).toEqual(1);
+          expect(progress.rulesUpdated).toEqual(2);
+          expect(updateFilters.length).toEqual(2);
+          expect(updatePayloads.length).toEqual(3);
+          expect(updatePayloads[0].name).toEqual('log-to-console-2');
+          expect(updatePayloads[0].enabled).toEqual(true);
+          expect(updatePayloads[0].script).toEqual('function logToConsole() { }');
+          expect(updatePayloads[1].name).toEqual('add-country');
+          expect(updatePayloads[1].script).toEqual(undefined);
+          expect(updatePayloads[1].enabled).toEqual(true);
+          expect(updatePayloads[1].order).toEqual(20);
+          expect(updatePayloads[2].script).toEqual('function authz() { }');
+          expect(updatePayloads[2].enabled).toEqual(false);
+          expect(updatePayloads[2].order).toEqual(30);
+          done();
+        });
+    });
+
+    it('should not create rules that are marked as manual', (done) => {
+      const filesForExistingRules = {
+        'new-rule': {
+          script: true,
+          scriptFile: 'function newRule() { // Existing }',
+          metadata: true,
+          metadataFile: '{ "order": 20 }'
+        }
+      };
+      rules.updateRules(progress, auth0, filesForExistingRules, [ 'new-rule' ])
+        .then(() => {
+          expect(progress.rulesCreated).toEqual(0);
+          expect(progress.rulesUpdated).toEqual(0);
           done();
         });
     });

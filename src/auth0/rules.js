@@ -40,6 +40,7 @@ const deleteRule = function(progress, client, rules, existingRule, excluded) {
 
   const isExcluded = excluded.indexOf(existingRule.name) >= 0;
   if (isExcluded) {
+    progress.log('Skipping delete for manual rule: ' + existingRule.name + ' (' + existingRule.id + ')');
     return Promise.resolve(true);
   }
 
@@ -74,7 +75,8 @@ const deleteRules = function(progress, client, rules, excluded) {
 /*
  * Update a single rule.
  */
-const updateRule = function(progress, client, existingRules, ruleName, ruleData) {
+const updateRule = function(progress, client, existingRules, ruleName, ruleData, excluded) {
+  const isExcluded = excluded.indexOf(ruleName) >= 0;
   const metadata = (ruleData.metadata) ? utils.parseJsonFile(ruleName, ruleData.metadataFile) : { enabled: true };
 
   const payload = {
@@ -97,8 +99,12 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
   };
 
   const existingRule = _.find(existingRules, { name: ruleName });
-
   if (!existingRule) {
+    if (isExcluded) {
+      progress.log('Skipping creating for manual rule: ' + ruleName);
+      return Promise.resolve(true);
+    }
+
     payload.stage = 'login_success';
     payload.enabled = true;
 
@@ -108,6 +114,11 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
     progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, null, 2));
 
     return client.rules.create(payload);
+  }
+
+  if (isExcluded && payload.script) {
+    payload.script = null;
+    progress.log('Ignoring script payload for manual rule: ' + ruleName);
   }
 
   if (!payload.script) {
@@ -125,7 +136,7 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData)
 /*
  * Update all rules.
  */
-const updateRules = function(progress, client, rules) {
+const updateRules = function(progress, client, rules, excluded) {
   const ruleNames = _.keys(rules);
   if (ruleNames.length === 0) {
     return Promise.resolve(true);
@@ -145,7 +156,7 @@ const updateRules = function(progress, client, rules) {
       return Promise.map(
         ruleNames,
         function(ruleName) {
-          updateRule(progress, client, existingRules, ruleName, rules[ruleName]);
+          updateRule(progress, client, existingRules, ruleName, rules[ruleName], excluded);
         },
         { concurrency: constants.CONCURRENT_CALLS }
       );
