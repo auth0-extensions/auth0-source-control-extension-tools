@@ -67,7 +67,7 @@ describe('#rules', () => {
     updateFilters = [ ];
     updatePayloads = [ ];
     progress = {
-      log: () => null,
+      log: () => { },
       date: new Date(),
       connectionsUpdated: 0,
       rulesCreated: 0,
@@ -202,7 +202,7 @@ describe('#rules', () => {
 
     it('should update existing rules correctly and ignore manual rules', (done) => {
       const filesForExistingRules = {
-        'log-to-console-2': {
+        'log-to-console-3': {
           script: true,
           scriptFile: 'function logToConsole() { }',
           metadata: false
@@ -225,7 +225,7 @@ describe('#rules', () => {
           expect(progress.rulesUpdated).toEqual(2);
           expect(updateFilters.length).toEqual(2);
           expect(updatePayloads.length).toEqual(3);
-          expect(updatePayloads[0].name).toEqual('log-to-console-2');
+          expect(updatePayloads[0].name).toEqual('log-to-console-3');
           expect(updatePayloads[0].enabled).toEqual(true);
           expect(updatePayloads[0].script).toEqual('function logToConsole() { }');
           expect(updatePayloads[1].name).toEqual('add-country');
@@ -235,23 +235,6 @@ describe('#rules', () => {
           expect(updatePayloads[2].script).toEqual('function authz() { }');
           expect(updatePayloads[2].enabled).toEqual(false);
           expect(updatePayloads[2].order).toEqual(30);
-          done();
-        });
-    });
-
-    it('should not create rules that are marked as manual', (done) => {
-      const filesForExistingRules = {
-        'new-rule': {
-          script: true,
-          scriptFile: 'function newRule() { // Existing }',
-          metadata: true,
-          metadataFile: '{ "order": 20 }'
-        }
-      };
-      rules.updateRules(progress, auth0, filesForExistingRules, [ 'new-rule' ])
-        .then(() => {
-          expect(progress.rulesCreated).toEqual(0);
-          expect(progress.rulesUpdated).toEqual(0);
           done();
         });
     });
