@@ -29,11 +29,20 @@ describe('#rules', () => {
     }
   };
 
+  const filesBroken = {
+    'broken-file': {
+      script: true,
+      scriptFile: 'function brokenFunction() { }',
+      metadata: false
+    }
+  };
+
   const existingRules = [
     { id: 456, name: 'log-to-console', stage: 'login_success', order: 1 },
     { id: 123, name: 'add-country', stage: 'login_success', order: 2 },
     { id: 789, name: 'enrich-profile', stage: 'login_success', order: 3 },
-    { id: 111, name: 'authz-extension', stage: 'login_success', script: 'function authz() { }', order: 4 }
+    { id: 666, name: 'broken-file', stage: 'login_success', order: 4 },
+    { id: 111, name: 'authz-extension', stage: 'login_success', script: 'function authz() { }', order: 5 }
   ];
 
   const manualRules = [
@@ -44,10 +53,18 @@ describe('#rules', () => {
     auth0 = {
       rules: {
         create(payload) {
+          if (payload.name === 'broken-file') {
+            return Promise.reject(new Error('ERROR'));
+          }
+
           updatePayloads.push(payload);
           return Promise.resolve();
         },
         update(filter, payload) {
+          if (payload.name === 'broken-file') {
+            return Promise.reject(new Error('ERROR'));
+          }
+
           updateFilters.push(filter);
           updatePayloads.push(payload);
           return Promise.resolve();
@@ -91,7 +108,7 @@ describe('#rules', () => {
     it('should call auth0 and get the rules', (done) => {
       rules.getRules(progress, auth0)
         .then((records) => {
-          expect(records.length).toEqual(4);
+          expect(records.length).toEqual(5);
           expect(records[0].name).toEqual('log-to-console');
           expect(records[2].name).toEqual('enrich-profile');
           done();
@@ -117,7 +134,8 @@ describe('#rules', () => {
     it('should not run if the rule is excluded', (done) => {
       rules.deleteRules(progress, auth0, files, manualRules)
         .then(() => {
-          expect(progress.rulesDeleted).toNotExist();
+          expect(progress.rulesDeleted).toEqual(1);
+          expect(updateFilters[0].id).toEqual(666);
           done();
         });
     });
@@ -125,8 +143,9 @@ describe('#rules', () => {
     it('should delete rules that are not in the repository', (done) => {
       rules.deleteRules(progress, auth0, files, [ ])
         .then(() => {
-          expect(progress.rulesDeleted).toEqual(1);
-          expect(updateFilters[0].id).toEqual(111);
+          expect(progress.rulesDeleted).toEqual(2);
+          expect(updateFilters[0].id).toEqual(666);
+          expect(updateFilters[1].id).toEqual(111);
           done();
         });
     });
@@ -157,6 +176,16 @@ describe('#rules', () => {
           expect(updatePayloads[2].name).toEqual('enrich-profile');
           expect(updatePayloads[2].enabled).toEqual(false);
           expect(updatePayloads[2].order).toEqual(30);
+          done();
+        });
+    });
+
+    it('should return error if cannot create rule', (done) => {
+      auth0.rules.getAll = () => Promise.resolve([ ]);
+
+      rules.updateRules(progress, auth0, filesBroken, [ 'foo' ])
+        .catch((err) => {
+          expect(err.message).toEqual('ERROR');
           done();
         });
     });
@@ -196,6 +225,21 @@ describe('#rules', () => {
           expect(updatePayloads[2].script).toEqual('function authz() { }');
           expect(updatePayloads[2].enabled).toEqual(false);
           expect(updatePayloads[2].order).toEqual(30);
+          done();
+        });
+    });
+
+    it('should return error if cannot update rule', (done) => {
+      const filesForExistingRules = {
+        'broken-file': {
+          script: true,
+          scriptFile: 'function brokenFunc() { }',
+          metadata: false
+        }
+      };
+      rules.updateRules(progress, auth0, filesForExistingRules, [ 'foo' ])
+        .catch((err) => {
+          expect(err.message).toEqual('ERROR');
           done();
         });
     });

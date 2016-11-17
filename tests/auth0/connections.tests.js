@@ -11,12 +11,17 @@ describe('#connections', () => {
   const existingConnections = [
     { id: 456, name: 'Username-Password' },
     { id: 123, name: 'My-Other-Custom-DB' },
+    { id: 666, name: 'Bad-Connection' },
     { id: 789, name: 'My-Custom-DB' }
   ];
 
   const auth0 = {
     connections: {
       update(filter, payload) {
+        if (filter.id === 666) {
+          return Promise.reject(new Error('ERROR'));
+        }
+
         updateFilters.push(filter);
         updatePayloads.push(payload);
         return Promise.resolve();
@@ -40,6 +45,15 @@ describe('#connections', () => {
       },
       delete: {
         scriptFile: 'function delete() { }'
+      }
+    }
+  };
+
+  const brokenDatabase = {
+    name: 'Bad-Connection',
+    scripts: {
+      login: {
+        scriptFile: 'function login() { }'
       }
     }
   };
@@ -98,6 +112,14 @@ describe('#connections', () => {
           done();
         });
     });
+
+    it('should return error if cannot update', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, brokenDatabase)
+        .catch((err) => {
+          expect(err.message).toEqual('ERROR');
+          done();
+        });
+    });
   });
 
   describe('#updateDatabases', () => {
@@ -131,6 +153,14 @@ describe('#connections', () => {
           expect(results.length).toEqual(1);
           expect(updateFilters.length).toEqual(1);
           expect(updatePayloads.length).toEqual(1);
+          done();
+        });
+    });
+
+    it('should return error if cannot update one or more databases', (done) => {
+      connections.updateDatabases(progress, auth0, [ database, brokenDatabase ])
+        .catch((err) => {
+          expect(err.message).toEqual('ERROR');
           done();
         });
     });
