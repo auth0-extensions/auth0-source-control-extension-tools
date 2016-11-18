@@ -31,5 +31,16 @@ constants.DATABASE_SCRIPTS = [
   'change_password',
   'delete'
 ];
+constants.DATABASE_SCRIPTS_NO_IMPORT = [
+  'create',
+  'verify',
+  'login',
+  'change_password',
+  'delete'
+];
+constants.DATABASE_SCRIPTS_IMPORT = [
+  'get_user',
+  'login'
+];
 
 constants.CONCURRENT_CALLS = 5;

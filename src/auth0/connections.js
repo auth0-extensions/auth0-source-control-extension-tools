@@ -41,11 +41,18 @@ const updateDatabase = function(progress, client, connections, database) {
   const options = connection.options || {};
   options.customScripts = {};
 
+  const allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
+
   // Set all custom scripts
   _.keys(database.scripts).forEach(function(scriptName) {
+    if (allowedScripts.indexOf(scriptName) < 0) {
+      throw new ValidationError('The ' + scriptName + ' script is not allowed for ' + database.name + '.');
+    }
+
     if (!database.scripts[scriptName].scriptFile || database.scripts[scriptName].scriptFile.length === 0) {
       throw new ValidationError('The ' + scriptName + ' script for ' + database.name + ' is empty.');
     }
+
     options.customScripts[scriptName] = database.scripts[scriptName].scriptFile;
   });
 
