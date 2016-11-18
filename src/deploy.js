@@ -32,7 +32,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
   progress.log('Getting access token for ' + config('AUTH0_CLIENT_ID') + '/' + config('AUTH0_DOMAIN'));
 
   // Send all changes to Auth0.
-  return context.init()
+  return context.init(progress)
     .then(function() {
       var assets = JSON.stringify({
         rules: context.rules,
