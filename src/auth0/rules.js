@@ -151,7 +151,7 @@ const updateRules = function(progress, client, rules, excluded) {
       return Promise.map(
         ruleNames,
         function(ruleName) {
-          updateRule(progress, client, existingRules, ruleName, rules[ruleName], excluded);
+          return updateRule(progress, client, existingRules, ruleName, rules[ruleName], excluded);
         },
         { concurrency: constants.CONCURRENT_CALLS }
       );
