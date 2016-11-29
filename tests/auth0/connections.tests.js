@@ -12,7 +12,7 @@ describe('#connections', () => {
     { id: 456, name: 'Username-Password' },
     { id: 123, name: 'My-Other-Custom-DB' },
     { id: 666, name: 'Bad-Connection' },
-    { id: 789, name: 'My-Custom-DB' }
+    { id: 789, name: 'My-Custom-DB', options: { import_mode: true } }
   ];
 
   const auth0 = {
@@ -143,6 +143,21 @@ describe('#connections', () => {
         .catch((err) => {
           expect(err).toExist();
           expect(err.message).toEqual('The login script for My-Other-Custom-DB is empty.');
+          done();
+        });
+    });
+
+    it('should return error if trying to update forbidden script', (done) => {
+      connections.updateDatabases(progress, auth0, [ {
+        name: 'My-Custom-DB',
+        scripts: {
+          delete: {
+            scriptFile: ''
+          }
+        }
+      } ])
+        .catch((err) => {
+          expect(err.message).toEqual('The delete script is not allowed for My-Custom-DB.');
           done();
         });
     });
