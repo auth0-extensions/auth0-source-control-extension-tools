@@ -42,7 +42,7 @@ const updateDatabase = function(progress, client, connections, database) {
   options.customScripts = {};
 
   const allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
-  progress.log(`Import User to Auth0 enabled: ${!!options.import_mode}. Allowed scripts: ${JSON.stringify(allowedScripts, null, 2)}`);
+  progress.log('Import User to Auth0 enabled: ' + options.import_mode + '. Allowed scripts: ' + JSON.stringify(allowedScripts, null, 2));
 
   // Set all custom scripts
   _.keys(database.scripts).forEach(function(scriptName) {
