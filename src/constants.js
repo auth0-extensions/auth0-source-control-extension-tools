@@ -32,4 +32,6 @@ constants.DATABASE_SCRIPTS = [
   'delete'
 ];
 
+constants.CLIENTS_DIRECTORY = 'clients';
+
 constants.CONCURRENT_CALLS = 5;

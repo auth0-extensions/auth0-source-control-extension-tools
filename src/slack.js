@@ -48,6 +48,15 @@ const createPayload = function(progress, template, extensionUrl) {
     if (progress.rulesDeleted) {
       fields.push({ title: 'Rules Deleted', value: progress.rulesDeleted, short: true });
     }
+    if (progress.clientsCreated) {
+      fields.push({ title: 'Clients Created', value: progress.clientsCreated, short: true });
+    }
+    if (progress.clientsUpdated) {
+      fields.push({ title: 'Clients Updated', value: progress.clientsUpdated, short: true });
+    }
+    if (progress.clientsDeleted) {
+      fields.push({ title: 'Clients Deleted', value: progress.clientsDeleted, short: true });
+    }
 
     msg.attachments.push({
       color: '#7CD197',
