@@ -30,7 +30,7 @@ const trackProgress = function(progressData) {
   };
 };
 
-module.exports = function(progressData, context, client, storage, config, slackTemplate, managementClientName) {
+module.exports = function(progressData, context, client, storage, config, slackTemplate, managementClientId) {
   const progress = trackProgress(progressData);
   progress.log('Getting access token for ' + config('AUTH0_CLIENT_ID') + '/' + config('AUTH0_DOMAIN'));
 
@@ -61,7 +61,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.validateRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
-      return auth0.validateClients(progress, client, context.clients, managementClientName);
+      return auth0.validateClients(progress, client, context.clients, managementClientId);
     })
     .then(function() {
       return auth0.updateDatabases(progress, client, context.databases);
