@@ -3,7 +3,6 @@ const Promise = require('bluebird');
 const ValidationError = require('auth0-extension-tools').ValidationError;
 
 const utils = require('../utils');
-// const constants = require('../constants');
 
 /*
  * Get all non-global clients
@@ -26,7 +25,7 @@ const getClients = function(progress, client) {
 
 const updateExistingClient = function(progress, client, clientName, clientConfig, existingClient) {
   /* Get entire client config */
-  clientConfig = utils.parseJsonFile(clientName, clientConfig.scriptFile);
+  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile);
   clientConfig.name = clientName;
 
   /* Filter out things that haven't changed */
@@ -83,7 +82,7 @@ const updateExistingClients = function(progress, client) {
  */
 const createClient = function(progress, client, clientName, clientConfig) {
   /* process client */
-  clientConfig = utils.parseJsonFile(clientName, clientConfig.scriptFile);
+  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile);
   clientConfig.name = clientName;
   progress.clientsCreated += 1;
   progress.log('Creating client ' + clientName + ': ' + JSON.stringify(clientConfig));
@@ -173,14 +172,14 @@ const splitClients = function(progress, clients, existingClients) {
 };
 
 /**
- * Make sure the management client exists and is filtered out, also make sure we have scriptFile defined for everything
+ * Make sure the management client exists and is filtered out, also make sure we have configFile defined for everything
  * @param clients the list of clients to add or update
  * @param managementClient the name of the management client
  * @param existingClients the list of clients that already have been added
  * @returns {Promise.<*>}
  */
 const validateClientsExistence = function(clients, managementClient, existingClients) {
-  let existingClientsFiltered = existingClients;
+  var existingClientsFiltered = existingClients;
   /* Make sure management client is valid */
   if (managementClient) {
     const priorSize = existingClientsFiltered.length;
@@ -205,7 +204,7 @@ const validateClientsExistence = function(clients, managementClient, existingCli
   const invalidClients = _(clients)
     .keys()
     .filter(function(clientName) {
-      return !clients[clientName].scriptFile;
+      return !clients[clientName].configFile;
     })
     .value();
 
@@ -219,15 +218,15 @@ const validateClientsExistence = function(clients, managementClient, existingCli
   const invalidNames = _(clients)
     .keys()
     .filter(function(clientName) {
-      /* Parse scriptFile */
-      const config = utils.parseJsonFile(clientName, clients[clientName].scriptFile);
+      /* Parse configFile */
+      const config = utils.parseJsonFile(clientName, clients[clientName].configFile);
       return config.name && config.name !== clientName;
     })
     .value();
 
   if (invalidNames.length) {
     return Promise.reject(
-      new ValidationError('The following clients have key names that do not match the configured name in the scriptFile: ' + invalidNames.join())
+      new ValidationError('The following clients have key names that do not match the configured name in the configFile: ' + invalidNames.join())
     );
   }
 

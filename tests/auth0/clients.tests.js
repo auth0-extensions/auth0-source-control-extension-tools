@@ -21,12 +21,12 @@ describe('#clients', () => {
 
   const clientConfigs = {
     'Some Client Name abcd': {
-      scriptFile: '{ "client_id": "AaiyAPdpYdesoKnqjj8HJqRn4T5titcd", "client_secret": "somesecretvalu2", "app_type": "", "logo_uri": "", "is_first_party": false, "oidc_conformant": false, "global": false}',
+      configFile: '{ "client_id": "AaiyAPdpYdesoKnqjj8HJqRn4T5titcd", "client_secret": "somesecretvalu2", "app_type": "", "logo_uri": "", "is_first_party": false, "oidc_conformant": false, "global": false}',
       metadata: true,
       metadataFile: '{ }'
     },
     'Some Client Name ijkl': {
-      scriptFile: '{ "app_type": "spa", "logo_uri": "", "is_first_party": true, "callbacks": [ "http://localhost/callback" ] }',
+      configFile: '{ "app_type": "spa", "logo_uri": "", "is_first_party": true, "callbacks": [ "http://localhost/callback" ] }',
       metadata: true,
       metadataFile: '{ }'
     }
@@ -196,14 +196,14 @@ describe('#clients', () => {
         'Some Client Name abcd': {
           existing: existingNonGlobalClients[1],
           config: {
-            scriptFile: '{ "app_type": "non-interactive" }'
+            configFile: '{ "app_type": "non-interactive" }'
           }
         },
         /* Should skip this second one because app_type is already spa */
         'Some Client Name efgh': {
           existing: existingNonGlobalClients[2],
           config: {
-            scriptFile: '{ "is_first_party": false }'
+            configFile: '{ "is_first_party": false }'
           }
         }
       };
@@ -252,10 +252,10 @@ describe('#clients', () => {
     it('should return error if file contains a name that does not match the directory name', (done) => {
       const filesWithError = {
         'my-client': {
-          scriptFile: '{ "name": "someothername" }'
+          configFile: '{ "name": "someothername" }'
         },
         'my-client2': {
-          scriptFile: '{  }'
+          configFile: '{  }'
         }
       };
 
@@ -264,7 +264,7 @@ describe('#clients', () => {
           check(done, function() {
             // eslint-disable-next-line no-unused-expressions
             expect(err).to.exist;
-            expect(err.message).to.equal('The following clients have key names that do not match the configured name in the scriptFile: my-client');
+            expect(err.message).to.equal('The following clients have key names that do not match the configured name in the configFile: my-client');
           });
         });
     });
@@ -272,7 +272,7 @@ describe('#clients', () => {
     it('should return error if we do not pass in the management client', (done) => {
       const someClient = {
         'my-client': {
-          scriptFile: '{ }'
+          configFile: '{ }'
         }
       };
 
@@ -289,7 +289,7 @@ describe('#clients', () => {
     it('should return error if we pass in the wrong management client', (done) => {
       const someClient = {
         'my-client': {
-          scriptFile: '{ }'
+          configFile: '{ }'
         }
       };
 
@@ -307,10 +307,10 @@ describe('#clients', () => {
     it('check clients to add', (done) => {
       const newClients = {
         'my-new-client': {
-          scriptFile: '{ "name": "my-new-client" }'
+          configFile: '{ "name": "my-new-client" }'
         },
         'my-new-client2': {
-          scriptFile: '{ "name": "my-new-client2" }'
+          configFile: '{ "name": "my-new-client2" }'
         }
       };
 
@@ -326,10 +326,10 @@ describe('#clients', () => {
     it('check clients to delete', (done) => {
       const newClients = {
         'my-new-client': {
-          scriptFile: '{ "name": "my-new-client" }'
+          configFile: '{ "name": "my-new-client" }'
         },
         'my-new-client2': {
-          scriptFile: '{ "name": "my-new-client2" }'
+          configFile: '{ "name": "my-new-client2" }'
         }
       };
 
@@ -345,10 +345,10 @@ describe('#clients', () => {
     it('check clients to update', (done) => {
       const clientConfig = {
         'Some Client Name abcd': {
-          scriptFile: '{ "name": "Some Client Name abcd" }'
+          configFile: '{ "name": "Some Client Name abcd" }'
         },
         'my-new-client2': {
-          scriptFile: '{ "name": "my-new-client2" }'
+          configFile: '{ "name": "my-new-client2" }'
         }
       };
 

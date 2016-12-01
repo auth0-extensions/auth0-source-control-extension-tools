@@ -41,6 +41,37 @@ describe('#utils', function() {
     done();
   });
 
+  it('should unify configs', function(done) {
+    const data = [
+      {
+        name: 'client1',
+        metadataFile: { b: 2 },
+        configFile: { a: 1 }
+      },
+      {
+        name: 'client2',
+        metadataFile: '{"b":2}',
+        configFile: '{"a":1}'
+      }
+    ];
+
+    const expectation = {
+      client1: {
+        name: 'client1',
+        metadataFile: '{"b":2}',
+        configFile: '{"a":1}'
+      },
+      client2: {
+        name: 'client2',
+        metadataFile: '{"b":2}',
+        configFile: '{"a":1}'
+      }
+    };
+
+    expect(utils.unifyConfigs(data)).toEqual(expectation);
+    done();
+  });
+
   it('should parse json', function(done) {
     const string = '{ "a": 1 }';
 

@@ -1,21 +1,29 @@
 const _ = require('lodash');
 const ValidationError = require('auth0-extension-tools').ValidationError;
 
-const unifyScripts = function(data) {
+const unifyFileMetaPairs = function(data, mainFileAttrName, metaFileAttrName) {
   const converted = {};
   _.forEach(data, function(item) {
-    if (typeof item.metadataFile === 'object') {
-      item.metadataFile = JSON.stringify(item.metadataFile);
+    if (typeof item[metaFileAttrName] === 'object') {
+      item[metaFileAttrName] = JSON.stringify(item[metaFileAttrName]);
     }
 
-    if (typeof item.scriptFile === 'object') {
-      item.scriptFile = JSON.stringify(item.scriptFile);
+    if (typeof item[mainFileAttrName] === 'object') {
+      item[mainFileAttrName] = JSON.stringify(item[mainFileAttrName]);
     }
 
     converted[item.name] = item;
   });
 
   return converted;
+};
+
+const unifyConfigs = function(data) {
+  return unifyFileMetaPairs(data, 'configFile', 'metadataFile');
+};
+
+const unifyScripts = function(data) {
+  return unifyFileMetaPairs(data, 'scriptFile', 'metadataFile');
 };
 
 module.exports.parseJsonFile = function(fileName, contents) {
@@ -42,3 +50,4 @@ module.exports.unifyDatabases = function(data) {
 };
 
 module.exports.unifyScripts = unifyScripts;
+module.exports.unifyConfigs = unifyConfigs;

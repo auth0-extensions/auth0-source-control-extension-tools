@@ -11,3 +11,4 @@ module.exports.requireUser = middlewares.requireUser;
 
 module.exports.unifyDatabases = utils.unifyDatabases;
 module.exports.unifyScripts = utils.unifyScripts;
+module.exports.unifyConfigs = utils.unifyConfigs;
