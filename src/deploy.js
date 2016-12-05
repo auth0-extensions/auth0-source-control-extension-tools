@@ -32,6 +32,7 @@ const trackProgress = function(progressData) {
 
 module.exports = function(progressData, context, client, storage, config, slackTemplate) {
   const progress = trackProgress(progressData);
+  progress.mappings = config('AUTH0_KEYWORD_REPLACE_MAPPINGS');
   progress.log('Getting access token for ' + config('AUTH0_CLIENT_ID') + '/' + config('AUTH0_DOMAIN'));
 
   // Send all changes to Auth0.

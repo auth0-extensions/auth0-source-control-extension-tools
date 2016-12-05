@@ -77,7 +77,7 @@ const deleteRules = function(progress, client, rules, excluded) {
  */
 const updateRule = function(progress, client, existingRules, ruleName, ruleData, excluded) {
   const isExcluded = excluded.indexOf(ruleName) >= 0;
-  const metadata = (ruleData.metadata) ? utils.parseJsonFile(ruleName, ruleData.metadataFile) : { enabled: true };
+  const metadata = (ruleData.metadata) ? utils.parseJsonFile(ruleName, ruleData.metadataFile, progress.mappings) : { enabled: true };
 
   const payload = {
     name: ruleName,
@@ -190,7 +190,7 @@ const validateRulesStages = function(progress, client, rules, existingRules) {
         return false;
       }
 
-      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile, progress.mappings);
       return metadata.stage && constants.RULES_STAGES.indexOf(metadata.stage) < 0;
     })
     .value();
@@ -208,7 +208,7 @@ const validateRulesStages = function(progress, client, rules, existingRules) {
         return false;
       }
 
-      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile, progress.mappings);
       return metadata.stage
         && _.some(
           existingRules,
@@ -241,11 +241,11 @@ const validateRulesOrder = function(progress, client, rules, existingRules) {
         return false;
       }
 
-      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile, progress.mappings);
       return metadata.order;
     })
     .map(function(ruleName) {
-      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile);
+      const metadata = utils.parseJsonFile(ruleName, rules[ruleName].metadataFile, progress.mappings);
       return {
         name: ruleName,
         stage: metadata.stage || constants.DEFAULT_RULE_STAGE,

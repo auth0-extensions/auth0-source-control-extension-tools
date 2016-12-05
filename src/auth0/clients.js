@@ -25,7 +25,7 @@ const getClients = function(progress, client) {
 
 const updateExistingClient = function(progress, client, clientName, clientConfig, existingClient) {
   /* Get entire client config */
-  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile);
+  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile, progress.mappings);
   clientConfig.name = clientName;
 
   /* Filter out things that haven't changed */
@@ -82,7 +82,7 @@ const updateExistingClients = function(progress, client) {
  */
 const createClient = function(progress, client, clientName, clientConfig) {
   /* process client */
-  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile);
+  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile, progress.mappings);
   clientConfig.name = clientName;
   progress.clientsCreated += 1;
   progress.log('Creating client ' + clientName + ': ' + JSON.stringify(clientConfig));
@@ -142,7 +142,8 @@ const splitClients = function(progress, clients, existingClients) {
     return existingClientNames.indexOf(name) >= 0;
   }).value();
 
-  progress.log('Adding ' + toAddClientNames.length + ' client(s), If implemented would be Deleting ' + toDeleteClientNames.length + ' client(s) and Updating ' + toUpdateClientNames.length + ' client(s)');
+  progress.log('Adding ' + toAddClientNames.length + ' client(s) and Updating ' + toUpdateClientNames.length +
+    ' client(s).  If implemented would be Deleting ' + toDeleteClientNames.length + ' client(s)');
 
   /*
   Create set of clients that we need to add with the config information
@@ -178,7 +179,7 @@ const splitClients = function(progress, clients, existingClients) {
  * @param existingClients the list of clients that already have been added
  * @returns {Promise.<*>}
  */
-const validateClientsExistence = function(clients, managementClient, existingClients) {
+const validateClientsExistence = function(progress, clients, managementClient, existingClients) {
   var existingClientsFiltered = existingClients;
   /* Make sure management client is valid */
   if (managementClient) {
@@ -219,7 +220,7 @@ const validateClientsExistence = function(clients, managementClient, existingCli
     .keys()
     .filter(function(clientName) {
       /* Parse configFile */
-      const config = utils.parseJsonFile(clientName, clients[clientName].configFile);
+      const config = utils.parseJsonFile(clientName, clients[clientName].configFile, progress.mappings);
       return config.name && config.name !== clientName;
     })
     .value();
@@ -252,7 +253,7 @@ const validateClients = function(progress, client, clients, managementClient) {
 
   return getClients(progress, client)
     .then(function(existingClients) {
-      return validateClientsExistence(clients, managementClient, existingClients)
+      return validateClientsExistence(progress, clients, managementClient, existingClients)
         .then(function(existingClientsFiltered) {
           return splitClients(progress, clients, existingClientsFiltered);
         });
