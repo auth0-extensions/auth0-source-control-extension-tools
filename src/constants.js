@@ -43,4 +43,6 @@ constants.DATABASE_SCRIPTS_IMPORT = [
   'login'
 ];
 
+constants.CLIENTS_DIRECTORY = 'clients';
+
 constants.CONCURRENT_CALLS = 5;

@@ -16,10 +16,14 @@ describe('#utils', function() {
         {
           name: 'else',
           metadataFile: '{"b":2}',
-          scriptFile: '{"a":1}'
+          scriptFile: 'console.log(@@hello@@);'
         }
       ]
     } ];
+
+    const mappings = {
+      hello: 'goodbye'
+    };
 
     const expectation = [ {
       name: 'database',
@@ -32,12 +36,43 @@ describe('#utils', function() {
         else: {
           name: 'else',
           metadataFile: '{"b":2}',
-          scriptFile: '{"a":1}'
+          scriptFile: 'console.log("goodbye");'
         }
       }
     } ];
 
-    expect(utils.unifyDatabases(data)).toEqual(expectation);
+    expect(utils.unifyDatabases(data, mappings)).toEqual(expectation);
+    done();
+  });
+
+  it('should unify configs', function(done) {
+    const data = [
+      {
+        name: 'client1',
+        metadataFile: { b: 2 },
+        configFile: { a: 1 }
+      },
+      {
+        name: 'client2',
+        metadataFile: '{"b":2}',
+        configFile: '{"a":1}'
+      }
+    ];
+
+    const expectation = {
+      client1: {
+        name: 'client1',
+        metadataFile: '{"b":2}',
+        configFile: '{"a":1}'
+      },
+      client2: {
+        name: 'client2',
+        metadataFile: '{"b":2}',
+        configFile: '{"a":1}'
+      }
+    };
+
+    expect(utils.unifyConfigs(data)).toEqual(expectation);
     done();
   });
 
@@ -45,6 +80,37 @@ describe('#utils', function() {
     const string = '{ "a": 1 }';
 
     expect(utils.parseJsonFile('test', string)).toEqual({ a: 1 });
+    done();
+  });
+
+  it('should parse json with keyword replacement mappings', function(done) {
+    const mappings = {
+      string: 'some string',
+      array: [
+        'some value',
+        'some other value'
+      ],
+      object: {
+        key1: 'value1',
+        key2: 'value2'
+      },
+      int: 5
+    };
+    const contents = '{ "a": 1, "string_key": @@string@@, "array_key": @@array@@, "object_key": @@object@@, "int_key": @@int@@ }';
+    const expectations = {
+      a: 1,
+      string_key: 'some string',
+      array_key: [
+        'some value',
+        'some other value'
+      ],
+      object_key: {
+        key1: 'value1',
+        key2: 'value2'
+      },
+      int_key: 5
+    };
+    expect(utils.parseJsonFile('test2', contents, mappings)).toEqual(expectations);
     done();
   });
 

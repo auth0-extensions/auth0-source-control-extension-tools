@@ -26,7 +26,7 @@ pages.getGlobalClientId = function(progress, auth0) {
  * Get the page by its name.
  *
  */
-pages.getPage = function(files, pageName) {
+pages.getPage = function(files, pageName, mappings) {
   const file = files[pageName];
   if (!file) {
     return null;
@@ -38,7 +38,7 @@ pages.getPage = function(files, pageName) {
   };
 
   if (file.metadata) {
-    const metadata = utils.parseJsonFile(pageName, file.metadataFile);
+    const metadata = utils.parseJsonFile(pageName, file.metadataFile, mappings);
     page.enabled = metadata.enabled;
   }
 
@@ -49,7 +49,7 @@ pages.getPage = function(files, pageName) {
  * Update the password reset page.
  */
 pages.updatePasswordResetPage = function(progress, client, files) {
-  const page = pages.getPage(files, constants.PAGE_PASSWORD_RESET);
+  const page = pages.getPage(files, constants.PAGE_PASSWORD_RESET, progress.mappings);
   if (!page) {
     return Promise.resolve(true);
   }
@@ -65,7 +65,7 @@ pages.updatePasswordResetPage = function(progress, client, files) {
  * Update the error page.
  */
 pages.updateErrorPage = function(progress, client, files) {
-  const page = pages.getPage(files, constants.PAGE_ERROR);
+  const page = pages.getPage(files, constants.PAGE_ERROR, progress.mappings);
   if (!page) {
     return Promise.resolve(true);
   }
@@ -88,7 +88,7 @@ pages.updateErrorPage = function(progress, client, files) {
  * Update the guardian mfa page.
  */
 pages.updateGuardianMultifactorPage = function(progress, client, files) {
-  const page = pages.getPage(files, constants.PAGE_GUARDIAN_MULTIFACTOR);
+  const page = pages.getPage(files, constants.PAGE_GUARDIAN_MULTIFACTOR, progress.mappings);
   if (!page) {
     return Promise.resolve(true);
   }
@@ -103,7 +103,7 @@ pages.updateGuardianMultifactorPage = function(progress, client, files) {
  * Update the custom login page.
  */
 pages.updateLoginPage = function(progress, auth0, files) {
-  const page = pages.getPage(files, constants.PAGE_LOGIN);
+  const page = pages.getPage(files, constants.PAGE_LOGIN, progress.mappings);
   if (!page) {
     return Promise.resolve(true);
   }
