@@ -1,6 +1,6 @@
 {
   "name": "auth0-source-control-extension-tools",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Supporting tools for the Source Control extensions",
   "main": "src/index.js",
   "scripts": {
@@ -34,6 +34,7 @@
     "auth0-oauth2-express": "^1.1.8",
     "bluebird": "^3.4.6",
     "lodash": "^4.15.0",
+    "rimraf": "^2.5.4",
     "superagent": "^2.3.0",
     "winston": "^2.2.0"
   },
