@@ -110,8 +110,8 @@ describe('#clients', () => {
     updateFilters = [];
     updatePayloads = [];
     progress = {
-      log: (message) => {
-        console.log(message);
+      log: () => {
+
       },
       date: new Date(),
       connectionsUpdated: 0,
