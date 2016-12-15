@@ -17,8 +17,18 @@ describe('#slack', () => {
       rulesCreated: 1,
       rulesUpdated: 1,
       rulesDeleted: 1,
-      clientsCreated: 1,
-      clientsUpdated: 1
+      configurables: {
+        clients: {
+          created: 1,
+          deleted: 1,
+          updated: 1
+        },
+        resourceServers: {
+          created: 1,
+          deleted: 1,
+          updated: 1
+        }
+      }
     };
     const template = {};
 

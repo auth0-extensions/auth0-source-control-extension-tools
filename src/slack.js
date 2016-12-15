@@ -48,14 +48,29 @@ const createPayload = function(progress, template, extensionUrl) {
     if (progress.rulesDeleted) {
       fields.push({ title: 'Rules Deleted', value: progress.rulesDeleted, short: true });
     }
-    if (progress.clientsCreated) {
-      fields.push({ title: 'Clients Created', value: progress.clientsCreated, short: true });
-    }
-    if (progress.clientsUpdated) {
-      fields.push({ title: 'Clients Updated', value: progress.clientsUpdated, short: true });
-    }
-    if (progress.clientsDeleted) {
-      fields.push({ title: 'Clients Deleted', value: progress.clientsDeleted, short: true });
+    if (progress.configurables) {
+      if (progress.configurables.clients) {
+        if (progress.configurables.clients.created) {
+          fields.push({ title: 'Clients Created', value: progress.configurables.clients.created, short: true });
+        }
+        if (progress.configurables.clients.updated) {
+          fields.push({ title: 'Clients Updated', value: progress.configurables.clients.updated, short: true });
+        }
+        if (progress.configurables.clients.deleted) {
+          fields.push({ title: 'Clients Deleted', value: progress.configurables.clients.deleted, short: true });
+        }
+      }
+      if (progress.configurables.resourceServers) {
+        if (progress.configurables.resourceServers.created) {
+          fields.push({ title: 'Resource Servers Created', value: progress.configurables.resourceServers.created, short: true });
+        }
+        if (progress.configurables.resourceServers.updated) {
+          fields.push({ title: 'Resource Servers Updated', value: progress.configurables.resourceServers.updated, short: true });
+        }
+        if (progress.configurables.resourceServers.deleted) {
+          fields.push({ title: 'Resource Servers Deleted', value: progress.configurables.resourceServers.deleted, short: true });
+        }
+      }
     }
 
     msg.attachments.push({

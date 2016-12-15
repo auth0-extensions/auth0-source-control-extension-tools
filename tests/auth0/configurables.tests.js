@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const expect = require('chai').expect;
 const Promise = require('bluebird');
-const clients = require('../../src/auth0/clients');
+const configurables = require('../../src/auth0/configurables');
 
 function check(done, f) {
   try {
@@ -12,8 +12,7 @@ function check(done, f) {
   }
 }
 
-
-describe('#clients', () => {
+describe('#configurables', () => {
   let auth0;
   let progress;
   let updateFilters;
@@ -80,7 +79,7 @@ describe('#clients', () => {
 
   beforeEach(() => {
     auth0 = {
-      clients: {
+      someUnits: {
         create(payload) {
           if (payload.name === 'broken-file') {
             return Promise.reject(new Error('ERROR'));
@@ -116,7 +115,7 @@ describe('#clients', () => {
       date: new Date(),
       connectionsUpdated: 0,
       configurables: {
-        clients: {
+        someUnits: {
           created: 0,
           updated: 0,
           deleted: 0
@@ -126,55 +125,35 @@ describe('#clients', () => {
     };
   });
 
-  describe('#getClients', () => {
-    it('should return cached clients', (done) => {
-      progress.clients = existingClients;
+  describe('#updateConfigurables', () => {
+    it('should not run if the repository does not contain any configurables', (done) => {
+      if ('someUnits' in progress.configurables) {
+        if ('adds' in progress.configurables.someUnits) delete progress.configurables.someUnits.adds;
+        if ('updates' in progress.configurables.someUnits) delete progress.configurables.someUnits.updates;
+        if ('created' in progress.configurables.someUnits) delete progress.configurables.someUnits.created;
+        if ('updated' in progress.configurables.someUnits) delete progress.configurables.someUnits.updated;
+      }
 
-      clients.getClients(progress)
-        .then((r) => {
-          check(done, function() {
-            expect(r).to.deep.equal(existingClients);
-          });
-        });
-    });
-
-    it('should call auth0 and get the clients', (done) => {
-      progress.clients = undefined;
-      clients.getClients(progress, auth0)
-        .then((records) => {
-          check(done, function() {
-            expect(records).to.deep.equal(existingNonGlobalClients);
-          });
-        });
-    });
-  });
-
-  describe('#updateClients', () => {
-    it('should not run if the repository does not contain any clients', (done) => {
-      if ('adds' in progress.configurables.clients) delete progress.configurables.clients.adds;
-      if ('updates' in progress.configurables.clients) delete progress.configurables.clients.updates;
-      if ('created' in progress.configurables.clients) delete progress.configurables.clients.created;
-      if ('updated' in progress.configurables.clients) delete progress.configurables.clients.updated;
-
-      clients.updateClients(progress, auth0)
+      configurables.update('someUnits', progress, auth0)
         .then(() => {
           check(done, function() {
             // eslint-disable-next-line no-unused-expressions
-            expect(progress.configurables.clients.created).to.not.exist;
+            expect(progress.configurables.someUnits.created).to.not.exist;
             // eslint-disable-next-line no-unused-expressions
-            expect(progress.configurables.clients.updated).to.not.exist;
+            expect(progress.configurables.someUnits.updated).to.not.exist;
           });
         });
     });
 
-    it('should create new clients correctly', (done) => {
-      progress.configurables.clients.adds = clientConfigs;
+    it('should create new configurables correctly', (done) => {
+      progress.configurables.someUnits.adds = clientConfigs;
+      progress.configurables.someUnits.idName = 'client_id';
 
-      clients.updateClients(progress, auth0)
+      configurables.update('someUnits', progress, auth0)
         .then(() => {
           check(done, function() {
-            expect(Object.keys(progress.configurables.clients.adds).length).to.equal(2);
-            expect(progress.configurables.clients.created).to.equal(2);
+            expect(Object.keys(progress.configurables.someUnits.adds).length).to.equal(2);
+            expect(progress.configurables.someUnits.created).to.equal(2);
             expect(updatePayloads.length).to.equal(2);
             expect(updatePayloads[0].name).to.equal('Some Client Name abcd');
             expect(updatePayloads[0].client_id).to.equal('AaiyAPdpYdesoKnqjj8HJqRn4T5titcd');
@@ -195,8 +174,8 @@ describe('#clients', () => {
         });
     });
 
-    it('should update existing clients correctly', (done) => {
-      progress.configurables.clients.updates = {
+    it('should update existing configurables correctly', (done) => {
+      progress.configurables.someUnits.updates = {
         'Some Client Name abcd': {
           existing: existingNonGlobalClients[1],
           config: {
@@ -211,13 +190,14 @@ describe('#clients', () => {
           }
         }
       };
-      progress.configurables.clients.idName = 'client_id';
 
-      clients.updateClients(progress, auth0)
+      progress.configurables.someUnits.idName = 'client_id';
+
+      configurables.update('someUnits', progress, auth0)
         .then(() => {
           check(done, function() {
-            expect(Object.keys(progress.configurables.clients.updates).length).to.equal(2);
-            expect(progress.configurables.clients.updated).to.equal(1);
+            expect(Object.keys(progress.configurables.someUnits.updates).length).to.equal(2);
+            expect(progress.configurables.someUnits.updated).to.equal(1);
             expect(updateFilters.length).to.equal(1);
             expect(updateFilters[0]).to.deep.equal({ client_id: 'AaiyAPdpYdesoKnqjj8HJqRn4T5titcd' });
             expect(updatePayloads.length).to.equal(1);
@@ -230,11 +210,28 @@ describe('#clients', () => {
     });
   });
 
-  describe('#validateClients', () => {
-    it('should not run if the repository does not contain any clients', (done) => {
-      clients.validateClients(progress, auth0, { })
+  describe('#validate', () => {
+    it('should not run if the repository does not contain any units', (done) => {
+      configurables.validate('someUnits', progress, auth0, { }, [])
         .then(() => {
           done();
+        });
+    });
+
+    it('should return error if you use a bad idName', (done) => {
+      const goodConfig = {
+        'my-client': {
+          configFile: '{ }'
+        }
+      };
+
+      configurables.validate('someUnits', progress, auth0, goodConfig, existingNonGlobalClients, [], 'notanid')
+        .catch((err) => {
+          check(done, function() {
+            // eslint-disable-next-line no-unused-expressions
+            expect(err).to.exist;
+            expect(err.message).to.equal('Attempted to use notanid for idName for someUnits but did not find that attribute in the existing someUnits.');
+          });
         });
     });
 
@@ -244,17 +241,17 @@ describe('#clients', () => {
         }
       };
 
-      clients.validateClients(progress, auth0, filesWithError, 'AaiyAPdpYdesoKnqjj8HJqRn4T5titab')
+      configurables.validate('someUnits', progress, auth0, filesWithError, existingNonGlobalClients)
         .catch((err) => {
           check(done, function() {
             // eslint-disable-next-line no-unused-expressions
             expect(err).to.exist;
-            expect(err.message).to.equal('The following clients have no config file: my-client');
+            expect(err.message).to.equal('The following someUnits have no config file: my-client');
           });
         });
     });
 
-    it('should return error if file contains a name that does not match the directory name', (done) => {
+    it('should return error if file contains a name that does not match the file name', (done) => {
       const filesWithError = {
         'my-client': {
           configFile: '{ "name": "someothername" }'
@@ -264,52 +261,17 @@ describe('#clients', () => {
         }
       };
 
-      clients.validateClients(progress, auth0, filesWithError, 'AaiyAPdpYdesoKnqjj8HJqRn4T5titab')
+      configurables.validate('someUnits', progress, auth0, filesWithError, existingNonGlobalClients)
         .catch((err) => {
           check(done, function() {
             // eslint-disable-next-line no-unused-expressions
             expect(err).to.exist;
-            expect(err.message).to.equal('The following clients have key names that do not match the configured name in the configFile: my-client');
+            expect(err.message).to.equal('The following someUnits have key names that do not match the configured name in the configFile: my-client');
           });
         });
     });
 
-    it('should return error if we do not pass in the management client', (done) => {
-      const someClient = {
-        'my-client': {
-          configFile: '{ }'
-        }
-      };
-
-      clients.validateClients(progress, auth0, someClient)
-        .catch((err) => {
-          check(done, function() {
-            // eslint-disable-next-line no-unused-expressions
-            expect(err).to.exist;
-            expect(err.message).to.equal('When specifying clients, you must specify which client is the management client for the deploy application.');
-          });
-        });
-    });
-
-    it('should return error if we pass in the wrong management client', (done) => {
-      const someClient = {
-        'my-client': {
-          configFile: '{ }'
-        }
-      };
-
-      clients.validateClients(progress, auth0, someClient, 'Wrong Management Client')
-        .catch((err) => {
-          check(done, function() {
-            // eslint-disable-next-line no-unused-expressions
-            expect(err).to.exist;
-            expect(err.message).to.equal('Did not find Wrong Management Client, in list of existing client IDs: AaiyAPdpYdesoKnqjj8HJqRn4T5titab,AaiyAPdpYdesoKnqjj8HJqRn4T5titcd,AaiyAPdpYdesoKnqjj8HJqRn4T5titef');
-          });
-        });
-    });
-
-
-    it('check clients to add', (done) => {
+    it('check configurables to add', (done) => {
       const newClients = {
         'my-new-client': {
           configFile: '{ "name": "my-new-client" }'
@@ -319,16 +281,16 @@ describe('#clients', () => {
         }
       };
 
-      clients.validateClients(progress, auth0, newClients, 'AaiyAPdpYdesoKnqjj8HJqRn4T5titab')
+      configurables.validate('someUnits', progress, auth0, newClients, existingNonGlobalClients, [], 'client_id')
         .then(() => {
           check(done, function() {
             // should be in add bucket
-            expect(progress.configurables.clients.adds).to.deep.equal(newClients);
+            expect(progress.configurables.someUnits.adds).to.deep.equal(newClients);
           });
         });
     });
 
-    it('check clients to delete', (done) => {
+    it('check configurables to delete', (done) => {
       const newClients = {
         'my-new-client': {
           configFile: '{ "name": "my-new-client" }'
@@ -338,11 +300,11 @@ describe('#clients', () => {
         }
       };
 
-      clients.validateClients(progress, auth0, newClients, 'AaiyAPdpYdesoKnqjj8HJqRn4T5titab')
+      configurables.validate('someUnits', progress, auth0, newClients, existingNonGlobalClients, [ { client_id: 'AaiyAPdpYdesoKnqjj8HJqRn4T5titab' } ], 'client_id')
         .then(() => {
           check(done, function() {
             // should be in delete bucket
-            expect(progress.configurables.clients.deletes).to.deep.equal([ 'Some Client Name abcd', 'Some Client Name efgh' ]);
+            expect(progress.configurables.someUnits.deletes).to.deep.equal([ 'Some Client Name abcd', 'Some Client Name efgh' ]);
           });
         });
     });
@@ -364,11 +326,11 @@ describe('#clients', () => {
         }
       };
 
-      clients.validateClients(progress, auth0, clientConfig, 'AaiyAPdpYdesoKnqjj8HJqRn4T5titab')
+      configurables.validate('someUnits', progress, auth0, clientConfig, existingNonGlobalClients, [], 'client_id')
         .then(() => {
           check(done, function() {
             // should be in delete bucket
-            expect(progress.configurables.clients.updates).to.deep.equal(updateClients);
+            expect(progress.configurables.someUnits.updates).to.deep.equal(updateClients);
           });
         });
     });

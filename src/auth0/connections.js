@@ -41,11 +41,23 @@ const updateDatabase = function(progress, client, connections, database) {
   const options = connection.options || {};
   options.customScripts = {};
 
-  const allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
+  const databaseScriptKeys = Object.keys(database.scripts);
+
+  let allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
+  /* Check if change_email is included and if it is, allow get_users for non-import */
+  if (!options.import_mode) {
+    if (databaseScriptKeys.indexOf(constants.DATABASE_SCRIPTS_CHANGE_EMAIL) >= 0) {
+      if (databaseScriptKeys.indexOf(constants.DATABASE_SCRIPTS_GET_USER) >= 0) {
+        allowedScripts = constants.DATABASE_SCRIPTS;
+      } else {
+        throw new ValidationError('The ' + constants.DATABASE_SCRIPTS_CHANGE_EMAIL + ' script requires the ' + constants.DATABASE_SCRIPTS_GET_USER + ' script for ' + database.name + '.');
+      }
+    }
+  }
   progress.log('Import User to Auth0 enabled: ' + options.import_mode + '. Allowed scripts: ' + JSON.stringify(allowedScripts, null, 2));
 
   // Set all custom scripts
-  _.keys(database.scripts).forEach(function(scriptName) {
+  _(databaseScriptKeys).forEach(function(scriptName) {
     if (allowedScripts.indexOf(scriptName) < 0) {
       throw new ValidationError('The ' + scriptName + ' script is not allowed for ' + database.name + '.');
     }

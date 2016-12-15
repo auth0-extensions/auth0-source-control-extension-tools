@@ -2,6 +2,7 @@ const rules = require('./rules');
 const pages = require('./pages');
 const connections = require('./connections');
 const clients = require('./clients');
+const resourceServers = require('./resourceServers');
 
 module.exports = {
   /* Connection and database operations */
@@ -16,6 +17,10 @@ module.exports = {
   /* Client operations */
   validateClients: clients.validateClients,
   updateClients: clients.updateClients,
+
+  /* ResourceServer operations */
+  validateResourceServers: resourceServers.validateResourceServers,
+  updateResourceServers: resourceServers.updateResourceServers,
 
   /* Page operations */
   updatePages: pages.updatePages,
