@@ -4,7 +4,43 @@ const ValidationError = require('auth0-extension-tools').ValidationError;
 
 const utils = require('../utils');
 
-const updateExistingUnit = function(type, progress, client, unitName, unitConfig, existingUnit) {
+/**
+ * Process the metadata
+ * @param progress the state object
+ * @param client the management api client
+ * @param metaDataFunction the function to use for processing the metadata, if undefined will skip processing
+ * @param unit The existing unit.  Metadata is processed against an existing unit
+ * @param config The configuration that contains the metadata, if no metadata is defined, the method will be called with undefined metadata
+ */
+const processMetaData = function(progress, client, metaDataFunction, unit, unitConfig) {
+  /* Make sure we have a function to call */
+  if (metaDataFunction) {
+    if (unitConfig.metadataFile) {
+      /* Process the metadata if there is some defined */
+      const metaBody = utils.parseJsonFile(unit.name, unitConfig.metadataFile, progress.mappings);
+      return metaDataFunction(progress, client, unit, metaBody);
+    }
+
+    /* No metadata defined, call with undefined metadata */
+    return metaDataFunction(progress, client, unit);
+  }
+
+  /* No meta data, so just return false and the existing unit */
+  return Promise.resolve(false);
+};
+
+/**
+ * Update the existing unit
+ * @param type The type of unit
+ * @param progress the state object
+ * @param client the management api client
+ * @param unitName the name of this particular unit
+ * @param unitConfig the configuration for this particular unit
+ * @param existingUnit the existing unit that was in the DB
+ * @param metaDataFunction a function that can process the metadata if provided
+ * @returns {*}
+ */
+const updateExistingUnit = function(type, progress, client, unitName, unitConfig, existingUnit, metaDataFunction) {
   /* Get entire config */
   const unitBody = utils.parseJsonFile(unitName, unitConfig.configFile, progress.mappings);
   unitBody.name = unitName;
@@ -24,11 +60,30 @@ const updateExistingUnit = function(type, progress, client, unitName, unitConfig
     progress.log('Updating ' + type + ' ' + unitName + ': ' + JSON.stringify(changedConfig));
     const params = {};
     params[progress.configurables[type].idName] = existingUnit[progress.configurables[type].idName];
-    return client[type].update(params, changedConfig);
+    return client[type].update(params, changedConfig)
+      .then(function(unit) {
+        return processMetaData(progress, client, metaDataFunction, unit, unitConfig)
+          .then(function(changed) {
+            if (changed) {
+              progress.log('Updated metadata for ' + type + ', ' + unitName);
+            }
+            return Promise.resolve(unit);
+          });
+      });
   }
 
-  progress.log('Skipping update of ' + type + ' ' + unitName + ', because no changes were found.');
-  return Promise.resolve(existingUnit);
+
+  /* Configuration did not change, try to process the metadata */
+  return processMetaData(progress, client, metaDataFunction, existingUnit, unitConfig)
+    .then(function(changed) {
+      if (changed) {
+        progress.log('Updated just the metadata for ' + type + ', ' + unitName);
+        progress.configurables[type].updated += 1;
+      } else {
+        progress.log('Skipping update of ' + type + ' ' + unitName + ', because no changes were found.');
+      }
+      return Promise.resolve(existingUnit);
+    });
 };
 
 
@@ -38,7 +93,7 @@ const updateExistingUnit = function(type, progress, client, unitName, unitConfig
  * @client the Auth0 client for the management API
  * @return Promise for updating the existing clients
  */
-const updateExistingUnits = function(type, progress, client) {
+const updateExistingUnits = function(type, progress, client, metaDataFunction) {
   // Check if there is anything to do here
   if (type in progress.configurables &&
     progress.configurables[type].updates &&
@@ -48,7 +103,15 @@ const updateExistingUnits = function(type, progress, client) {
     /* First process clients we need to add */
     return Promise.map(Object.keys(progress.configurables[type].updates),
       function(unitName) {
-        return updateExistingUnit(type, progress, client, unitName, progress.configurables[type].updates[unitName].config, progress.configurables[type].updates[unitName].existing);
+        return updateExistingUnit(
+          type,
+          progress,
+          client,
+          unitName,
+          progress.configurables[type].updates[unitName].config,
+          progress.configurables[type].updates[unitName].existing,
+          metaDataFunction
+        );
       }
     );
   }
@@ -65,13 +128,23 @@ const updateExistingUnits = function(type, progress, client) {
  * @param unitConfig The JSON configuration of the unit
  * @returns {unitConfig} The created unit
  */
-const createUnit = function(type, progress, client, unitName, unitConfig) {
+const createUnit = function(type, progress, client, unitName, unitConfig, metaDataFunction) {
   /* process unit */
-  unitConfig = utils.parseJsonFile(unitName, unitConfig.configFile, progress.mappings);
-  unitConfig.name = unitName;
+  const unitBody = utils.parseJsonFile(unitName, unitConfig.configFile, progress.mappings);
+  unitBody.name = unitName;
   progress.configurables[type].created += 1;
-  progress.log('Creating ' + type + ' ' + unitName + ': ' + JSON.stringify(unitConfig));
-  return client[type].create(unitConfig);
+  progress.log('Creating ' + type + ' ' + unitName + ': ' + JSON.stringify(unitBody));
+  return client[type].create(unitBody)
+    .then(function(unit) {
+      return processMetaData(progress, client, metaDataFunction, unit, unitConfig)
+        .then(function(changed) {
+          if (changed) {
+            progress.log('Processed metadata for ' + type + ', ' + unitName);
+          }
+
+          Promise.resolve(unit);
+        });
+    });
 };
 
 /**
@@ -80,7 +153,7 @@ const createUnit = function(type, progress, client, unitName, unitConfig) {
  * @client the Auth0 client for the management API
  * @return Promise for creating new units
  */
-const createUnits = function(type, progress, client) {
+const createUnits = function(type, progress, client, metaDataFunction) {
   // Check if there is anything to do here
   if (type in progress.configurables &&
     progress.configurables[type].adds &&
@@ -90,7 +163,7 @@ const createUnits = function(type, progress, client) {
     /* First process units we need to add */
     return Promise.map(Object.keys(progress.configurables[type].adds),
       function(unitName) {
-        return createUnit(type, progress, client, unitName, progress.configurables[type].adds[unitName]);
+        return createUnit(type, progress, client, unitName, progress.configurables[type].adds[unitName], metaDataFunction);
       }
     );
   }
@@ -101,13 +174,15 @@ const createUnits = function(type, progress, client) {
 
 /**
  * Update units
+ * @param type the type of object we are updating
  * @param progress the progress object
- * @client the Auth0 client for the management API
+ * @param client the Auth0 client for the management API
+ * @param metaDataFunction function to call when processing metaData, it must return a promise and takes a metaData object
  * @return Promise for creating new and updating existing units
  */
-const update = function(type, progress, client) {
-  return createUnits(type, progress, client)
-    .then(() => updateExistingUnits(type, progress, client));
+const update = function(type, progress, client, metaDataFunction) {
+  return createUnits(type, progress, client, metaDataFunction)
+    .then(() => updateExistingUnits(type, progress, client, metaDataFunction));
 };
 
 /**

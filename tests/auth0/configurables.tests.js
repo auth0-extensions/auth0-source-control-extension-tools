@@ -21,12 +21,10 @@ describe('#configurables', () => {
   const clientConfigs = {
     'Some Client Name abcd': {
       configFile: '{ "client_id": "AaiyAPdpYdesoKnqjj8HJqRn4T5titcd", "client_secret": "somesecretvalu2", "app_type": "", "logo_uri": "", "is_first_party": false, "oidc_conformant": false, "global": false}',
-      metadata: true,
       metadataFile: '{ }'
     },
     'Some Client Name ijkl': {
       configFile: '{ "app_type": "spa", "logo_uri": "", "is_first_party": true, "callbacks": [ "http://localhost/callback" ] }',
-      metadata: true,
       metadataFile: '{ }'
     }
   };
@@ -86,12 +84,14 @@ describe('#configurables', () => {
           }
 
           updatePayloads.push(payload);
-          return Promise.resolve();
+
+          /* returning payload is not perfect, but helps with some tests */
+          return Promise.resolve(payload);
         },
         update(filter, payload) {
           updateFilters.push(filter);
           updatePayloads.push(payload);
-          return Promise.resolve();
+          return Promise.resolve(payload);
         },
         // Uncomment me when we are actually deleting: delete(filter, payload) {
         //   updateFilters.push(filter);
@@ -141,6 +141,138 @@ describe('#configurables', () => {
             expect(progress.configurables.someUnits.created).to.not.exist;
             // eslint-disable-next-line no-unused-expressions
             expect(progress.configurables.someUnits.updated).to.not.exist;
+          });
+        });
+    });
+
+    it('should pass through metadata on create', (done) => {
+      var gotMetaData = false;
+
+      const metaData = {
+        someVal: true
+      };
+
+      const config = {
+        some_new_configurable: {
+          configFile: '{ }',
+          metadataFile: JSON.stringify(metaData)
+        }
+      };
+
+      /* Setup valid state */
+      progress.configurables.someUnits.adds = config;
+
+      /* Initialize metadata function */
+      const metaDataFunction = function(localProgress, client, unit, localMeta) {
+        gotMetaData = localMeta.someVal;
+        return Promise.resolve(true);
+      };
+
+      /* Call create */
+      configurables.update('someUnits', progress, auth0, metaDataFunction)
+        .then(() => {
+          check(done, function() {
+            // eslint-disable-next-line no-unused-expressions
+            expect(progress.configurables.someUnits.created).to.equal(1);
+            // eslint-disable-next-line no-unused-expressions
+            expect(gotMetaData).to.be.true;
+          });
+        });
+    });
+
+    it('should not mark as updated if metadata does not update', (done) => {
+      const metaData = {
+        someVal: true
+      };
+
+      const config = {
+        configFile: '{ "is_first_party": false }',
+        metadataFile: JSON.stringify(metaData)
+      };
+
+      progress.configurables.someUnits.updates = {
+        'Some Client Name efgh': {
+          existing: existingNonGlobalClients[2],
+          config: config
+        }
+      };
+
+      /* Initialize metadata function */
+      const metaDataFunction = function() {
+        return Promise.resolve(false);
+      };
+
+      configurables.update('someUnits', progress, auth0, metaDataFunction)
+        .then(() => {
+          check(done, function() {
+            expect(Object.keys(progress.configurables.someUnits.updates).length).to.equal(1);
+            expect(progress.configurables.someUnits.updated).to.equal(0);
+            expect(updatePayloads.length).to.equal(0);
+          });
+        });
+    });
+
+    it('should mark as updated if only metadata updates', (done) => {
+      const metaData = {
+        someVal: true
+      };
+
+      const config = {
+        configFile: '{ "is_first_party": false }',
+        metadataFile: JSON.stringify(metaData)
+      };
+
+      progress.configurables.someUnits.updates = {
+        'Some Client Name efgh': {
+          existing: existingNonGlobalClients[2],
+          config: config
+        }
+      };
+
+      /* Initialize metadata function */
+      const metaDataFunction = function() {
+        return Promise.resolve(true);
+      };
+
+      configurables.update('someUnits', progress, auth0, metaDataFunction)
+        .then(() => {
+          check(done, function() {
+            expect(Object.keys(progress.configurables.someUnits.updates).length).to.equal(1);
+            expect(progress.configurables.someUnits.updated).to.equal(1);
+            expect(updatePayloads.length).to.equal(0);
+          });
+        });
+    });
+
+    it('should mark as updated if both metadata and unit updates', (done) => {
+      const metaData = {
+        someVal: true
+      };
+
+      const config = {
+        configFile: '{ "is_first_party": true }',
+        metadataFile: JSON.stringify(metaData)
+      };
+
+      progress.configurables.someUnits.updates = {
+        'Some Client Name efgh': {
+          existing: existingNonGlobalClients[2],
+          config: config
+        }
+      };
+
+      /* Initialize metadata function */
+      const metaDataFunction = function() {
+        return Promise.resolve(true);
+      };
+
+      configurables.update('someUnits', progress, auth0, metaDataFunction)
+        .then(() => {
+          check(done, function() {
+            expect(Object.keys(progress.configurables.someUnits.updates).length).to.equal(1);
+            expect(progress.configurables.someUnits.updated).to.equal(1);
+            expect(updatePayloads.length).to.equal(1);
+            expect(updatePayloads[0]).to.deep.equal({ is_first_party: true });
           });
         });
     });
@@ -309,7 +441,7 @@ describe('#configurables', () => {
         });
     });
 
-    it('check clients to update', (done) => {
+    it('check configurables to update', (done) => {
       const clientConfig = {
         'Some Client Name abcd': {
           configFile: '{ "name": "Some Client Name abcd" }'
