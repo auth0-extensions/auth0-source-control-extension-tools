@@ -43,7 +43,7 @@ const updateDatabase = function(progress, client, connections, database) {
 
   const databaseScriptKeys = Object.keys(database.scripts);
 
-  let allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
+  var allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
   /* Check if change_email is included and if it is, allow get_users for non-import */
   if (!options.import_mode) {
     if (databaseScriptKeys.indexOf(constants.DATABASE_SCRIPTS_CHANGE_EMAIL) >= 0) {
