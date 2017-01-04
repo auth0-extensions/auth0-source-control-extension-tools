@@ -53,7 +53,9 @@ const processClientGrants = function(progress, client, existingClient, metaData)
               /* Scopes have changed, run an update */
               const updatePayload = { scope: metaData.grants[audience] };
               return client.clientGrants.update({ id: clientGrants[0].id }, updatePayload)
-                .then(() => true);
+                .then(function() {
+                  return true;
+                });
             }
 
             /* No changes, just return that we didn't have to change anything */
@@ -67,7 +69,9 @@ const processClientGrants = function(progress, client, existingClient, metaData)
             scope: metaData.grants[audience]
           };
           return client.clientGrants.create(createPayload)
-            .then(() => true);
+            .then(function() {
+              return true;
+            });
         }));
     });
 

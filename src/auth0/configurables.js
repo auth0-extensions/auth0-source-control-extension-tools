@@ -182,7 +182,9 @@ const createUnits = function(type, progress, client, metaDataFunction) {
  */
 const update = function(type, progress, client, metaDataFunction) {
   return createUnits(type, progress, client, metaDataFunction)
-    .then(() => updateExistingUnits(type, progress, client, metaDataFunction));
+    .then(function() {
+      return updateExistingUnits(type, progress, client, metaDataFunction);
+    });
 };
 
 /**

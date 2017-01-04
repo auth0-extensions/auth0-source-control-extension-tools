@@ -29,6 +29,7 @@ const getDatabaseConnections = function(progress, client, databases) {
  * Update a database.
  */
 const updateDatabase = function(progress, client, connections, database) {
+  var allowedScripts = null;
   progress.log('Processing connection ' + database.name);
 
   const connection = _.find(connections, { name: database.name });
@@ -43,7 +44,7 @@ const updateDatabase = function(progress, client, connections, database) {
 
   const databaseScriptKeys = Object.keys(database.scripts);
 
-  var allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
+  allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
   /* Check if change_email is included and if it is, allow get_users for non-import */
   if (!options.import_mode) {
     if (databaseScriptKeys.indexOf(constants.DATABASE_SCRIPTS_CHANGE_EMAIL) >= 0) {
