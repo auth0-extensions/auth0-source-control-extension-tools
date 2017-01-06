@@ -23,13 +23,16 @@ constants.PAGE_NAMES = [
 ];
 
 constants.DATABASE_CONNECTIONS_DIRECTORY = 'database-connections';
+constants.DATABASE_SCRIPTS_CHANGE_EMAIL = 'change_email';
+constants.DATABASE_SCRIPTS_GET_USER = 'get_user';
 constants.DATABASE_SCRIPTS = [
-  'get_user',
+  constants.DATABASE_SCRIPTS_GET_USER,
   'create',
   'verify',
   'login',
   'change_password',
-  'delete'
+  'delete',
+  constants.DATABASE_SCRIPTS_CHANGE_EMAIL
 ];
 constants.DATABASE_SCRIPTS_NO_IMPORT = [
   'create',
@@ -39,10 +42,17 @@ constants.DATABASE_SCRIPTS_NO_IMPORT = [
   'delete'
 ];
 constants.DATABASE_SCRIPTS_IMPORT = [
-  'get_user',
+  constants.DATABASE_SCRIPTS_GET_USER,
   'login'
 ];
 
+constants.RESOURCE_SERVERS_DIRECTORY = 'resource-servers';
+constants.RESOURCE_SERVERS_CLIENT_NAME = 'resourceServers';
+constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME = 'Auth0 Management API';
+constants.RESOURCE_SERVERS_ID_NAME = 'id';
+
 constants.CLIENTS_DIRECTORY = 'clients';
+constants.CLIENTS_CLIENT_NAME = 'clients';
+constants.CLIENTS_CLIENT_ID_NAME = 'client_id';
 
 constants.CONCURRENT_CALLS = 5;

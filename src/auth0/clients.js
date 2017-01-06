@@ -2,7 +2,8 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 const ValidationError = require('auth0-extension-tools').ValidationError;
 
-const utils = require('../utils');
+const constants = require('../constants');
+const configurables = require('./configurables');
 
 /*
  * Get all non-global clients
@@ -23,93 +24,66 @@ const getClients = function(progress, client) {
     });
 };
 
-const updateExistingClient = function(progress, client, clientName, clientConfig, existingClient) {
-  /* Get entire client config */
-  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile, progress.mappings);
-  clientConfig.name = clientName;
+/**
+ * Add the client grants if they have changed
+ *
+ * @param progress the state object
+ * @param client the management client
+ * @param unit the existing client
+ * @param metaData the client grant information
+ */
+const processClientGrants = function(progress, client, existingClient, metaData) {
+  /* Make sure grants have been specified, if not, simply return */
+  if (metaData && metaData.grants) {
+    const grantPromises = [];
+    _.keys(metaData.grants).forEach(function(audience) {
+      /* Foreach audience, set the client grants */
+      const filter = { audience: audience, client_id: existingClient.client_id };
+      grantPromises.push(client.clientGrants.getAll(filter)
+        .then(function(clientGrants) {
+          /* First check if we have actually found something */
+          if (clientGrants.length >= 1) {
+            if (clientGrants.length > 1) {
+              /* Not sure how we could get into a situation where we have more than 1..., ignore it... */
+              progress.log('Didn\'t update client grants for ' + existingClient.name + ', because we found too many grants for audience: ' + audience);
+            }
 
-  /* Filter out things that haven't changed */
-  const changedConfigKeys = _(clientConfig)
-    .keys()
-    .filter(function(key) {
-      return clientConfig[key] !== existingClient[key];
-    })
-    .value();
+            /* Check if the scopes have changed */
+            if (JSON.stringify(clientGrants[0].scope) !== JSON.stringify(metaData.grants[audience])) {
+              /* Scopes have changed, run an update */
+              const updatePayload = { scope: metaData.grants[audience] };
+              return client.clientGrants.update({ id: clientGrants[0].id }, updatePayload)
+                .then(function() {
+                  return true;
+                });
+            }
 
-  if (changedConfigKeys.length > 0) {
-    /* Make a new object with just the changed attributes */
-    const changedConfig = _.zipObject(changedConfigKeys, _.map(changedConfigKeys, function(key) { return clientConfig[key]; }));
-    progress.clientsUpdated += 1;
-    progress.log('Updating client ' + clientName + ': ' + JSON.stringify(changedConfig));
-    return client.clients.update({ client_id: existingClient.client_id }, changedConfig);
+            /* No changes, just return that we didn't have to change anything */
+            return Promise.resolve(false);
+          }
+
+          /* Didn't find one, so let's just create it */
+          const createPayload = {
+            client_id: existingClient.client_id,
+            audience: audience,
+            scope: metaData.grants[audience]
+          };
+          return client.clientGrants.create(createPayload)
+            .then(function() {
+              return true;
+            });
+        }));
+    });
+
+    /* Resolve all of the promises and return true if any of them were true */
+    return Promise.all(grantPromises)
+      .then(function(results) {
+        return results.indexOf(true) >= 0;
+      });
   }
 
-  progress.log('Skipping update of client ' + clientName + ', because no changes were found.');
-  return Promise.resolve(existingClient);
-};
-
-
-/**
- * Update existing clients
- * @param progress the progress object
- * @client the Auth0 client for the management API
- * @return Promise for updating the existing clients
- */
-const updateExistingClients = function(progress, client) {
-  // Check if there is anything to do here
-  if (progress.updateClients && Object.keys(progress.updateClients).length > 0) {
-    progress.log('Updating clients...');
-
-    /* First process clients we need to add */
-    return Promise.map(Object.keys(progress.updateClients),
-      function(clientName) {
-        return updateExistingClient(progress, client, clientName, progress.updateClients[clientName].config, progress.updateClients[clientName].existing);
-      }
-    );
-  }
-
-  // No updateClients, so must not be any work here, just resolve happily
-  return Promise.resolve();
-};
-
-/**
- * Create an individual client
- * @param progress state object
- * @param client ManagementClient
- * @param clientName The name of the client to create
- * @param clientConfig The JSON configuration of the client
- * @returns {clientConfig} The created client
- */
-const createClient = function(progress, client, clientName, clientConfig) {
-  /* process client */
-  clientConfig = utils.parseJsonFile(clientName, clientConfig.configFile, progress.mappings);
-  clientConfig.name = clientName;
-  progress.clientsCreated += 1;
-  progress.log('Creating client ' + clientName + ': ' + JSON.stringify(clientConfig));
-  return client.clients.create(clientConfig);
-};
-
-/**
- * Create new clients
- * @param progress the progress object
- * @client the Auth0 client for the management API
- * @return Promise for creating new clients
- */
-const createClients = function(progress, client) {
-  // Check if there is anything to do here
-  if (progress.addClients && Object.keys(progress.addClients).length > 0) {
-    progress.log('Creating clients...');
-
-    /* First process clients we need to add */
-    return Promise.map(Object.keys(progress.addClients),
-      function(clientName) {
-        return createClient(progress, client, clientName, progress.addClients[clientName]);
-      }
-    );
-  }
-
-  // No addClients, so must not be any work here, just resolve happily
-  return Promise.resolve();
+  /* return that no changes were made */
+  return Promise.resolve(false);
 };
 
 /**
@@ -119,57 +93,7 @@ const createClients = function(progress, client) {
  * @return Promise for creating new and updating existing clients
  */
 const updateClients = function(progress, client) {
-  return createClients(progress, client)
-    .then(() => updateExistingClients(progress, client));
-};
-
-/**
- * Split the clients into buckets for adding, updating, and deleting
- */
-const splitClients = function(progress, clients, existingClients) {
-  /* Here split into different containers for type of client action */
-  const clientNames = _(clients).keys();
-  const existingClientNames = _.map(existingClients, 'name');
-
-  // Now grab the different buckets of names
-  const toAddClientNames = _(clientNames).filter(function(name) {
-    return existingClientNames.indexOf(name) < 0;
-  }).value();
-  const toDeleteClientNames = _(existingClientNames).filter(function(name) {
-    return clientNames.indexOf(name) < 0;
-  }).value();
-  const toUpdateClientNames = _(clientNames).filter(function(name) {
-    return existingClientNames.indexOf(name) >= 0;
-  }).value();
-
-  progress.log('Adding ' + toAddClientNames.length + ' client(s) and Updating ' + toUpdateClientNames.length +
-    ' client(s).  If implemented would be Deleting ' + toDeleteClientNames.length + ' client(s)');
-
-  /*
-  Create set of clients that we need to add with the config information
-   */
-  progress.addClients = _.zipObject(toAddClientNames,
-    _.map(toAddClientNames, function(name) {
-      return clients[name];
-    }));
-
-  /*
-  Just need the list of names we need to delete
-   */
-  progress.deleteClients = toDeleteClientNames;
-
-  /*
-  Need both the config and existing information for clients we need to update
-   */
-  progress.updateClients = _.zipObject(toUpdateClientNames,
-    _.map(toUpdateClientNames, function(name) {
-      return {
-        existing: _.find(existingClients, [ 'name', name ]),
-        config: clients[name]
-      };
-    }));
-
-  return existingClients;
+  return configurables.update(constants.CLIENTS_CLIENT_NAME, progress, client, processClientGrants);
 };
 
 /**
@@ -201,36 +125,6 @@ const validateClientsExistence = function(progress, clients, managementClient, e
     );
   }
 
-  /* Check that the clients are formed well */
-  const invalidClients = _(clients)
-    .keys()
-    .filter(function(clientName) {
-      return !clients[clientName].configFile;
-    })
-    .value();
-
-  if (invalidClients.length) {
-    return Promise.reject(
-      new ValidationError('The following clients have no config file: ' + invalidClients.join())
-    );
-  }
-
-  /* Also make sure client name either matches or is not in the script */
-  const invalidNames = _(clients)
-    .keys()
-    .filter(function(clientName) {
-      /* Parse configFile */
-      const config = utils.parseJsonFile(clientName, clients[clientName].configFile, progress.mappings);
-      return config.name && config.name !== clientName;
-    })
-    .value();
-
-  if (invalidNames.length) {
-    return Promise.reject(
-      new ValidationError('The following clients have key names that do not match the configured name in the configFile: ' + invalidNames.join())
-    );
-  }
-
   return Promise.resolve(existingClientsFiltered);
 };
 
@@ -255,7 +149,7 @@ const validateClients = function(progress, client, clients, managementClient) {
     .then(function(existingClients) {
       return validateClientsExistence(progress, clients, managementClient, existingClients)
         .then(function(existingClientsFiltered) {
-          return splitClients(progress, clients, existingClientsFiltered);
+          return configurables.validate(constants.CLIENTS_CLIENT_NAME, progress, client, clients, existingClientsFiltered, [ ], constants.CLIENTS_CLIENT_ID_NAME);
         });
     });
 };

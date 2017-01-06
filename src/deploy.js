@@ -18,9 +18,18 @@ const trackProgress = function(progressData) {
     repository: progressData.repository,
     date: new Date(),
     connectionsUpdated: 0,
-    clientsCreated: 0,
-    clientsUpdated: 0,
-    clientsDeleted: 0,
+    configurables: {
+      clients: {
+        created: 0,
+        updated: 0,
+        deleted: 0
+      },
+      resourceServers: {
+        created: 0,
+        updated: 0,
+        deleted: 0
+      }
+    },
     rulesCreated: 0,
     rulesUpdated: 0,
     rulesDeleted: 0,
@@ -40,6 +49,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
     .then(function() {
       var assets = JSON.stringify({
         clients: context.clients,
+        resourceServers: context.resourceServers,
         rules: context.rules,
         pages: context.pages,
         databases: context.databases
@@ -62,6 +72,9 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.validateRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
+      return auth0.validateResourceServers(progress, client, context.resourceServers);
+    })
+    .then(function() {
       return auth0.validateClients(progress, client, context.clients, config('AUTH0_CLIENT_ID'));
     })
     .then(function() {
@@ -72,6 +85,9 @@ module.exports = function(progressData, context, client, storage, config, slackT
     })
     .then(function() {
       return auth0.updateRules(progress, client, context.rules, context.excluded_rules);
+    })
+    .then(function() {
+      return auth0.updateResourceServers(progress, client);
     })
     .then(function() {
       return auth0.updateClients(progress, client);
@@ -90,6 +106,8 @@ module.exports = function(progressData, context, client, storage, config, slackT
         connections: {
           updated: progress.connectionsUpdated
         },
+        clients: progress.configurables.clients,
+        resourceServers: progress.configurables.resourceServers,
         rules: {
           created: progress.rulesCreated,
           updated: progress.rulesUpdated,

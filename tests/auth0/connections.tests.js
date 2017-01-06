@@ -45,6 +45,12 @@ describe('#connections', () => {
       },
       delete: {
         scriptFile: 'function delete() { }'
+      },
+      change_email: {
+        scriptFile: 'function change_email() { }'
+      },
+      get_user: {
+        scriptFile: 'function get_user() { }'
       }
     }
   };
@@ -109,6 +115,8 @@ describe('#connections', () => {
           expect(updatePayloads[0].options.customScripts.login).toEqual('function login() { }');
           expect(updatePayloads[0].options.customScripts.create).toEqual('function create() { }');
           expect(updatePayloads[0].options.customScripts.delete).toEqual('function delete() { }');
+          expect(updatePayloads[0].options.customScripts.get_user).toEqual('function get_user() { }');
+          expect(updatePayloads[0].options.customScripts.change_email).toEqual('function change_email() { }');
           done();
         });
     });
@@ -158,6 +166,36 @@ describe('#connections', () => {
       } ])
         .catch((err) => {
           expect(err.message).toEqual('The delete script is not allowed for My-Custom-DB.');
+          done();
+        });
+    });
+
+    it('should return error if trying to update forbidden script, get_user', (done) => {
+      connections.updateDatabases(progress, auth0, [ {
+        name: 'My-Other-Custom-DB',
+        scripts: {
+          get_user: {
+            scriptFile: ''
+          }
+        }
+      } ])
+        .catch((err) => {
+          expect(err.message).toEqual('The get_user script is not allowed for My-Other-Custom-DB.');
+          done();
+        });
+    });
+
+    it('should return error if trying to update forbidden script, change_email and no get_user', (done) => {
+      connections.updateDatabases(progress, auth0, [ {
+        name: 'My-Other-Custom-DB',
+        scripts: {
+          change_email: {
+            scriptFile: ''
+          }
+        }
+      } ])
+        .catch((err) => {
+          expect(err.message).toEqual('The change_email script requires the get_user script for My-Other-Custom-DB.');
           done();
         });
     });
