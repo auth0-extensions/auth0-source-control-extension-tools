@@ -11,33 +11,24 @@ const keywordReplace = function(input, mappings) {
   return input;
 };
 
-const unifyFileMetaPairs = function(data, mainFileAttrName, metaFileAttrName, mappings) {
+const unifyScripts = function(data, mappings) {
   const converted = {};
   _.forEach(data, function(item) {
-    if (typeof item[metaFileAttrName] === 'object') {
-      item[metaFileAttrName] = JSON.stringify(item[metaFileAttrName]);
-    }
-    /* Meta file should always be JSON and therefore already parsed */
-
-    if (typeof item[mainFileAttrName] === 'object') {
-      item[mainFileAttrName] = JSON.stringify(item[mainFileAttrName]);
-    } else if (item[mainFileAttrName]) {
-      item[mainFileAttrName] = keywordReplace(item[mainFileAttrName], mappings);
-    }
+    _.keys(item)
+      .filter(function(key) { return key.endsWith('File'); })
+      .forEach(function(key) {
+        /* foreach attribute that ends in file, do a keyword replacement, or stringify it */
+        if (typeof item[key] === 'object') {
+          item[key] = JSON.stringify(item[key]);
+        } else if (item[key]) {
+          item[key] = keywordReplace(item[key], mappings);
+        }
+      });
 
     converted[item.name] = item;
   });
 
   return converted;
-};
-
-const unifyConfigs = function(data) {
-  /* These are both JSON files that shouldn't need to be re-mapped */
-  return unifyFileMetaPairs(data, 'configFile', 'metadataFile');
-};
-
-const unifyScripts = function(data, mappings) {
-  return unifyFileMetaPairs(data, 'scriptFile', 'metadataFile', mappings);
 };
 
 module.exports.parseJsonFile = function(fileName, contents, mappings) {
@@ -65,4 +56,3 @@ module.exports.unifyDatabases = function(data, mappings) {
 };
 
 module.exports.unifyScripts = unifyScripts;
-module.exports.unifyConfigs = unifyConfigs;
