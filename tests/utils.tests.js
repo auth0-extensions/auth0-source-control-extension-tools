@@ -1,4 +1,4 @@
-const expect = require('expect');
+const expect = require('chai').expect;
 
 const utils = require('../src/utils');
 
@@ -10,19 +10,21 @@ describe('#utils', function() {
       scripts: [
         {
           name: 'login',
+          htmlFile: '<html>@@hello@@</html>',
           metadataFile: { b: 2 },
           scriptFile: { a: 1 }
         },
         {
           name: 'else',
-          metadataFile: '{"b":2}',
+          metadataFile: '{"b":@@two@@}',
           scriptFile: 'console.log(@@hello@@);'
         }
       ]
     } ];
 
     const mappings = {
-      hello: 'goodbye'
+      hello: 'goodbye',
+      two: 2
     };
 
     const expectation = [ {
@@ -30,6 +32,7 @@ describe('#utils', function() {
       scripts: {
         login: {
           name: 'login',
+          htmlFile: '<html>"goodbye"</html>',
           metadataFile: '{"b":2}',
           scriptFile: '{"a":1}'
         },
@@ -41,7 +44,7 @@ describe('#utils', function() {
       }
     } ];
 
-    expect(utils.unifyDatabases(data, mappings)).toEqual(expectation);
+    expect(utils.unifyDatabases(data, mappings)).to.deep.equal(expectation);
     done();
   });
 
@@ -54,7 +57,7 @@ describe('#utils', function() {
       },
       {
         name: 'client2',
-        metadataFile: '{"b":2}',
+        metadataFile: '{"b":@@two@@}',
         configFile: '{"a":1}'
       }
     ];
@@ -72,14 +75,14 @@ describe('#utils', function() {
       }
     };
 
-    expect(utils.unifyConfigs(data)).toEqual(expectation);
+    expect(utils.unifyScripts(data, { two: 2 })).to.deep.equal(expectation);
     done();
   });
 
   it('should parse json', function(done) {
     const string = '{ "a": 1 }';
 
-    expect(utils.parseJsonFile('test', string)).toEqual({ a: 1 });
+    expect(utils.parseJsonFile('test', string)).to.deep.equal({ a: 1 });
     done();
   });
 
@@ -110,7 +113,7 @@ describe('#utils', function() {
       },
       int_key: 5
     };
-    expect(utils.parseJsonFile('test2', contents, mappings)).toEqual(expectations);
+    expect(utils.parseJsonFile('test2', contents, mappings)).to.deep.equal(expectations);
     done();
   });
 
@@ -119,7 +122,7 @@ describe('#utils', function() {
 
     expect(function() {
       utils.parseJsonFile('test', string);
-    }).toThrow(/Error parsing JSON from metadata file: test/);
+    }).to.throw(/Error parsing JSON from metadata file: test/);
     done();
   });
 });
