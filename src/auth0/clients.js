@@ -38,14 +38,17 @@ const processClientGrants = function(progress, client, existingClient, metaData)
     const grantPromises = [];
     _.keys(metaData.grants).forEach(function(audience) {
       /* Foreach audience, set the client grants */
-      const filter = { audience: audience, client_id: existingClient.client_id };
+      const filter = { audience: audience };
       grantPromises.push(client.clientGrants.getAll(filter)
-        .then(function(clientGrants) {
+        .then(function(clientGrantsForAudience) {
           /* First check if we have actually found something */
+          var clientGrants = _.filter(clientGrantsForAudience, function(grant) {
+            return grant.client_id === existingClient.client_id;
+          });
           if (clientGrants.length >= 1) {
             if (clientGrants.length > 1) {
-              /* Not sure how we could get into a situation where we have more than 1..., ignore it... */
-              progress.log('Didn\'t update client grants for ' + existingClient.name + ', because we found too many grants for audience: ' + audience);
+              /* Shouldn't be able to get here */
+              progress.log('Strangely found too many client grants for ' + existingClient.name + ', audience: ' + audience);
             }
 
             /* Check if the scopes have changed */
