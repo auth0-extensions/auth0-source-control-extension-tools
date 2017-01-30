@@ -394,12 +394,21 @@ describe('#clients', () => {
 
     const existingGrants = [
       {
-        id: 'asdfasdfadsf',
-        client_id: 'cid1',
-        audience: 'urn:some:backend1',
+        id: 'qwerqwerqwerqwer1',
+        client_id: 'cid4',
+        audience: 'urn:some:backend2',
         scope: [
-          'scope1',
-          'scope2'
+          'scope3',
+          'scope4'
+        ]
+      },
+      {
+        id: 'qwerqwerqwerqwer2',
+        client_id: 'cid5',
+        audience: 'urn:some:backend2',
+        scope: [
+          'scope3',
+          'scope4'
         ]
       },
       {
@@ -412,12 +421,21 @@ describe('#clients', () => {
         ]
       },
       {
-        id: 'asdfasdfadsf',
-        client_id: 'cid1',
+        id: 'asdfasdfadsf2',
+        client_id: 'cid6',
         audience: 'urn:some:backend1',
         scope: [
           'should:not:see1',
           'should:not:see2'
+        ]
+      },
+      {
+        id: 'asdfasdfadsf',
+        client_id: 'cid1',
+        audience: 'urn:some:backend1',
+        scope: [
+          'scope1',
+          'scope2'
         ]
       }
     ];
@@ -455,13 +473,8 @@ describe('#clients', () => {
           getAll(filter) {
             return Promise.resolve(
               _.filter(existingGrants, function(grant) {
-                let match = true;
-                if (filter) {
-                  _(filter).keys().forEach(function(key) {
-                    match = match && grant[key] === filter[key];
-                  });
-                }
-                return match;
+                /* Actual API ignores everything but audience */
+                return grant.audience === filter.audience;
               }));
           }
         },
