@@ -125,4 +125,105 @@ describe('#utils', function() {
     }).to.throw(/Error parsing JSON from metadata file: test/);
     done();
   });
+
+  it('should generate sha256 hex checksum with string', function(done) {
+    const string = 'Some string value';
+    const expectation = 'ec52355b4573bfac072b4fd2391e4b536edaabb09b55a4b71493b19fcf2461f1';
+
+    expect(utils.generateChecksum(string, expectation));
+    done();
+  });
+
+  it('should throw argument error for a checksum on a non-string', function(done) {
+    const nonstring = {};
+
+    expect(function() {
+      utils.generateChecksum(nonstring);
+    }).to.throw(/Must provide data as a string/);
+    done();
+  });
+
+  it('should reduce stringified JSON with array of parameter names', function(done) {
+    const object = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: 'value 3',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: 'value 3'
+      }
+    };
+
+    const expectation = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop4: 'value 4',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2'
+      }
+    };
+
+    const json = JSON.stringify(object, utils.propertyReducer([ 'prop3', 'prop5' ]));
+    const reducedObject = JSON.parse(json);
+
+    expect(reducedObject).to.deep.equal(expectation);
+    done();
+  });
+
+  it('should reduce stringified JSON with a single parameter name as a string', function(done) {
+    const object = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: 'value 3',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: 'value 3'
+      }
+    };
+
+    const expectation = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2'
+      }
+    };
+
+    const json = JSON.stringify(object, utils.propertyReducer('prop3'));
+    const reducedObject = JSON.parse(json);
+
+    expect(reducedObject).to.deep.equal(expectation);
+    done();
+  });
+
+  it('should not impact stringified JSON with unspecified properties', function(done) {
+    const object = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: 'value 3',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: 'value 3'
+      }
+    };
+
+    const json = JSON.stringify(object, utils.propertyReducer());
+    const reducedObject = JSON.parse(json);
+
+    expect(reducedObject).to.deep.equal(object);
+    done();
+  });
 });

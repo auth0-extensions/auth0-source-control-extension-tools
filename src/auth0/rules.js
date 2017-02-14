@@ -85,6 +85,10 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
     enabled: true
   };
 
+  if (typeof ruleData.scriptFile === 'string') {
+    payload.checksum = utils.generateChecksum(ruleData.scriptFile);
+  }
+
   progress.log('Processing rule ' + ruleName);
 
   // If a metadata file is provided, we'll apply these values to the rule.
@@ -106,13 +110,14 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
     applyMetadata();
 
     progress.rulesCreated += 1;
-    progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, null, 2));
+    progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, utils.propertyReducer('script'), 2));
 
     return client.rules.create(payload);
   }
 
   if (isExcluded && payload.script) {
     payload.script = null;
+    payload.checksum = null;
     progress.log('Ignoring script payload for manual rule: ' + ruleName);
   }
 
@@ -124,7 +129,7 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
 
   // Update the rule.
   progress.rulesUpdated += 1;
-  progress.log('Updating rule ' + ruleName + ' (' + existingRule.id + '):' + JSON.stringify(payload, null, 2));
+  progress.log('Updating rule ' + ruleName + ' (' + existingRule.id + '):' + JSON.stringify(payload, utils.propertyReducer('script'), 2));
   return client.rules.update({ id: existingRule.id }, payload);
 };
 

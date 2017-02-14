@@ -2,6 +2,7 @@ const _ = require('lodash');
 const Promise = require('bluebird');
 const ValidationError = require('auth0-extension-tools').ValidationError;
 
+const utils = require('../utils');
 const constants = require('../constants');
 
 /*
@@ -71,7 +72,7 @@ const updateDatabase = function(progress, client, connections, database) {
   });
 
   progress.connectionsUpdated += 1;
-  progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, null, 2));
+  progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, utils.propertyReducer('scriptFile'), 2));
   return client.connections.update({ id: connection.id }, { options: options });
 };
 
