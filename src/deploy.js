@@ -2,7 +2,7 @@ const logger = require('./logger');
 const auth0 = require('./auth0');
 const pushToSlack = require('./slack');
 const appendProgress = require('./storage');
-const utils = require('../utils');
+const utils = require('./utils');
 
 const trackProgress = function(progressData) {
   const logs = [];
@@ -54,7 +54,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
         rules: context.rules,
         pages: context.pages,
         databases: context.databases
-      }, utils.propertyReducer(['htmlFile', 'scriptFile']));
+      }, utils.checksumReplacer([ 'htmlFile', 'scriptFile' ]));
       progress.log('Assets: ' + assets, null, 2);
     })
     .then(function() {

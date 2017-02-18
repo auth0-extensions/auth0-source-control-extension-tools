@@ -72,7 +72,7 @@ const updateDatabase = function(progress, client, connections, database) {
   });
 
   progress.connectionsUpdated += 1;
-  progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, utils.propertyReducer('scriptFile'), 2));
+  progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, utils.checksumReplacer(Object.keys(options.customScripts)), 2));
   return client.connections.update({ id: connection.id }, { options: options });
 };
 

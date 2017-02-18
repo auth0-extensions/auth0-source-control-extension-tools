@@ -33,7 +33,7 @@ const unifyScripts = function(data, mappings) {
   return converted;
 };
 
-module.exports.generateChecksum = function(data) {
+const generateChecksum = function(data) {
   if (typeof data !== 'string') {
     throw new ArgumentError('Must provide data as a string.');
   }
@@ -52,15 +52,16 @@ module.exports.parseJsonFile = function(fileName, contents, mappings) {
   }
 };
 
-module.exports.propertyReducer = function(exclusions) {
+module.exports.checksumReplacer = function(exclusions) {
   exclusions = exclusions || [];
   if (typeof exclusions === 'string') {
     exclusions = [ exclusions ];
   }
 
   return function(key, value) {
-    if (exclusions.includes(key)) {
-      return undefined;
+    if (exclusions.includes(key) && typeof value === 'string') {
+      const checksum = generateChecksum(value);
+      return checksum;
     }
 
     return value;
