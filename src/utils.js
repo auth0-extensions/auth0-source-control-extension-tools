@@ -1,5 +1,7 @@
 const _ = require('lodash');
+const crypto = require('crypto');
 const ValidationError = require('auth0-extension-tools').ValidationError;
+const ArgumentError = require('auth0-extension-tools').ArgumentError;
 
 const keywordReplace = function(input, mappings) {
   if (mappings && Object.keys(mappings).length > 0) {
@@ -31,6 +33,15 @@ const unifyScripts = function(data, mappings) {
   return converted;
 };
 
+const generateChecksum = function(data) {
+  if (typeof data !== 'string') {
+    throw new ArgumentError('Must provide data as a string.');
+  }
+
+  const checksum = crypto.createHash('sha256').update(data).digest('hex');
+  return checksum;
+};
+
 module.exports.parseJsonFile = function(fileName, contents, mappings) {
   try {
     /* if mappings is defined, replace contents before parsing */
@@ -39,6 +50,22 @@ module.exports.parseJsonFile = function(fileName, contents, mappings) {
     throw new ValidationError('Error parsing JSON from metadata file: ' + fileName + ', because: ' +
      JSON.stringify(e) + ', contents: ' + contents);
   }
+};
+
+module.exports.checksumReplacer = function(exclusions) {
+  exclusions = exclusions || [];
+  if (typeof exclusions === 'string') {
+    exclusions = [ exclusions ];
+  }
+
+  return function(key, value) {
+    if (exclusions.includes(key) && typeof value === 'string') {
+      const checksum = generateChecksum(value);
+      return checksum;
+    }
+
+    return value;
+  };
 };
 
 module.exports.unifyDatabases = function(data, mappings) {

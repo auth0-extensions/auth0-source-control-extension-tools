@@ -125,4 +125,93 @@ describe('#utils', function() {
     }).to.throw(/Error parsing JSON from metadata file: test/);
     done();
   });
+
+  it('should reduce stringified JSON with array of parameter names', function(done) {
+    const object = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: 'value 3',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: 'value 3'
+      }
+    };
+
+    const expectation = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: '5e2d78eb5107622b5441f53ac317fe431cebbfc2a04036c4ed820e11d54d6d1c',
+      prop4: 'value 4',
+      prop5: '3db104a9dc47163e43226d0b25c4cabf082d1813a80d4d217b75a9c2b1e49ae8',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: '5e2d78eb5107622b5441f53ac317fe431cebbfc2a04036c4ed820e11d54d6d1c'
+      }
+    };
+
+    const json = JSON.stringify(object, utils.checksumReplacer([ 'prop3', 'prop5' ]));
+    const reducedObject = JSON.parse(json);
+
+    expect(reducedObject).to.deep.equal(expectation);
+    done();
+  });
+
+  it('should reduce stringified JSON with a single parameter name as a string', function(done) {
+    const object = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: 'value 3',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: 'value 3'
+      }
+    };
+
+    const expectation = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: '5e2d78eb5107622b5441f53ac317fe431cebbfc2a04036c4ed820e11d54d6d1c',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: '5e2d78eb5107622b5441f53ac317fe431cebbfc2a04036c4ed820e11d54d6d1c'
+      }
+    };
+
+    const json = JSON.stringify(object, utils.checksumReplacer('prop3'));
+    const reducedObject = JSON.parse(json);
+
+    expect(reducedObject).to.deep.equal(expectation);
+    done();
+  });
+
+  it('should not impact stringified JSON with unspecified properties', function(done) {
+    const object = {
+      prop1: 'value 1',
+      prop2: 'value 2',
+      prop3: 'value 3',
+      prop4: 'value 4',
+      prop5: 'value 5',
+      prop6: {
+        prop1: 'value 1',
+        prop2: 'value 2',
+        prop3: 'value 3'
+      }
+    };
+
+    const json = JSON.stringify(object, utils.checksumReplacer());
+    const reducedObject = JSON.parse(json);
+
+    expect(reducedObject).to.deep.equal(object);
+    done();
+  });
 });

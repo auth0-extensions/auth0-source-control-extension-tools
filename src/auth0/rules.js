@@ -106,7 +106,7 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
     applyMetadata();
 
     progress.rulesCreated += 1;
-    progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, null, 2));
+    progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, utils.checksumReplacer('script'), 2));
 
     return client.rules.create(payload);
   }
@@ -124,7 +124,7 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
 
   // Update the rule.
   progress.rulesUpdated += 1;
-  progress.log('Updating rule ' + ruleName + ' (' + existingRule.id + '):' + JSON.stringify(payload, null, 2));
+  progress.log('Updating rule ' + ruleName + ' (' + existingRule.id + '):' + JSON.stringify(payload, utils.checksumReplacer('script'), 2));
   return client.rules.update({ id: existingRule.id }, payload);
 };
 
