@@ -59,7 +59,7 @@ module.exports.checksumReplacer = function(exclusions) {
   }
 
   return function(key, value) {
-    if (exclusions.includes(key) && typeof value === 'string') {
+    if (exclusions.indexOf(key) > -1 && typeof value === 'string') {
       const checksum = generateChecksum(value);
       return checksum;
     }
