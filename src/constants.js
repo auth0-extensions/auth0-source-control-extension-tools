@@ -35,6 +35,7 @@ constants.DATABASE_SCRIPTS = [
   constants.DATABASE_SCRIPTS_CHANGE_EMAIL
 ];
 constants.DATABASE_SCRIPTS_NO_IMPORT = [
+  constants.DATABASE_SCRIPTS_GET_USER,
   'create',
   'verify',
   'login',
