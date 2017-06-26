@@ -6,6 +6,11 @@ const ArgumentError = require('auth0-extension-tools').ArgumentError;
 const keywordReplace = function(input, mappings) {
   if (mappings && Object.keys(mappings).length > 0) {
     Object.keys(mappings).forEach(function(key) {
+      const re = new RegExp('##' + key + '##', 'g');
+      input = input.replace(re, mappings[key]);
+    });
+
+    Object.keys(mappings).forEach(function(key) {
       const re = new RegExp('@@' + key + '@@', 'g');
       input = input.replace(re, JSON.stringify(mappings[key]));
     });
@@ -17,7 +22,9 @@ const unifyScripts = function(data, mappings) {
   const converted = {};
   _.forEach(data, function(item) {
     _.keys(item)
-      .filter(function(key) { return key.endsWith('File'); })
+      .filter(function(key) {
+        return key.endsWith('File');
+      })
       .forEach(function(key) {
         /* foreach attribute that ends in file, do a keyword replacement, or stringify it */
         if (typeof item[key] === 'object') {
@@ -43,12 +50,13 @@ const generateChecksum = function(data) {
 };
 
 module.exports.parseJsonFile = function(fileName, contents, mappings) {
+  let json = contents;
   try {
     /* if mappings is defined, replace contents before parsing */
-    return JSON.parse(keywordReplace(contents, mappings));
+    json = keywordReplace(contents, mappings);
+    return JSON.parse(json);
   } catch (e) {
-    throw new ValidationError('Error parsing JSON from metadata file: ' + fileName + ', because: ' +
-     JSON.stringify(e) + ', contents: ' + contents);
+    throw new ValidationError(`Error parsing JSON from metadata file: ${fileName}, because: ${e.message}, contents: ${contents}, post-replace: ${json}`);
   }
 };
 

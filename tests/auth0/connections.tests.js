@@ -170,21 +170,6 @@ describe('#connections', () => {
         });
     });
 
-    it('should return error if trying to update forbidden script, get_user', (done) => {
-      connections.updateDatabases(progress, auth0, [ {
-        name: 'My-Other-Custom-DB',
-        scripts: {
-          get_user: {
-            scriptFile: ''
-          }
-        }
-      } ])
-        .catch((err) => {
-          expect(err.message).toEqual('The get_user script is not allowed for My-Other-Custom-DB.');
-          done();
-        });
-    });
-
     it('should return error if trying to update forbidden script, change_email and no get_user', (done) => {
       connections.updateDatabases(progress, auth0, [ {
         name: 'My-Other-Custom-DB',
