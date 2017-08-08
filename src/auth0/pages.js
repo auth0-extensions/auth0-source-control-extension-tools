@@ -4,7 +4,7 @@ const Promise = require('bluebird');
 const utils = require('../utils');
 const constants = require('../constants');
 
-const pages = module.exports = { };
+const pages = module.exports = { }; // eslint-disable-line no-multi-assign
 
 /*
  * Get global client.
