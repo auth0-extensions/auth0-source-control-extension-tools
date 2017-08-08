@@ -30,13 +30,13 @@
     "supertest": "^2.0.0"
   },
   "dependencies": {
-    "auth0": "^2.6.0",
+    "auth0": "^2.7.0",
     "auth0-extension-tools": "^0.14.0",
     "auth0-oauth2-express": "^1.1.8",
     "bluebird": "^3.4.6",
     "lodash": "^4.15.0",
     "rimraf": "^2.5.4",
-    "superagent": "^2.3.0",
+    "superagent": "^3.5.2",
     "winston": "^2.2.0"
   },
   "nyc": {
