@@ -117,6 +117,44 @@ describe('#utils', function() {
     done();
   });
 
+  it('should parse json with keyword replacement mappings, new method', function(done) {
+    const mappings = {
+      string: 'some string',
+      array: [
+        'some value',
+        'some other value'
+      ],
+      object: {
+        key1: 'value1',
+        key2: 'value2'
+      },
+      int: 5
+    };
+
+    const contents = '{ "a": 1, "string_key": @@string@@, "array_key": @@array@@, "object_key": @@object@@,' +
+      ' "int_key": @@int@@, "simple_string_key": "Some ##string##", "simple_array_key": "Some' +
+      ' ##array##", "simple_object_key": "Some ##object##", "simple_int_key": ##int## }';
+    const expectations = {
+      a: 1,
+      string_key: 'some string',
+      array_key: [
+        'some value',
+        'some other value'
+      ],
+      object_key: {
+        key1: 'value1',
+        key2: 'value2'
+      },
+      int_key: 5,
+      simple_string_key: 'Some some string',
+      simple_array_key: 'Some some value,some other value',
+      simple_object_key: 'Some [object Object]',
+      simple_int_key: 5
+    };
+    expect(utils.parseJsonFile('test2.5', contents, mappings)).to.deep.equal(expectations);
+    done();
+  });
+
   it('should throw error if cannot parse json', function(done) {
     const string = 'json?';
 
