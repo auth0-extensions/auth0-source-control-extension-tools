@@ -1,4 +1,4 @@
-const constants = module.exports = { };
+const constants = module.exports = { }; // eslint-disable-line no-multi-assign
 constants.RULES_DIRECTORY = 'rules';
 constants.RULES_STAGES = [
   'login_success'
