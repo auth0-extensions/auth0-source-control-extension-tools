@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 const expect = require('expect');
 const Promise = require('bluebird');
 
@@ -28,6 +30,15 @@ describe('#rules', () => {
       metadataFile: '{ "order": 30, "enabled": false }'
     }
   };
+
+  const filesWithExtraCreate = _.assign({}, files, {
+    'new-lame-rule': {
+      script: true,
+      scriptFile: 'function newLameRule() { }',
+      metadata: true,
+      metadataFile: '{ "order": 40, "enabled": true }'
+    }
+  });
 
   const filesBroken = {
     'broken-file': {
@@ -186,6 +197,14 @@ describe('#rules', () => {
       rules.updateRules(progress, auth0, filesBroken, [ 'foo' ])
         .catch((err) => {
           expect(err.message).toEqual('ERROR');
+          done();
+        });
+    });
+
+    it('should not add rule if the rule is excluded', (done) => {
+      rules.updateRules(progress, auth0, filesWithExtraCreate, [ 'new-lame-rule' ])
+        .then(() => {
+          expect(progress.rulesCreated).toEqual(0);
           done();
         });
     });
