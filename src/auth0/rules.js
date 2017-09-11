@@ -100,6 +100,11 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
 
   const existingRule = _.find(existingRules, { name: ruleName });
   if (!existingRule) {
+    if (isExcluded) {
+      progress.log('Ignoring creation request for manual rule: ' + ruleName + ': ' + JSON.stringify(payload, utils.checksumReplacer('script'), 2));
+      return Promise.resolve(true);
+    }
+
     payload.stage = 'login_success';
     payload.enabled = true;
 
