@@ -9,3 +9,10 @@ env:
 branches:
   only:
   - master
+deploy:
+  provider: npm
+  email: sgmeyer@gmail.com
+  api_key: $NPM_TOKEN
+  on:
+    branch: master
+    tags: true
