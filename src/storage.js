@@ -6,6 +6,15 @@ const _ = require('lodash');
 module.exports = function(storage, progress) {
   return storage.read()
     .then(function(data) {
+      progress.rules = _.map(progress.rules || [], function(rule) {
+        // trimming big scripts
+        if (rule.script.length > 500) {
+          rule.script = rule.script.substr(0, 500) + '...';
+        }
+
+        return rule;
+      });
+
       data.deployments = data.deployments || [];
       data.deployments.push(progress);
       if (data.deployments.length > 10) {
