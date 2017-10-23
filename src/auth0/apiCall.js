@@ -6,8 +6,8 @@ const idle = function(timeout) {
   });
 };
 
-module.exports = function(context, promise, args, retry = 2) {
-  var retriesLeft = retry;
+module.exports = function(context, promise, args, retry) {
+  var retriesLeft = retry || 2;
 
   const tryRequest = function() {
     return promise.apply(context, args)
