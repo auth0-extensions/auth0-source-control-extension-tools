@@ -3,6 +3,7 @@ const Promise = require('bluebird');
 const ValidationError = require('auth0-extension-tools').ValidationError;
 
 const utils = require('../utils');
+const apiCall = require('./apiCall');
 
 /**
  * Process the metadata
@@ -60,7 +61,7 @@ const updateExistingUnit = function(type, progress, client, unitName, unitConfig
     progress.log('Updating ' + type + ' ' + unitName + ': ' + JSON.stringify(changedConfig));
     const params = {};
     params[progress.configurables[type].idName] = existingUnit[progress.configurables[type].idName];
-    return client[type].update(params, changedConfig)
+    return apiCall(client, client[type].update, [ params, changedConfig ])
       .then(function(unit) {
         return processMetaData(progress, client, metaDataFunction, unit, unitConfig)
           .then(function(changed) {

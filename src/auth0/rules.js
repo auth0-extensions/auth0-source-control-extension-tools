@@ -4,6 +4,7 @@ const ValidationError = require('auth0-extension-tools').ValidationError;
 
 const utils = require('../utils');
 const constants = require('../constants');
+const apiCall = require('./apiCall');
 
 const mapToName = function(rule) {
   return rule.name;
@@ -18,7 +19,7 @@ const getRules = function(progress, client) {
   }
 
   return Promise.all(constants.RULES_STAGES.map(function(stage) {
-    return client.rules.getAll({ stage: stage });
+    return apiCall(client, client.rules.getAll, [ { stage: stage } ]);
   }))
     .then(function(allRules) {
       progress.rules = _.chain(allRules)
@@ -46,7 +47,7 @@ const deleteRule = function(progress, client, rules, existingRule, excluded) {
 
   progress.rulesDeleted += 1;
   progress.log('Deleting rule ' + existingRule.name + ' (' + existingRule.id + ')');
-  return client.rules.delete({ id: existingRule.id });
+  return apiCall(client, client.rules.delete, [ { id: existingRule.id } ]);
 };
 
 /*
@@ -113,7 +114,7 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
     progress.rulesCreated += 1;
     progress.log('Creating rule ' + ruleName + ': ' + JSON.stringify(payload, utils.checksumReplacer('script'), 2));
 
-    return client.rules.create(payload);
+    return apiCall(client, client.rules.create, [ payload ]);
   }
 
   if (isExcluded && payload.script) {
@@ -130,7 +131,7 @@ const updateRule = function(progress, client, existingRules, ruleName, ruleData,
   // Update the rule.
   progress.rulesUpdated += 1;
   progress.log('Updating rule ' + ruleName + ' (' + existingRule.id + '):' + JSON.stringify(payload, utils.checksumReplacer('script'), 2));
-  return client.rules.update({ id: existingRule.id }, payload);
+  return apiCall(client, client.rules.update, [ { id: existingRule.id }, payload ]);
 };
 
 /*
