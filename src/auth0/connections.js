@@ -4,6 +4,7 @@ const ValidationError = require('auth0-extension-tools').ValidationError;
 
 const utils = require('../utils');
 const constants = require('../constants');
+const apiCall = require('./apiCall');
 
 /*
  * Get database connections.
@@ -17,7 +18,7 @@ const getDatabaseConnections = function(progress, client, databases) {
     return database.name;
   });
 
-  return client.connections.getAll({ strategy: 'auth0' })
+  return apiCall(client, client.connections.getAll, [ { strategy: 'auth0' } ])
     .then(function(connections) {
       progress.connections = connections.filter(function(connection) {
         return databaseNames.indexOf(connection.name) > -1;
@@ -73,7 +74,7 @@ const updateDatabase = function(progress, client, connections, database) {
 
   progress.connectionsUpdated += 1;
   progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, utils.checksumReplacer(Object.keys(options.customScripts)), 2));
-  return client.connections.update({ id: connection.id }, { options: options });
+  return apiCall(client, client.connections.update, [ { id: connection.id }, { options: options } ]);
 };
 
 /*

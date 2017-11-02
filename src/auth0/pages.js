@@ -3,6 +3,7 @@ const Promise = require('bluebird');
 
 const utils = require('../utils');
 const constants = require('../constants');
+const apiCall = require('./apiCall');
 
 const pages = module.exports = { }; // eslint-disable-line no-multi-assign
 
@@ -14,7 +15,7 @@ pages.getGlobalClientId = function(progress, auth0) {
     return Promise.resolve(progress.globalClientId);
   }
 
-  return Promise.all(auth0.clients.getAll())
+  return Promise.all(apiCall(auth0, auth0.clients.getAll))
     .then(function(apps) {
       const globalClient = _.find(apps, { global: true });
       progress.globalClientId = globalClient.client_id;
@@ -55,9 +56,7 @@ pages.updatePasswordResetPage = function(progress, client, files) {
   }
 
   progress.log('Updating change password page...');
-  return client.updateTenantSettings({
-    change_password: page
-  });
+  return apiCall(client, client.updateTenantSettings, [ { change_password: page } ]);
 };
 
 
@@ -79,9 +78,7 @@ pages.updateErrorPage = function(progress, client, files) {
   delete page.enabled;
 
   progress.log('Updating error page...');
-  return client.updateTenantSettings({
-    error_page: page
-  });
+  return apiCall(client, client.updateTenantSettings, [ { error_page: page } ]);
 };
 
 /*
@@ -94,9 +91,7 @@ pages.updateGuardianMultifactorPage = function(progress, client, files) {
   }
 
   progress.log('Updating guardian multifactor page...');
-  return client.updateTenantSettings({
-    guardian_mfa_page: page
-  });
+  return apiCall(client, client.updateTenantSettings, [ { guardian_mfa_page: page } ]);
 };
 
 /*
@@ -111,10 +106,15 @@ pages.updateLoginPage = function(progress, auth0, files) {
   progress.log('Updating login page...');
   return pages.getGlobalClientId(progress, auth0).then(
     function(clientId) {
-      return auth0.clients.update({ client_id: clientId }, {
-        custom_login_page: page.html,
-        custom_login_page_on: page.enabled
-      });
+      return apiCall(auth0, auth0.clients.update,
+        [
+          { client_id: clientId },
+          {
+            custom_login_page: page.html,
+            custom_login_page_on: page.enabled
+          }
+        ]
+      );
     }
   );
 };

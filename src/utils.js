@@ -50,13 +50,13 @@ const generateChecksum = function(data) {
 };
 
 module.exports.parseJsonFile = function(fileName, contents, mappings) {
-  let json = contents;
+  var json = contents;
   try {
     /* if mappings is defined, replace contents before parsing */
     json = keywordReplace(contents, mappings);
     return JSON.parse(json);
   } catch (e) {
-    throw new ValidationError(`Error parsing JSON from metadata file: ${fileName}, because: ${e.message}, contents: ${contents}, post-replace: ${json}`);
+    throw new ValidationError('Error parsing JSON from metadata file: ' + fileName + ', because: ' + e.message + ', contents: ' + contents + ', post-replace: ' + json);
   }
 };
 

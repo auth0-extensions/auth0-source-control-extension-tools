@@ -4,6 +4,7 @@ const ValidationError = require('auth0-extension-tools').ValidationError;
 
 const constants = require('../constants');
 const configurables = require('./configurables');
+const apiCall = require('./apiCall');
 
 /*
  * Get all non-global clients
@@ -14,7 +15,7 @@ const getClients = function(progress, client) {
   }
 
   /* Grab all non-global clients */
-  return Promise.all(client.clients.getAll({ global: false }))
+  return Promise.all(apiCall(client, client.clients.getAll, [ { global: false } ]))
     .then(function(allClients) {
       progress.clients = _.chain(allClients)
         .flattenDeep()
@@ -39,7 +40,7 @@ const processClientGrants = function(progress, client, existingClient, metaData)
     _.keys(metaData.grants).forEach(function(audience) {
       /* Foreach audience, set the client grants */
       const filter = { audience: audience };
-      grantPromises.push(client.clientGrants.getAll(filter)
+      grantPromises.push(apiCall(client, client.clientGrants.getAll, [ filter ])
         .then(function(clientGrantsForAudience) {
           /* First check if we have actually found something */
           var clientGrants = _.filter(clientGrantsForAudience, function(grant) {
@@ -55,7 +56,7 @@ const processClientGrants = function(progress, client, existingClient, metaData)
             if (JSON.stringify(clientGrants[0].scope) !== JSON.stringify(metaData.grants[audience])) {
               /* Scopes have changed, run an update */
               const updatePayload = { scope: metaData.grants[audience] };
-              return client.clientGrants.update({ id: clientGrants[0].id }, updatePayload)
+              return apiCall(client, client.clientGrants.update, [ { id: clientGrants[0].id }, updatePayload ])
                 .then(function() {
                   return true;
                 });
@@ -71,7 +72,7 @@ const processClientGrants = function(progress, client, existingClient, metaData)
             audience: audience,
             scope: metaData.grants[audience]
           };
-          return client.clientGrants.create(createPayload)
+          return apiCall(client, client.clientGrants.create, [ createPayload ])
             .then(function() {
               return true;
             });

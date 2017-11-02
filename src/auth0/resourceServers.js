@@ -4,6 +4,7 @@ const ValidationError = require('auth0-extension-tools').ValidationError;
 
 const constants = require('../constants');
 const configurables = require('./configurables');
+const apiCall = require('./apiCall');
 
 /*
  * Get all non-global resourceServers
@@ -14,7 +15,7 @@ const getResourceServers = function(progress, client) {
   }
 
   /* Grab all non-global resourceServers */
-  return Promise.all(client.resourceServers.getAll({ is_system: false }))
+  return Promise.all(apiCall(client, client.resourceServers.getAll, [ { is_system: false } ]))
     .then(function(allResourceServers) {
       progress.resourceServers = _.chain(allResourceServers)
         .flattenDeep()
