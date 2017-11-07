@@ -110,7 +110,6 @@ describe('#configurables', () => {
     updatePayloads = [];
     progress = {
       log: () => {
-
       },
       date: new Date(),
       connectionsUpdated: 0,

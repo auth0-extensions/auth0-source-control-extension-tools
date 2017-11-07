@@ -10,9 +10,7 @@ describe('#write logs to storage', () => {
 
     store(storage, '').then(() => done());
   });
-});
 
-describe('#write logs to storage', () => {
   it('should update logs with 11 or more records', (done) => {
     const storage = {
       read: () => Promise.resolve({ deployments: [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ] }),
