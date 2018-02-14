@@ -1,6 +1,7 @@
 const logger = require('./logger');
 const auth0 = require('./auth0');
 const pushToSlack = require('./slack');
+const sendWebhook = require('./webhook');
 const appendProgress = require('./storage');
 const utils = require('./utils');
 
@@ -52,6 +53,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
         clients: context.clients,
         resourceServers: context.resourceServers,
         rules: context.rules,
+        ruleConfigs: context.ruleConfigs,
         pages: context.pages,
         databases: context.databases
       }, utils.checksumReplacer([ 'htmlFile', 'scriptFile' ]));
@@ -88,6 +90,9 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.updateRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
+      return auth0.updateRuleConfigs(progress, client, context.rule_configs, config('AUTH0_DOMAIN'));
+    })
+    .then(function() {
       return auth0.updateResourceServers(progress, client);
     })
     .then(function() {
@@ -98,6 +103,9 @@ module.exports = function(progressData, context, client, storage, config, slackT
     })
     .then(function() {
       return pushToSlack(progress, slackTemplate, config('WT_URL') + '/login', config('SLACK_INCOMING_WEBHOOK_URL'));
+    })
+    .then(function() {
+      return sendWebhook(progress, config('CUSTOM_WEBHOOK_URL'));
     })
     .then(function() {
       return appendProgress(storage, progress);
