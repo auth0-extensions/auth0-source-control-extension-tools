@@ -6,10 +6,12 @@ const _ = require('lodash');
 module.exports = function(storage, progress) {
   // Trimming the history to a maximum of 10 records and 490KB (keeping a 10KB buffer).
   function trimLogs(data) {
-    var dataSize = JSON.stringify(data).length;
-    while (dataSize >= 490000 || data.deployments.length > 10) {
-      data.deployments = _.drop(data.deployments, data.deployments.length - 10);
-      dataSize = JSON.stringify(data).length;
+    const maximumBytes = 490000;
+    var dataSize = Buffer.from(JSON.stringify(data)).length;
+
+    while (dataSize >= maximumBytes || data.deployments.length > 10) {
+      data.deployments = _.drop(data.deployments, 1);
+      dataSize = Buffer.from(JSON.stringify(data)).byteLength;
     }
 
     return data;
