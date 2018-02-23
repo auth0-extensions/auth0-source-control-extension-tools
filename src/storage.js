@@ -32,7 +32,22 @@ module.exports = function(storage, progress) {
 
       // Adding new historical record for latest deployment.
       data.deployments = data.deployments || [];
-      progress = exceedsMaximumBytes(progress) ? { message: 'Logs exceeded maximum storage' } : progress;
+      if (exceedsMaximumBytes(progress)) {
+        progress = {
+          id: progress.id,
+          user: progress.user,
+          branch: progress.branch,
+          repository: progress.repository,
+          date: progress.date,
+          connectionsUpdated: progress.connectionsUpdated,
+          rulesCreated: progress.rulesCreated,
+          rulesUpdated: progress.rulesUpdated,
+          rulesDeleted: progress.rulesDeleted,
+          error: progress.error,
+          message: 'This log entry has exceeded the maximum allowed size and data has been redacted to reduce the total size.'
+        };
+      }
+
       data.deployments.push(progress);
 
       data = trimLogs(data);

@@ -58,21 +58,42 @@ describe('#write logs to storage', () => {
   });
 
   it('should redact logs if data is greater than 490 KB', (done) => {
-    // Generate a string that is 490,002 bytes.  When generating a randomBytes and converting to hex the
+    // Generate a string that is 490,000 bytes.  When generating a randomBytes and converting to hex the
     // bytes become doubled after string conversion.
-    var newDeploymentLog = crypto.randomBytes(245001).toString('hex');
+    var massiveBlob = crypto.randomBytes(245000).toString('hex');
+
+    var progress = {
+      id: 1,
+      user: 2,
+      branch: 3,
+      repository: 4,
+      date: 5,
+      connectionsUpdated: 6,
+      rulesCreated: 7,
+      rulesUpdated: 8,
+      rulesDeleted: 9,
+      error: 10,
+      junk: massiveBlob,
+      message: 'This log entry has exceeded the maximum allowed size and data has been redacted to reduce the total size.'
+    };
 
     const storage = {
       read: () => Promise.resolve({
         deployments: [ 1, 2, 3, 4 ]
       }),
       write: (newData) => {
+        var currentLog = newData.deployments[newData.deployments.length - 1];
         expect(newData.deployments.length).toBe(5);
-        expect(JSON.stringify(newData.deployments[newData.deployments.length - 1])).toBe('{"message":"Logs exceeded maximum storage"}');
+        expect(currentLog.id).toBe(1);
+        expect(currentLog.user).toBe(2);
+        expect(currentLog.date).toBe(5);
+        expect(currentLog.message).toBe(progress.message);
+        expect(currentLog.junk).toBe(undefined);
+
         return Promise.resolve({});
       }
     };
 
-    store(storage, newDeploymentLog).then(() => done());
+    store(storage, progress).then(() => done());
   });
 });
