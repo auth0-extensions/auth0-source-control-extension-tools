@@ -31,7 +31,8 @@ describe('#write logs to storage', () => {
   it('should remove oldest history when total history size exceeds 490KB, but not exceed length', (done) => {
     var deployments = [];
 
-    // Generate 9 random strings of 54,444 bytes.
+    // Generate 9 random strings of 54,444 bytes.  Converting these bytes to text will be double the bytes
+    // after string conversion.
     deployments.push(crypto.randomBytes(27222).toString('hex'));
     deployments.push(crypto.randomBytes(27222).toString('hex'));
     deployments.push(crypto.randomBytes(27222).toString('hex'));
@@ -54,5 +55,24 @@ describe('#write logs to storage', () => {
     };
 
     store(storage, 'test').then(() => done());
+  });
+
+  it('should redact logs if data is greater than 490 KB', (done) => {
+    // Generate a string that is 490,002 bytes.  When generating a randomBytes and converting to hex the
+    // bytes become doubled after string conversion.
+    var newDeploymentLog = crypto.randomBytes(245001).toString('hex');
+
+    const storage = {
+      read: () => Promise.resolve({
+        deployments: [ 1, 2, 3, 4 ]
+      }),
+      write: (newData) => {
+        expect(newData.deployments.length).toBe(5);
+        expect(JSON.stringify(newData.deployments[newData.deployments.length - 1])).toBe('{"message":"Logs exceeded maximum storage"}');
+        return Promise.resolve({});
+      }
+    };
+
+    store(storage, newDeploymentLog).then(() => done());
   });
 });

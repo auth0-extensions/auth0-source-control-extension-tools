@@ -4,14 +4,16 @@ const _ = require('lodash');
  * Append progress to deployments.
  */
 module.exports = function(storage, progress) {
-  // Trimming the history to a maximum of 10 records and 490KB (keeping a 10KB buffer).
-  function trimLogs(data) {
+  function exceedsMaximumBytes(data) {
     const maximumBytes = 490000;
     var dataSize = Buffer.from(JSON.stringify(data)).length;
+    return dataSize >= maximumBytes;
+  }
 
-    while (dataSize >= maximumBytes || data.deployments.length > 10) {
+  // Trimming the history to a maximum of 10 records and 490KB (keeping a 10KB buffer).
+  function trimLogs(data) {
+    while (exceedsMaximumBytes(data) || data.deployments.length > 10) {
       data.deployments = _.drop(data.deployments, 1);
-      dataSize = Buffer.from(JSON.stringify(data)).byteLength;
     }
 
     return data;
@@ -30,6 +32,7 @@ module.exports = function(storage, progress) {
 
       // Adding new historical record for latest deployment.
       data.deployments = data.deployments || [];
+      progress = exceedsMaximumBytes(progress) ? { message: 'Logs exceeded maximum storage' } : progress;
       data.deployments.push(progress);
 
       data = trimLogs(data);
