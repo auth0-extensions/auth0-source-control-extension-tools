@@ -74,7 +74,11 @@ describe('#write logs to storage', () => {
       rulesDeleted: 9,
       error: 10,
       junk: massiveBlob,
-      message: 'This log entry has exceeded the maximum allowed size and data has been redacted to reduce the total size.'
+      sha: 'sha',
+      logs: [ {
+        date: '2018-02-23T19:45:01.965Z',
+        message: 'This log entry has exceeded the maximum allowed size and data has been redacted to reduce the total size.'
+      } ]
     };
 
     const storage = {
@@ -84,9 +88,10 @@ describe('#write logs to storage', () => {
       write: (newData) => {
         var currentLog = newData.deployments[newData.deployments.length - 1];
         expect(newData.deployments.length).toBe(5);
-        expect(currentLog.id).toBe(1);
-        expect(currentLog.user).toBe(2);
-        expect(currentLog.date).toBe(5);
+        expect(currentLog.id).toBe(progress.id);
+        expect(currentLog.user).toBe(progress.user);
+        expect(currentLog.date).toBe(progress.date);
+        expect(currentLog.sha).toBe(progress.sha);
         expect(currentLog.message).toBe(progress.message);
         expect(currentLog.junk).toBe(undefined);
 

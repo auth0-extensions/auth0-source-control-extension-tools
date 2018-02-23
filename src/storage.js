@@ -44,7 +44,11 @@ module.exports = function(storage, progress) {
           rulesUpdated: progress.rulesUpdated,
           rulesDeleted: progress.rulesDeleted,
           error: progress.error,
-          message: 'This log entry has exceeded the maximum allowed size and data has been redacted to reduce the total size.'
+          sha: progress.sha,
+          logs: [ {
+            date: '2018-02-23T19:45:01.965Z',
+            message: 'This log entry has exceeded the maximum allowed size and data has been redacted to reduce the total size.'
+          } ]
         };
       }
 
