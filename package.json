@@ -1,6 +1,6 @@
 {
   "name": "auth0-source-control-extension-tools",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "Supporting tools for the Source Control extensions",
   "main": "src/index.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "supertest": "^2.0.0"
   },
   "dependencies": {
-    "auth0": "^2.7.0",
+    "auth0": "^2.9.0",
     "auth0-extension-tools": "^0.14.0",
     "auth0-oauth2-express": "^1.1.8",
     "bluebird": "^3.4.6",
