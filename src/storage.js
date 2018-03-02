@@ -6,7 +6,15 @@ const _ = require('lodash');
 module.exports = function(storage, progress) {
   function exceedsMaximumBytes(data) {
     const maximumBytes = 490000;
-    var dataSize = Buffer.from(JSON.stringify(data)).length;
+
+    var innerData = JSON.stringify(data);
+    var outterData = {
+      etag: 100000000,
+      data: innerData
+    };
+
+    var dataSize = Buffer.from(JSON.stringify(outterData)).length;
+
     return dataSize >= maximumBytes;
   }
 
