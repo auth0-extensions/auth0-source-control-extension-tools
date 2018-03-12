@@ -90,7 +90,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.updateRules(progress, client, context.rules, context.excluded_rules);
     })
     .then(function() {
-      return auth0.updateRuleConfigs(progress, client, context.rule_configs, config('AUTH0_DOMAIN'));
+      return auth0.updateRuleConfigs(progress, context.ruleConfigs, config);
     })
     .then(function() {
       return auth0.updateResourceServers(progress, client);

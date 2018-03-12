@@ -5,6 +5,8 @@ constants.RULES_STAGES = [
 ];
 constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];
 
+constants.RULES_CONFIGS_DIRECTORY = 'rules-configs';
+
 constants.PAGES_DIRECTORY = 'pages';
 constants.PAGE_LOGIN = 'login';
 constants.PAGE_PASSWORD_RESET = 'password_reset';
