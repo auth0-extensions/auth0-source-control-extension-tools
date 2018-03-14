@@ -4,11 +4,13 @@ const request = require('superagent');
 const managementApi = require('auth0-extension-tools').managementApi;
 
 const constants = require('../constants');
+const utils = require('../utils');
 const apiCall = require('./apiCall');
 
 const updateRuleConfig = function(progress, token, domain, ruleConfig) {
-  const data = { value: ruleConfig.configFile };
   const key = ruleConfig.name;
+  const configFile = utils.parseJsonFile(key, ruleConfig.configFile);
+  const data = { value: configFile.value };
   const url = 'https://' + domain + '/api/v2/rules-configs/' + key;
 
   return new Promise(function(resolve, reject) {
