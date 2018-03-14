@@ -2,6 +2,7 @@ const rules = require('./rules');
 const pages = require('./pages');
 const connections = require('./connections');
 const clients = require('./clients');
+const ruleConfigs = require('./ruleConfigs');
 const resourceServers = require('./resourceServers');
 
 module.exports = {
@@ -13,6 +14,9 @@ module.exports = {
   validateRules: rules.validateRules,
   deleteRules: rules.deleteRules,
   updateRules: rules.updateRules,
+
+  /* Rule Configs operations */
+  updateRuleConfigs: ruleConfigs.updateRuleConfigs,
 
   /* Client operations */
   validateClients: clients.validateClients,
