@@ -27,9 +27,8 @@ const updateRuleConfig = function(progress, token, domain, ruleConfig) {
         progress.log('Rule Config "' + key + '" updated.');
 
         return resolve(res && res.body);
-      })
+      });
   });
-
 };
 
 // Update rule configs
