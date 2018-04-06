@@ -5,6 +5,7 @@ const ValidationError = require('auth0-extension-tools').ValidationError;
 const constants = require('../constants');
 const configurables = require('./configurables');
 const apiCall = require('./apiCall');
+const multipartRequest = require('./multipartRequest');
 
 /*
  * Get all non-global clients
@@ -15,7 +16,7 @@ const getClients = function(progress, client) {
   }
 
   /* Grab all non-global clients */
-  return Promise.all(apiCall(client, client.clients.getAll, [ { global: false } ]))
+  return Promise.all(multipartRequest(client, 'clients', { global: false }))
     .then(function(allClients) {
       progress.clients = _.chain(allClients)
         .flattenDeep()
