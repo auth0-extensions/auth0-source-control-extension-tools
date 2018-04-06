@@ -5,6 +5,7 @@ const ValidationError = require('auth0-extension-tools').ValidationError;
 const utils = require('../utils');
 const constants = require('../constants');
 const apiCall = require('./apiCall');
+const multipartRequest = require('./multipartRequest');
 
 /*
  * Get database connections.
@@ -18,7 +19,7 @@ const getDatabaseConnections = function(progress, client, databases) {
     return database.name;
   });
 
-  return apiCall(client, client.connections.getAll, [ { strategy: 'auth0' } ])
+  return multipartRequest(client, 'connections', { strategy: 'auth0', fields: 'enabled_clients', 'include_fields': false })
     .then(function(connections) {
       progress.connections = connections.filter(function(connection) {
         return databaseNames.indexOf(connection.name) > -1;
