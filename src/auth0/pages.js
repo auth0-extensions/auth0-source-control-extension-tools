@@ -41,6 +41,7 @@ pages.getPage = function(files, pageName, mappings) {
   if (file.metadata) {
     const metadata = utils.parseJsonFile(pageName, file.metadataFile, mappings);
     page.enabled = metadata.enabled;
+    page.metadata = metadata;
   }
 
   return page;
@@ -55,6 +56,7 @@ pages.updatePasswordResetPage = function(progress, client, files) {
     return Promise.resolve(true);
   }
 
+  delete page.metadata;
   progress.log('Updating change password page...');
   return apiCall(client, client.updateTenantSettings, [ { change_password: page } ]);
 };
@@ -71,10 +73,12 @@ pages.updateErrorPage = function(progress, client, files) {
 
   if (!page.enabled) {
     page.html = '';
+    page.url = page.metadata.url || '';
   } else {
     page.url = '';
   }
 
+  delete page.metadata;
   delete page.enabled;
 
   progress.log('Updating error page...');
@@ -90,6 +94,8 @@ pages.updateGuardianMultifactorPage = function(progress, client, files) {
     return Promise.resolve(true);
   }
 
+  delete page.metadata;
+
   progress.log('Updating guardian multifactor page...');
   return apiCall(client, client.updateTenantSettings, [ { guardian_mfa_page: page } ]);
 };
@@ -102,6 +108,7 @@ pages.updateLoginPage = function(progress, auth0, files) {
   if (!page) {
     return Promise.resolve(true);
   }
+
 
   progress.log('Updating login page...');
   return pages.getGlobalClientId(progress, auth0).then(
