@@ -28,7 +28,7 @@ module.exports = function(client, entity, opts = {}, perPage = 100, concurrency 
         return null;
       });
 
-  const getPage = (page) =>
+  const getPage = page =>
     apiCall(client, getter, [ Object.assign({}, options, { page: page }) ])
       .then((data) => {
         data.forEach(item => result.push(item));
@@ -43,7 +43,7 @@ module.exports = function(client, entity, opts = {}, perPage = 100, concurrency 
         }
 
         const pages = [];
-        for (let i=1; i<=pageCount; i++) {
+        for (let i = 1; i <= pageCount; i++) {
           pages.push(i);
         }
 
