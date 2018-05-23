@@ -19,7 +19,7 @@ const getDatabaseConnections = function(progress, client, databases) {
     return database.name;
   });
 
-  return multipartRequest(client, 'connections', { strategy: 'auth0', fields: 'enabled_clients', 'include_fields': false })
+  return multipartRequest(client, 'connections', { strategy: 'auth0', fields: 'enabled_clients', include_fields: false })
     .then(function(connections) {
       progress.connections = connections.filter(function(connection) {
         return databaseNames.indexOf(connection.name) > -1;

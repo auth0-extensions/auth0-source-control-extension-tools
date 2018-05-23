@@ -32,6 +32,7 @@
     "new-cap": 0,
     "no-param-reassign": 0,
     "no-multiple-empty-lines": 2,
+    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-unused-vars": 2,
     "no-var": 0,
     "object-curly-spacing": [2, "always"],

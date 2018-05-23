@@ -34,6 +34,11 @@ describe('#pages', () => {
       htmlFile: '<html>this is error page</html>',
       metadata: true,
       metadataFile: '{ "enabled": false }'
+    },
+    error_page_url: {
+      htmlFile: '',
+      metadata: true,
+      metadataFile: '{ "enabled": false, "url": "https://mycompany.org/error" }'
     }
   };
 
@@ -98,7 +103,8 @@ describe('#pages', () => {
     it('should read status from metadata', () => {
       const page = pages.getPage(files, 'password_reset_with_metadata');
       expect(page).toExist();
-      expect(page.enabled).toNotExist();
+      expect(page.enabled).toEqual(false);
+      expect(page.metadata).toExist();
     });
 
     it('should handle metadata errors', () => {
@@ -128,6 +134,7 @@ describe('#pages', () => {
         .then(function() {
           expect(payload.change_password).toExist();
           expect(payload.change_password.enabled).toEqual(true);
+          expect(payload.change_password.metadata).toNotExist();
           expect(payload.change_password.html).toEqual('<html>this is pwd reset</html>');
           done();
         });
@@ -155,6 +162,7 @@ describe('#pages', () => {
       pages.updateErrorPage(progress, auth0, files)
         .then(function() {
           expect(payload.error_page).toExist();
+          expect(payload.error_page.metadata).toNotExist();
           expect(payload.error_page.html).toEqual('<html>this is error page</html>');
           done();
         });
@@ -172,7 +180,28 @@ describe('#pages', () => {
       pages.updateErrorPage(progress, auth0, { error_page: files.error_page_disabled })
         .then(function() {
           expect(payload.error_page).toExist();
+          expect(payload.error_page.metadata).toNotExist();
+          expect(payload.error_page.url).toEqual('');
           expect(payload.error_page.html).toEqual('');
+          done();
+        });
+    });
+
+    it('should remove html if disabled and set url if provided', (done) => {
+      let payload = null;
+      const auth0 = {
+        updateTenantSettings(data) {
+          payload = data;
+          return Promise.resolve(true);
+        }
+      };
+
+      pages.updateErrorPage(progress, auth0, { error_page: files.error_page_url })
+        .then(function() {
+          expect(payload.error_page).toExist();
+          expect(payload.error_page.metadata).toNotExist();
+          expect(payload.error_page.html).toEqual('');
+          expect(payload.error_page.url).toEqual('https://mycompany.org/error');
           done();
         });
     });
