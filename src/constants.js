@@ -58,4 +58,8 @@ constants.CLIENTS_DIRECTORY = 'clients';
 constants.CLIENTS_CLIENT_NAME = 'clients';
 constants.CLIENTS_CLIENT_ID_NAME = 'client_id';
 
+constants.CONNECTIONS_DIRECTORY = 'connections';
+constants.CONNECTIONS_CLIENT_NAME = 'connections';
+constants.CONNECTIONS_ID_NAME = 'id';
+
 constants.CONCURRENT_CALLS = 5;
