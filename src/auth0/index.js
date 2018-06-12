@@ -1,14 +1,15 @@
 const rules = require('./rules');
 const pages = require('./pages');
-const connections = require('./connections');
+const databaseConnections = require('./databaseConnections');
 const clients = require('./clients');
 const ruleConfigs = require('./ruleConfigs');
 const resourceServers = require('./resourceServers');
+const connections = require('./connections');
 
 module.exports = {
   /* Connection and database operations */
-  validateDatabases: connections.validateDatabases,
-  updateDatabases: connections.updateDatabases,
+  validateDatabases: databaseConnections.validateDatabases,
+  updateDatabases: databaseConnections.updateDatabases,
 
   /* Rule operations */
   validateRules: rules.validateRules,
@@ -31,5 +32,9 @@ module.exports = {
   updateErrorPage: pages.updateErrorPage,
   updatePasswordResetPage: pages.updatePasswordResetPage,
   updateLoginPage: pages.updateLoginPage,
-  updateGuardianMultifactorPage: pages.updateGuardianMultifactorPage
+  updateGuardianMultifactorPage: pages.updateGuardianMultifactorPage,
+
+  /* Connection operations */
+  validateConnections: connections.validateConnections,
+  updateConnections: connections.updateConnections
 };

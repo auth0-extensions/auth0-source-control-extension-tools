@@ -30,6 +30,11 @@ const trackProgress = function(progressData) {
         created: 0,
         updated: 0,
         deleted: 0
+      },
+      connections: {
+        created: 0,
+        updated: 0,
+        deleted: 0
       }
     },
     rulesCreated: 0,
@@ -55,7 +60,8 @@ module.exports = function(progressData, context, client, storage, config, slackT
         rules: context.rules,
         ruleConfigs: context.ruleConfigs,
         pages: context.pages,
-        databases: context.databases
+        databases: context.databases,
+        connections: context.connections
       }, utils.checksumReplacer([ 'htmlFile', 'scriptFile' ]));
       progress.log('Assets: ' + assets, null, 2);
     })
@@ -69,6 +75,9 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.updatePages(progress, client, context.pages);
     })
     .then(function() {
+      return auth0.validateConnections(progress, client, context.connections);
+    })
+    .then(function() {
       return auth0.validateDatabases(progress, client, context.databases);
     })
     .then(function() {
@@ -79,6 +88,9 @@ module.exports = function(progressData, context, client, storage, config, slackT
     })
     .then(function() {
       return auth0.validateClients(progress, client, context.clients, config('AUTH0_CLIENT_ID'));
+    })
+    .then(function() {
+      return auth0.updateConnections(progress, client);
     })
     .then(function() {
       return auth0.updateDatabases(progress, client, context.databases);

@@ -1,232 +1,285 @@
-const expect = require('expect');
+const _ = require('lodash');
+const expect = require('chai').expect;
 const Promise = require('bluebird');
-
 const connections = require('../../src/auth0/connections');
 
+const check = function(done, f) {
+  try {
+    f();
+    done();
+  } catch (e) {
+    done(e);
+  }
+};
+
 describe('#connections', () => {
-  let progress = null;
-  let updateFilters = [ ];
-  let updatePayloads = [ ];
+  let auth0;
+  let progress;
+  let updateFilters;
+  let updatePayloads;
+
+  const connectionsConfigs = {
+    'Username Password Database': {
+      configFile: '{ "name": "Username Password Database", "strategy": "auth0", "enabled_clients": [ "VcxDs0khG026SBgrUjGbFqgvrXezGmU1", "E3XwoN1Hhtw2lrtHierRnvSSCR14CsDi" ], "options": { "import_mode": false, "disable_signup": false, "requires_username": false, "brute_force_protection": true } }'
+    },
+    'New Username Password Database': {
+      configFile: '{ "name": "New Username Password Database", "strategy": "auth0", "enabled_clients": [], "options": { "requires_username": false, "brute_force_protection": true } }'
+    }
+  };
 
   const existingConnections = [
-    { id: 456, name: 'Username-Password' },
-    { id: 123, name: 'My-Other-Custom-DB' },
-    { id: 666, name: 'Bad-Connection' },
-    { id: 789, name: 'My-Custom-DB', options: { import_mode: true } }
+    {
+      id: 'con_4DUzr',
+      name: 'Username Password Database',
+      options: {
+        import_mode: false,
+        disable_signup: false,
+        requires_username: false,
+        brute_force_protection: true
+      },
+      strategy: 'auth0',
+      enabled_clients: [ 'VcxDs0khG026SBgrUjGbFqgvrXezGmU1', 'E3XwoN1Hhtw2lrtHierRnvSSCR14CsDi' ]
+    },
+    {
+      id: 'con_dkDKi',
+      name: 'Internal Username Password Database',
+      options: {
+        import_mode: false,
+        disable_signup: true,
+        requires_username: true,
+        brute_force_protection: true
+      },
+      strategy: 'auth0',
+      enabled_clients: [ 'VcxDs0khG026SBgrUjGbFqgvrXezGmU1', 'E3XwoN1Hhtw2lrtHierRnvSSCR14CsDi' ]
+    }
   ];
 
-  const auth0 = {
-    connections: {
-      update(filter, payload) {
-        if (filter.id === 666) {
-          return Promise.reject(new Error('ERROR'));
-        }
-
-        updateFilters.push(filter);
-        updatePayloads.push(payload);
-        return Promise.resolve();
-      },
-      getAll() {
-        return Promise.resolve(
-          existingConnections
-        );
-      }
-    }
-  };
-
-  const database = {
-    name: 'My-Other-Custom-DB',
-    scripts: {
-      login: {
-        scriptFile: 'function login() { }'
-      },
-      create: {
-        scriptFile: 'function create() { }'
-      },
-      delete: {
-        scriptFile: 'function delete() { }'
-      },
-      change_email: {
-        scriptFile: 'function change_email() { }'
-      },
-      get_user: {
-        scriptFile: 'function get_user() { }'
-      }
-    }
-  };
-
-  const brokenDatabase = {
-    name: 'Bad-Connection',
-    scripts: {
-      login: {
-        scriptFile: 'function login() { }'
-      }
-    }
-  };
-
   beforeEach(() => {
-    updateFilters = [ ];
-    updatePayloads = [ ];
+    auth0 = {
+      connections: {
+        create(payload) {
+          if (payload.name === 'broken-file') {
+            return Promise.reject(new Error('ERROR'));
+          }
+
+          updatePayloads.push(payload);
+          return Promise.resolve(_(payload).extend({
+            id: 'asdfgh'
+          }));
+        },
+        update(filter, payload) {
+          updateFilters.push(filter);
+          updatePayloads.push(payload);
+          /* Need a garbage object so we don't fail */
+          return Promise.resolve(_(payload).extend({
+            name: 'asdf',
+            id: 'asdf'
+          }));
+        },
+        getAll() {
+          return Promise.resolve(
+            existingConnections
+          );
+        }
+      }
+    };
+    updateFilters = [];
+    updatePayloads = [];
     progress = {
-      log: () => null
+      log: () => {
+      },
+      date: new Date(),
+      connectionsUpdated: 0,
+      configurables: {
+        connections: {
+          created: 0,
+          updated: 0,
+          deleted: 0
+        }
+      },
+      error: null
     };
   });
 
-  describe('#getDatabaseConnections', () => {
+  describe('#getConnections', () => {
     it('should return cached connections', (done) => {
       progress.connections = existingConnections;
 
-      connections.getDatabaseConnections(progress)
-        .then((c) => {
-          expect(c).toEqual(existingConnections);
-          done();
+      connections.getConnections(progress)
+        .then((r) => {
+          check(done, function() {
+            expect(r).to.deep.equal(existingConnections);
+          });
         });
     });
 
-    it('should call auth0 and get the databases', (done) => {
-      connections.getDatabaseConnections(progress, auth0, [ { name: 'My-Custom-DB' }, database ])
-        .then((conn) => {
-          expect(conn.length).toEqual(2);
-          expect(conn[0].name).toEqual('My-Other-Custom-DB');
-          expect(conn[1].name).toEqual('My-Custom-DB');
-          done();
+    it('should call auth0 and get the connections', (done) => {
+      progress.connections = undefined;
+      connections.getConnections(progress, auth0)
+        .then((records) => {
+          check(done, function() {
+            expect(records).to.deep.equal(existingConnections);
+          });
         });
     });
   });
 
-  describe('#updateDatabase', () => {
-    it('should throw if connection does not exist', (done) => {
-      connections.updateDatabase(progress, null, { }, database)
-        .catch((err) => {
-          expect(err).toExist();
-          expect(err.message).toEqual('Unable to find connection named: ' + database.name);
-          done();
-        });
-    });
+  describe('#updateConnections', () => {
+    it('should not run if the repository does not contain any connection', (done) => {
+      if ('adds' in progress.configurables.connections) delete progress.configurables.connections.adds;
+      if ('updates' in progress.configurables.connections) delete progress.configurables.connections.updates;
+      if ('created' in progress.configurables.connections) delete progress.configurables.connections.created;
+      if ('updated' in progress.configurables.connections) delete progress.configurables.connections.updated;
 
-    it('should update the connection correctly', (done) => {
-      connections.updateDatabase(progress, auth0, existingConnections, database)
+      connections.updateConnections(progress, auth0)
         .then(() => {
-          expect(updateFilters[0]).toExist();
-          expect(updateFilters[0].id).toEqual(123);
-          expect(updatePayloads[0]).toExist();
-          expect(updatePayloads[0].options).toExist();
-          expect(updatePayloads[0].options.customScripts).toExist();
-          expect(updatePayloads[0].options.customScripts.login).toEqual('function login() { }');
-          expect(updatePayloads[0].options.customScripts.create).toEqual('function create() { }');
-          expect(updatePayloads[0].options.customScripts.delete).toEqual('function delete() { }');
-          expect(updatePayloads[0].options.customScripts.get_user).toEqual('function get_user() { }');
-          expect(updatePayloads[0].options.customScripts.change_email).toEqual('function change_email() { }');
-          done();
+          check(done, function() {
+            // eslint-disable-next-line no-unused-expressions
+            expect(progress.configurables.connections.created).to.not.exist;
+            // eslint-disable-next-line no-unused-expressions
+            expect(progress.configurables.connections.updated).to.not.exist;
+          });
         });
     });
 
-    it('should return error if cannot update', (done) => {
-      connections.updateDatabase(progress, auth0, existingConnections, brokenDatabase)
-        .catch((err) => {
-          expect(err.message).toEqual('ERROR');
-          done();
+    it('should create new connections correctly', (done) => {
+      progress.configurables.connections.adds = connectionsConfigs;
+
+      connections.updateConnections(progress, auth0)
+        .then(() => {
+          check(done, function() {
+            expect(Object.keys(progress.configurables.connections.adds).length).to.equal(2);
+            expect(progress.configurables.connections.created).to.equal(2);
+            expect(updatePayloads.length).to.equal(2);
+            expect(updatePayloads[0].name).to.equal('Username Password Database');
+            expect(updatePayloads[0].strategy).to.equal('auth0');
+            expect(updatePayloads[0].enabled_clients[0]).to.equal('VcxDs0khG026SBgrUjGbFqgvrXezGmU1');
+            expect(updatePayloads[0].enabled_clients[1]).to.equal('E3XwoN1Hhtw2lrtHierRnvSSCR14CsDi');
+            expect(updatePayloads[0].options.import_mode).to.equal(false);
+            expect(updatePayloads[0].options.disable_signup).to.equal(false);
+            expect(updatePayloads[0].options.requires_username).to.equal(false);
+            expect(updatePayloads[0].options.brute_force_protection).to.equal(true);
+
+            expect(updatePayloads[1].name).to.equal('New Username Password Database');
+            expect(updatePayloads[1].strategy).to.equal('auth0');
+            expect(updatePayloads[1].enabled_clients).to.be.an.instanceof(Array);
+            expect(updatePayloads[1].enabled_clients.length).to.be.equal(0);
+            expect(updatePayloads[1].options.requires_username).to.equal(false);
+            expect(updatePayloads[1].options.brute_force_protection).to.equal(true);
+          });
+        })
+        .catch(function(err) {
+          done(err);
+        });
+    });
+
+    it('should update existing connections correctly', (done) => {
+      progress.configurables.connections.updates = {
+        'Username Password Database': {
+          existing: existingConnections[0],
+          config: {
+            configFile: '{ "name": "Username Password Database Update", "options": { "disable_signup": true }, "enabled_clients": [ "VcxDs0khG026SBgrUjGbFqgvrXezGmU1", "2lrtHierRnvE3XwoN1HhtwSSCR14CsDi" ] }'
+          }
+        },
+        'Internal Username Password Database': {
+          existing: existingConnections[1],
+          config: {
+            configFile: '{ "options": { "requires_username": false } }'
+          }
+        }
+      };
+      progress.configurables.connections.idName = 'id';
+
+      connections.updateConnections(progress, auth0)
+        .then(() => {
+          check(done, function() {
+            expect(Object.keys(progress.configurables.connections.updates).length).to.equal(2);
+            expect(progress.configurables.connections.updated).to.equal(2);
+
+            expect(updateFilters.length).to.equal(2);
+            expect(updateFilters[0]).to.deep.equal({ id: 'con_4DUzr' });
+            expect(updateFilters[1]).to.deep.equal({ id: 'con_dkDKi' });
+
+            expect(updatePayloads.length).to.equal(2);
+            expect(updatePayloads[0]).to.deep.equal({ options: { disable_signup: true }, enabled_clients: [ 'VcxDs0khG026SBgrUjGbFqgvrXezGmU1', '2lrtHierRnvE3XwoN1HhtwSSCR14CsDi' ] });
+            expect(updatePayloads[1]).to.deep.equal({ options: { requires_username: false } });
+          });
+        })
+        .catch(function(err) {
+          done(err);
         });
     });
   });
 
-  describe('#updateDatabases', () => {
-    it('should continue if no databases need to be updated', (done) => {
-      connections.updateDatabases(progress, null, [ ])
-        .then((result) => {
-          expect(result).toExist();
+  describe('#validateConnections', () => {
+    it('should not run if the repository does not contain any connections', (done) => {
+      connections.validateConnections(progress, auth0, {})
+        .then(() => {
           done();
         });
     });
 
-    it('should handle errors correctly', (done) => {
-      connections.updateDatabases(progress, auth0, [ {
-        name: 'My-Other-Custom-DB',
-        scripts: {
-          login: {
-            scriptFile: ''
-          }
+    it('check connections to add', (done) => {
+      const newConnections = {
+        'my-new-connection': {
+          configFile: '{ "name": "my-new-connection" }'
+        },
+        'my-new-connection2': {
+          configFile: '{ "name": "my-new-connection2" }'
         }
-      } ])
-        .catch((err) => {
-          expect(err).toExist();
-          expect(err.message).toEqual('The login script for My-Other-Custom-DB is empty.');
-          done();
+      };
+
+      connections.validateConnections(progress, auth0, newConnections)
+        .then(() => {
+          check(done, function() {
+            // should be in add bucket
+            expect(progress.configurables.connections.adds).to.deep.equal(newConnections);
+          });
         });
     });
 
-    it('should return error if trying to update forbidden script', (done) => {
-      connections.updateDatabases(progress, auth0, [ {
-        name: 'My-Custom-DB',
-        scripts: {
-          delete: {
-            scriptFile: ''
-          }
+    it('check connections to delete', (done) => {
+      const newConnections = {
+        'my-new-connection': {
+          configFile: '{ "name": "my-new-connection" }'
+        },
+        'my-new-connection2': {
+          configFile: '{ "name": "my-new-connection2" }'
         }
-      } ])
-        .catch((err) => {
-          expect(err.message).toEqual('The delete script is not allowed for My-Custom-DB.');
-          done();
+      };
+
+      connections.validateConnections(progress, auth0, newConnections)
+        .then(() => {
+          check(done, function() {
+            // should be in delete bucket
+            expect(progress.configurables.connections.deletes).to.deep.equal([ 'Username Password Database', 'Internal Username Password Database' ]);
+          });
         });
     });
 
-    it('should return error if trying to update forbidden script, change_email and no get_user', (done) => {
-      connections.updateDatabases(progress, auth0, [ {
-        name: 'My-Other-Custom-DB',
-        scripts: {
-          change_email: {
-            scriptFile: ''
-          }
+    it('check connections to update', (done) => {
+      const connectionsConfig = {
+        'Internal Username Password Database': {
+          configFile: '{ "name": "Internal Username Password Database" }'
+        },
+        'my-new-connection2': {
+          configFile: '{ "name": "my-new-connection2" }'
         }
-      } ])
-        .catch((err) => {
-          expect(err.message).toEqual('The change_email script requires the get_user script for My-Other-Custom-DB.');
-          done();
-        });
-    });
+      };
 
-    it('should update all databases', (done) => {
-      connections.updateDatabases(progress, auth0, [ database ])
-        .then((results) => {
-          expect(results.length).toEqual(1);
-          expect(updateFilters.length).toEqual(1);
-          expect(updatePayloads.length).toEqual(1);
-          done();
-        });
-    });
+      const updateConnections = {
+        'Internal Username Password Database': {
+          existing: existingConnections[1],
+          config: connectionsConfig['Internal Username Password Database']
+        }
+      };
 
-    it('should return error if cannot update one or more databases', (done) => {
-      connections.updateDatabases(progress, auth0, [ database, brokenDatabase ])
-        .catch((err) => {
-          expect(err.message).toEqual('ERROR');
-          done();
-        });
-    });
-  });
-
-  describe('#validateDatabases', () => {
-    it('should continue if no databases need to be updated', (done) => {
-      connections.validateDatabases(progress, null, [ ])
-        .then((result) => {
-          expect(result).toExist();
-          done();
-        });
-    });
-
-    it('should continue if all databases exist', (done) => {
-      connections.validateDatabases(progress, auth0, [ database ])
-        .then((result) => {
-          expect(result).toExist();
-          done();
-        });
-    });
-
-    it('should return an error if a database does not exist', (done) => {
-      connections.validateDatabases(progress, auth0, [ database, { name: 'foo' } ])
-        .catch((err) => {
-          expect(err).toExist();
-          expect(err.message).toEqual('The following databases do not exist in the Auth0 tenant: foo');
-          done();
+      connections.validateConnections(progress, auth0, connectionsConfig)
+        .then(() => {
+          check(done, function() {
+            // should be in delete bucket
+            expect(progress.configurables.connections.updates).to.deep.equal(updateConnections);
+          });
         });
     });
   });
