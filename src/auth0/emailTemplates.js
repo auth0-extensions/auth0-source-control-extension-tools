@@ -61,7 +61,7 @@ const updateEmailTemplateByName = function(progress, client, files, name) {
 const updateAllEmailTemplates = function(progress, client, files) {
   progress.log('Updating email templates...');
 
-  const promises = constants.EMAIL_TEMPLATES.map(name =>
+  const promises = constants.EMAIL_TEMPLATE_NAMES.map(name =>
     updateEmailTemplateByName(progress, client, files, name)
   );
 

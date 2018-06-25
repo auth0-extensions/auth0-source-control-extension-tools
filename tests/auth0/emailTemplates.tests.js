@@ -128,7 +128,7 @@ describe('#emailTemplates', () => {
   describe('#updateAllEmailTemplates', () => {
     let callCount = 0;
     const myFiles = {};
-    constants.EMAIL_TEMPLATES.forEach((name) => {
+    constants.EMAIL_TEMPLATE_NAMES.forEach((name) => {
       myFiles[name] = { htmlFile: '<html>', metadata: true, metadataFile: '{"enabled":true}' };
     });
     const auth0 = {
@@ -143,7 +143,7 @@ describe('#emailTemplates', () => {
       emailTemplates.updateAllEmailTemplates(progress, auth0, myFiles)
         .then(function(result) {
           expect(result).toExist();
-          expect(callCount).toEqual(constants.EMAIL_TEMPLATES.length);
+          expect(callCount).toEqual(constants.EMAIL_TEMPLATE_NAMES.length);
           done();
         });
     });

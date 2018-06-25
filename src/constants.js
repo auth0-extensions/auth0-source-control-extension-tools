@@ -1,4 +1,7 @@
 const constants = module.exports = { }; // eslint-disable-line no-multi-assign
+
+const _ = require('lodash');
+
 constants.RULES_DIRECTORY = 'rules';
 constants.RULES_STAGES = [
   'login_success'
@@ -69,7 +72,8 @@ constants.EMAIL_TEMPLATE_ENROLLMENT_EMAIL = 'enrollment_email';
 constants.EMAIL_TEMPLATE_CHANGE_PASSWORD = 'change_password';
 constants.EMAIL_TEMPLATE_PASSWORD_RESET = 'password_reset';
 constants.EMAIL_TEMPLATE_MFA_OOB_CODE = 'mfa_oob_code';
-constants.EMAIL_TEMPLATES = [
+
+constants.EMAIL_TEMPLATE_NAMES = [
   constants.EMAIL_TEMPLATE_VERIFY_EMAIL,
   constants.EMAIL_TEMPLATE_RESET_EMAIL,
   constants.EMAIL_TEMPLATE_WELCOME_EMAIL,
@@ -80,3 +84,7 @@ constants.EMAIL_TEMPLATES = [
   constants.EMAIL_TEMPLATE_PASSWORD_RESET,
   constants.EMAIL_TEMPLATE_MFA_OOB_CODE
 ];
+
+constants.EMAIL_TEMPLATE_FILENAMES = _.flatMap(constants.EMAIL_TEMPLATE_NAMES, name => [ name + '.html', name + '.json' ]);
+
+constants.EMAIL_TEMPLATES_DIRECTORY = 'email-templates';
