@@ -59,3 +59,24 @@ constants.CLIENTS_CLIENT_NAME = 'clients';
 constants.CLIENTS_CLIENT_ID_NAME = 'client_id';
 
 constants.CONCURRENT_CALLS = 5;
+
+constants.EMAIL_TEMPLATE_VERIFY_EMAIL = 'verify_email';
+constants.EMAIL_TEMPLATE_RESET_EMAIL = 'reset_email';
+constants.EMAIL_TEMPLATE_WELCOME_EMAIL = 'welcome_email';
+constants.EMAIL_TEMPLATE_BLOCKED_ACCOUNT = 'blocked_account';
+constants.EMAIL_TEMPLATE_STOLEN_CREDENTIALS = 'stolen_credentials';
+constants.EMAIL_TEMPLATE_ENROLLMENT_EMAIL = 'enrollment_email';
+constants.EMAIL_TEMPLATE_CHANGE_PASSWORD = 'change_password';
+constants.EMAIL_TEMPLATE_PASSWORD_RESET = 'password_reset';
+constants.EMAIL_TEMPLATE_MFA_OOB_CODE = 'mfa_oob_code';
+constants.EMAIL_TEMPLATES = [
+  constants.EMAIL_TEMPLATE_VERIFY_EMAIL,
+  constants.EMAIL_TEMPLATE_RESET_EMAIL,
+  constants.EMAIL_TEMPLATE_WELCOME_EMAIL,
+  constants.EMAIL_TEMPLATE_BLOCKED_ACCOUNT,
+  constants.EMAIL_TEMPLATE_STOLEN_CREDENTIALS,
+  constants.EMAIL_TEMPLATE_ENROLLMENT_EMAIL,
+  constants.EMAIL_TEMPLATE_CHANGE_PASSWORD,
+  constants.EMAIL_TEMPLATE_PASSWORD_RESET,
+  constants.EMAIL_TEMPLATE_MFA_OOB_CODE
+];
