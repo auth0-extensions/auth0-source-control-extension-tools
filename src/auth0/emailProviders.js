@@ -1,8 +1,7 @@
-// const _ = require('lodash');
 const Promise = require('bluebird');
 
 const utils = require('../utils');
-// const constants = require('../constants');
+const constants = require('../constants');
 const apiCall = require('./apiCall');
 
 /**
@@ -11,7 +10,7 @@ const apiCall = require('./apiCall');
  * a single email provider.
  */
 const getEmailProviderObject = function(files, mappings) {
-  const file = files.default;
+  const file = files[constants.EMAIL_PROVIDER_NAME];
   if (!file) {
     return null;
   }
