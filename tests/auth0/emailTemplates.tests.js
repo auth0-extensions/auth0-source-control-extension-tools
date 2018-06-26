@@ -102,6 +102,27 @@ describe('#emailTemplates', () => {
           done();
         });
     });
+
+    it('should create template if it doesn\'t exist', (done) => {
+      let payload = null;
+      const auth0 = {
+        emailTemplates: {
+          update() {
+            return Promise.reject({ statusCode: 404 });
+          },
+          create(data) {
+            payload = data;
+            return Promise.resolve(true);
+          }
+        }
+      };
+
+      emailTemplates.updateEmailTemplateByName(progress, auth0, files, 'verify_email')
+        .then(function() {
+          expect(payload.body).toEqual('this is verify_email');
+          done();
+        });
+    });
   });
 
   describe('#updateAllEmailTemplates', () => {

@@ -38,7 +38,15 @@ const updateEmailTemplateByName = function(progress, client, files, name) {
   }
 
   progress.log('Updating email template "' + name + '"...');
-  return apiCall(client, client.emailTemplates.update, [ { name: name }, tpl ]).then(() => true);
+  return apiCall(client, client.emailTemplates.update, [ { name: name }, tpl ])
+    .then(() => true)
+    .catch((result) => {
+      if (result.statusCode === 404) {
+        progress.log('Email template ' + name + ' doesn\'t exist, creating it...');
+        return apiCall(client, client.emailTemplates.create, [ tpl ]);
+      }
+      return Promise.reject(result);
+    });
 };
 
 const updateAllEmailTemplates = function(progress, client, files) {
