@@ -19,4 +19,16 @@ describe('#constants', () => {
   it('should have email templates directory', () => {
     expect(tools.constants.EMAIL_TEMPLATES_DIRECTORY).toEqual('email-templates');
   });
+
+  it('should have email providers directory', () => {
+    expect(tools.constants.EMAIL_PROVIDERS_DIRECTORY).toEqual('email-providers');
+  });
+
+  it('should have name of default email provider', () => {
+    expect(tools.constants.EMAIL_PROVIDER_NAME).toEqual('default');
+  });
+
+  it('should have file name of default email provider', () => {
+    expect(tools.constants.EMAIL_PROVIDER_FILENAME).toEqual('default.json');
+  });
 });

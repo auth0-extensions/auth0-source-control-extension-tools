@@ -88,3 +88,7 @@ constants.EMAIL_TEMPLATE_NAMES = [
 constants.EMAIL_TEMPLATE_FILENAMES = _.flatMap(constants.EMAIL_TEMPLATE_NAMES, name => [ name + '.html', name + '.json' ]);
 
 constants.EMAIL_TEMPLATES_DIRECTORY = 'email-templates';
+
+constants.EMAIL_PROVIDER_NAME = 'default';
+constants.EMAIL_PROVIDER_FILENAME = constants.EMAIL_PROVIDER_NAME + '.json';
+constants.EMAIL_PROVIDERS_DIRECTORY = 'email-providers';
