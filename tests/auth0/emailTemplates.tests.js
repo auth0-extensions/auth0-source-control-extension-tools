@@ -29,7 +29,7 @@ describe('#emailTemplates', () => {
   });
 
   describe('#getEmailTemplateObject', () => {
-    it('should return null if page not found', () => {
+    it('should return null if template not found', () => {
       expect(emailTemplates.getEmailTemplateObject({ }, 'foo')).toNotExist();
     });
 
