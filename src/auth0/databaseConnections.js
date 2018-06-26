@@ -10,10 +10,6 @@ const apiCall = require('./apiCall');
  * Get database connections.
  */
 const getDatabaseConnections = function(progress, client, databases) {
-  if (progress.connections) {
-    return Promise.resolve(progress.connections);
-  }
-
   const databaseNames = databases.map(function(database) {
     return database.name;
   });
@@ -71,6 +67,7 @@ const updateDatabase = function(progress, client, connections, database) {
 
     options.customScripts[scriptName] = database.scripts[scriptName].scriptFile;
   });
+  options.enabledDatabaseCustomization = true;
 
   progress.connectionsUpdated += 1;
   progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, utils.checksumReplacer(Object.keys(options.customScripts)), 2));
@@ -97,27 +94,23 @@ const updateDatabases = function(progress, client, databases) {
 /*
  * Validates that all databases included in the repository exist in the tenant.
  */
-const validateDatabases = function(progress, client, databases) {
+const validateDatabases = function(progress, client, connections, databases) {
   if (databases.length === 0) {
     return Promise.resolve(true);
   }
 
-  progress.log('Validating that configured databases exist in Auth0...');
+  progress.log('Validating that configured databases exist...');
 
-  return getDatabaseConnections(progress, client, databases)
-    .then(function(connections) {
-      const missingDatabases = _.difference(
-        _.map(databases, function(db) { return db.name; }),
-        _.map(connections, function(conn) { return conn.name; }));
+  const connectionNames = _.keys(connections);
+  const databaseNames = _.map(databases, db => db.name);
 
-      if (missingDatabases.length > 0) {
-        return Promise.reject(
-          new ValidationError('The following databases do not exist in the Auth0 tenant: ' + missingDatabases)
-        );
-      }
-
-      return true;
-    });
+  const missingDatabases = _.difference(databaseNames, connectionNames);
+  if (missingDatabases.length > 0) {
+    return Promise.reject(
+      new ValidationError('The following databases do not exist in the Auth0 tenant: ' + missingDatabases)
+    );
+  }
+  return Promise.resolve(true);
 };
 
 module.exports = {

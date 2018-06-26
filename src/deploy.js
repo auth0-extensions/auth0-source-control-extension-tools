@@ -78,7 +78,7 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.validateConnections(progress, client, context.connections);
     })
     .then(function() {
-      return auth0.validateDatabases(progress, client, context.databases);
+      return auth0.validateDatabases(progress, client, context.connections, context.databases);
     })
     .then(function() {
       return auth0.validateRules(progress, client, context.rules, context.excluded_rules);
