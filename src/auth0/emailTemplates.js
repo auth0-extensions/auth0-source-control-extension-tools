@@ -6,22 +6,6 @@ const constants = require('../constants');
 const apiCall = require('./apiCall');
 
 /**
- * Get an e-mail template
- */
-const getEmailTemplateByName = function(progress, client, name) {
-  if (progress.emailTemplates && progress.emailTemplates[name]) {
-    return Promise.resolve(progress.emailTemplates[name]);
-  }
-
-  return apiCall(client, client.emailTemplates.get, [ { name: name } ])
-    .then(function(emailTemplate) {
-      progress.emailTemplates = progress.emailTemplates || {};
-      progress.emailTemplates[name] = emailTemplate;
-      return emailTemplate;
-    });
-};
-
-/**
  * Get an email template object from the files object.
  */
 const getEmailTemplateObject = function(files, name, mappings) {
@@ -53,8 +37,6 @@ const updateEmailTemplateByName = function(progress, client, files, name) {
   }
 
   progress.log('Updating email template "' + name + '"...');
-  // Hm, do we need to use Create sometimes?
-  // But the API docs for getEmailTemplateByName doesn't contain 404..
   return apiCall(client, client.emailTemplates.update, [ { name: name }, tpl ]).then(() => true);
 };
 
@@ -69,7 +51,6 @@ const updateAllEmailTemplates = function(progress, client, files) {
 };
 
 module.exports = {
-  getEmailTemplateByName: getEmailTemplateByName,
   getEmailTemplateObject: getEmailTemplateObject,
   updateEmailTemplateByName: updateEmailTemplateByName,
   updateAllEmailTemplates: updateAllEmailTemplates

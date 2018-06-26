@@ -28,41 +28,6 @@ describe('#emailTemplates', () => {
     };
   });
 
-  describe('#getEmailTemplateByName', () => {
-    it('should return cached template', (done) => {
-      progress.emailTemplates = { verify_email: { body: 'cached' } };
-
-      emailTemplates.getEmailTemplateByName(progress, null, 'verify_email')
-        .then((templateObject) => {
-          expect(templateObject.body).toEqual('cached');
-          done();
-        });
-    });
-
-    it('should call auth0 and get a template', (done) => {
-      const auth0 = {
-        emailTemplates: {
-          get(params) {
-            return Promise.resolve(
-              {
-                template: params.name,
-                body: '<html></html>'
-              }
-            );
-          }
-        }
-      };
-
-      emailTemplates.getEmailTemplateByName(progress, auth0, 'verify_email')
-        .then((templateObject) => {
-          expect(templateObject.template).toEqual('verify_email');
-          expect(templateObject.body).toEqual('<html></html>');
-          expect(progress.emailTemplates.verify_email).toExist();
-          done();
-        });
-    });
-  });
-
   describe('#getEmailTemplateObject', () => {
     it('should return null if page not found', () => {
       expect(emailTemplates.getEmailTemplateObject({ }, 'foo')).toNotExist();
