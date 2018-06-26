@@ -57,6 +57,20 @@ describe('#emailTemplates', () => {
       expect(tpl).toExist();
       expect(tpl.enabled).toEqual(false);
     });
+
+    it('should ignore \'body\' and \'template\' in metadata, since they come from the HTML file and the template name, respectively', () => {
+      const myFiles = {
+        verify_email: {
+          htmlFile: '<html>real</html>',
+          metadata: true,
+          metadataFile: '{"template":"foo","body":"<html>fake</html>"}'
+        }
+      };
+      const tpl = emailTemplates.getEmailTemplateObject(myFiles, 'verify_email', {});
+      expect(tpl).toExist();
+      expect(tpl.body).toEqual('<html>real</html>');
+      expect(tpl.template).toEqual('verify_email');
+    });
   });
 
   describe('#updateEmailTemplateByName', () => {

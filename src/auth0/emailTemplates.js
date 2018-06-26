@@ -24,7 +24,8 @@ const getEmailTemplateObject = function(files, name, mappings) {
 
   if (file.metadata) {
     const metadata = utils.parseJsonFile(name, file.metadataFile, mappings);
-    tpl = _.assign(tpl, metadata);
+    // 'template' and 'body' are set above and cannot be overridden with metadata
+    tpl = _.assign(tpl, _.omit(metadata, [ 'body', 'template' ]));
   }
 
   return tpl;
