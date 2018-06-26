@@ -55,9 +55,11 @@ describe('#emailProviders', () => {
 
     it('should update the provider correctly', (done) => {
       let payload = null;
+      let params = null;
       const auth0 = {
         emailProvider: {
-          update(data) {
+          update(paramsObj, data) {
+            params = paramsObj;
             payload = data;
             return Promise.resolve(true);
           }
@@ -74,6 +76,7 @@ describe('#emailProviders', () => {
       emailProviders.updateEmailProvider(progress, auth0, files)
         .then(function(result) {
           expect(result).toEqual(true);
+          expect(params).toEqual({});
           expect(payload.name).toEqual('smtp');
           done();
         });

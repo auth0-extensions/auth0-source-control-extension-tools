@@ -65,7 +65,7 @@ describe('#deploy', () => {
     const progressData = {};
     const client = {
       emailProvider: {
-        update(config) {
+        update(_, config) {
           providerConfig = config;
           operations.push('provider');
           return Promise.resolve(true);

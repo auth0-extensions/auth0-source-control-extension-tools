@@ -26,7 +26,7 @@ const updateEmailProvider = function(progress, client, files) {
   }
 
   progress.log('Updating email provider...');
-  return apiCall(client, client.emailProvider.update, [ payload ]).then(() => true);
+  return apiCall(client, client.emailProvider.update, [ {}, payload ]).then(() => true);
 };
 
 module.exports = {
