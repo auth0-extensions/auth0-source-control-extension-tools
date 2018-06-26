@@ -5,6 +5,7 @@ const clients = require('./clients');
 const ruleConfigs = require('./ruleConfigs');
 const resourceServers = require('./resourceServers');
 const emailTemplates = require('./emailTemplates');
+const emailProviders = require('./emailProviders');
 
 module.exports = {
   /* Connection and database operations */
@@ -35,5 +36,8 @@ module.exports = {
   updateGuardianMultifactorPage: pages.updateGuardianMultifactorPage,
 
   /* Email template operations */
-  updateAllEmailTemplates: emailTemplates.updateAllEmailTemplates
+  updateAllEmailTemplates: emailTemplates.updateAllEmailTemplates,
+
+  /* Email provider operations */
+  updateEmailProvider: emailProviders.updateEmailProvider
 };

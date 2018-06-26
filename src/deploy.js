@@ -100,6 +100,11 @@ module.exports = function(progressData, context, client, storage, config, slackT
       return auth0.updateClients(progress, client);
     })
     .then(function() {
+      // Update email provider _before_ templates, since a non-empty 'from' address in
+      // a template requires an enabled email provider.
+      return auth0.updateEmailProvider(progress, client, context.emailProviders);
+    })
+    .then(function() {
       return auth0.updateAllEmailTemplates(progress, client, context.emailTemplates);
     })
     .then(function() {
