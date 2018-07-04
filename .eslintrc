@@ -1,6 +1,6 @@
 {
   "extends": [
-    "airbnb/base",
+    "airbnb-base",
     "plugin:import/errors",
     "plugin:import/warnings"
   ],
