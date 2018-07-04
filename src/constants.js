@@ -1,9 +1,11 @@
-const constants = module.exports = { }; // eslint-disable-line no-multi-assign
+const constants = {};
+
 constants.RULES_DIRECTORY = 'rules';
 constants.RULES_STAGES = [
   'login_success'
 ];
-constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];
+
+constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];  // eslint-disable-line
 
 constants.RULES_CONFIGS_DIRECTORY = 'rules-configs';
 
@@ -63,3 +65,5 @@ constants.CONNECTIONS_CLIENT_NAME = 'connections';
 constants.CONNECTIONS_ID_NAME = 'id';
 
 constants.CONCURRENT_CALLS = 5;
+
+export default constants;
