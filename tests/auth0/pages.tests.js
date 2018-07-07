@@ -63,13 +63,11 @@ describe('#pages', () => {
       const auth0 = {
         clients: {
           getAll() {
-            return Promise.resolve(
-              [
-                { client_id: '123', global: false },
-                { client_id: '456', global: true },
-                { client_id: '789', global: false }
-              ]
-            );
+            return Promise.resolve([
+              { client_id: '123', global: false },
+              { client_id: '456', global: true },
+              { client_id: '789', global: false }
+            ]);
           }
         }
       };
@@ -227,13 +225,11 @@ describe('#pages', () => {
             return Promise.resolve();
           },
           getAll() {
-            return Promise.resolve(
-              [
-                { client_id: '123', global: false },
-                { client_id: '456', global: true },
-                { client_id: '789', global: false }
-              ]
-            );
+            return Promise.resolve([
+              { client_id: '123', global: false },
+              { client_id: '456', global: true },
+              { client_id: '789', global: false }
+            ]);
           }
         }
       };

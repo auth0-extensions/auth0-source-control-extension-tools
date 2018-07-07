@@ -1,40 +1,64 @@
-const rules = require('./rules');
-const pages = require('./pages');
-const databaseConnections = require('./databaseConnections');
-const clients = require('./clients');
-const ruleConfigs = require('./ruleConfigs');
-const resourceServers = require('./resourceServers');
-const connections = require('./connections');
+import Ajv from 'ajv/lib/ajv';
 
-module.exports = {
-  /* Connection and database operations */
-  validateDatabases: databaseConnections.validateDatabases,
-  updateDatabases: databaseConnections.updateDatabases,
+import pagedClient from './client';
+import schema from './schema';
+import * as handlers from './handlers';
 
-  /* Rule operations */
-  validateRules: rules.validateRules,
-  deleteRules: rules.deleteRules,
-  updateRules: rules.updateRules,
+const defaultOrder = 50;
 
-  /* Rule Configs operations */
-  updateRuleConfigs: ruleConfigs.updateRuleConfigs,
+function sortByOrder(toSort, stage) {
+  const sorted = [ ...toSort ];
+  sorted.sort((a, b) => {
+    const aOrder = a[stage].order || defaultOrder;
+    const bOrder = b[stage].order || defaultOrder;
+    return aOrder - bOrder;
+  });
+  return sorted;
+}
 
-  /* Client operations */
-  validateClients: clients.validateClients,
-  updateClients: clients.updateClients,
 
-  /* ResourceServer operations */
-  validateResourceServers: resourceServers.validateResourceServers,
-  updateResourceServers: resourceServers.updateResourceServers,
+export default class Auth0 {
+  constructor(client, assets, tracker, config) {
+    this.client = pagedClient(client);
+    this.assets = {
+      clients: assets.clients || [],
+      databases: assets.databases || [],
+      connections: assets.connections || [],
+      pages: assets.pages || [],
+      resourceServers: assets.resourceServers || [],
+      rules: assets.rules || [],
+      rulesConfigs: assets.rulesConfigs || [],
+      excludedRules: assets.excluded_rules || []
+    };
+    this.tracker = tracker;
+    const options = { client: this.client, tracker, config };
+    this.handlers = Object.values(handlers).map(h => new h.default(options));
+    this.stats = {};
+    this.config = config;
+  }
 
-  /* Page operations */
-  updatePages: pages.updatePages,
-  updateErrorPage: pages.updateErrorPage,
-  updatePasswordResetPage: pages.updatePasswordResetPage,
-  updateLoginPage: pages.updateLoginPage,
-  updateGuardianMultifactorPage: pages.updateGuardianMultifactorPage,
+  async runStage(stage) {
+    // Sort by priority
+    for (const handler of sortByOrder(this.handlers, stage)) { // eslint-disable-line
+      const stageFn = Object.getPrototypeOf(handler)[stage];
+      this.assets = {
+        ...this.assets,
+        ...await stageFn.apply(handler, [ this.assets ]) || {}
+      };
+    }
+  }
 
-  /* Connection operations */
-  validateConnections: connections.validateConnections,
-  updateConnections: connections.updateConnections
-};
+  async validate() {
+    const ajv = new Ajv({ useDefaults: true });
+    const valid = ajv.validate(schema, this.assets);
+    if (!valid) {
+      throw new Error(`Schema validation failed loading ${JSON.stringify(ajv.errors, null, 4)}`);
+    }
+
+    await this.runStage('validate');
+  }
+
+  async processChanges() {
+    await this.runStage('processChanges');
+  }
+}

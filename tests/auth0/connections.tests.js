@@ -77,9 +77,7 @@ describe('#connections', () => {
           }));
         },
         getAll() {
-          return Promise.resolve(
-            existingConnections
-          );
+          return Promise.resolve(existingConnections);
         }
       }
     };

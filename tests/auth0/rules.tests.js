@@ -49,11 +49,21 @@ describe('#rules', () => {
   };
 
   const existingRules = [
-    { id: 456, name: 'log-to-console', stage: 'login_success', order: 1 },
-    { id: 123, name: 'add-country', stage: 'login_success', order: 2 },
-    { id: 789, name: 'enrich-profile', stage: 'login_success', order: 3 },
-    { id: 666, name: 'broken-file', stage: 'login_success', order: 4 },
-    { id: 111, name: 'authz-extension', stage: 'login_success', script: 'function authz() { }', order: 5 }
+    {
+      id: 456, name: 'log-to-console', stage: 'login_success', order: 1
+    },
+    {
+      id: 123, name: 'add-country', stage: 'login_success', order: 2
+    },
+    {
+      id: 789, name: 'enrich-profile', stage: 'login_success', order: 3
+    },
+    {
+      id: 666, name: 'broken-file', stage: 'login_success', order: 4
+    },
+    {
+      id: 111, name: 'authz-extension', stage: 'login_success', script: 'function authz() { }', order: 5
+    }
   ];
 
   const manualRules = [
@@ -86,9 +96,7 @@ describe('#rules', () => {
           return Promise.resolve();
         },
         getAll() {
-          return Promise.resolve(
-            existingRules
-          );
+          return Promise.resolve(existingRules);
         }
       }
     };

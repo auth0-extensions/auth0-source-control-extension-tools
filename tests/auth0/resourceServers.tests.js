@@ -116,9 +116,7 @@ describe('#resourceServers', () => {
         // },
         getAll(options) {
           var returnResourceServers = options && options.is_system === false ? existingNonGlobalResourceServers : existingResourceServers;
-          return Promise.resolve(
-            returnResourceServers
-          );
+          return Promise.resolve(returnResourceServers);
         }
       }
     };

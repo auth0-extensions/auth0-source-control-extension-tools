@@ -1,84 +1,8 @@
-const expect = require('chai').expect;
-
-const utils = require('../src/utils');
+import { expect } from 'chai';
+import * as utils from '../src/utils';
 
 
 describe('#utils', function() {
-  it('should unify scripts', function(done) {
-    const data = [ {
-      name: 'database',
-      scripts: [
-        {
-          name: 'login',
-          htmlFile: '<html>@@hello@@</html>',
-          metadataFile: { b: 2 },
-          scriptFile: { a: 1 }
-        },
-        {
-          name: 'else',
-          metadataFile: '{"b":@@two@@}',
-          scriptFile: 'console.log(@@hello@@);'
-        }
-      ]
-    } ];
-
-    const mappings = {
-      hello: 'goodbye',
-      two: 2
-    };
-
-    const expectation = [ {
-      name: 'database',
-      scripts: {
-        login: {
-          name: 'login',
-          htmlFile: '<html>"goodbye"</html>',
-          metadataFile: '{"b":2}',
-          scriptFile: '{"a":1}'
-        },
-        else: {
-          name: 'else',
-          metadataFile: '{"b":2}',
-          scriptFile: 'console.log("goodbye");'
-        }
-      }
-    } ];
-
-    expect(utils.unifyDatabases(data, mappings)).to.deep.equal(expectation);
-    done();
-  });
-
-  it('should unify configs', function(done) {
-    const data = [
-      {
-        name: 'client1',
-        metadataFile: { b: 2 },
-        configFile: { a: 1 }
-      },
-      {
-        name: 'client2',
-        metadataFile: '{"b":@@two@@}',
-        configFile: '{"a":1}'
-      }
-    ];
-
-    const expectation = {
-      client1: {
-        name: 'client1',
-        metadataFile: '{"b":2}',
-        configFile: '{"a":1}'
-      },
-      client2: {
-        name: 'client2',
-        metadataFile: '{"b":2}',
-        configFile: '{"a":1}'
-      }
-    };
-
-    expect(utils.unifyScripts(data, { two: 2 })).to.deep.equal(expectation);
-    done();
-  });
-
   it('should parse json', function(done) {
     const string = '{ "a": 1 }';
 
@@ -252,4 +176,47 @@ describe('#utils', function() {
     expect(reducedObject).to.deep.equal(object);
     done();
   });
+});
+
+
+describe('#utils calcChanges', () => {
+  it('should calc create', () => {
+    const existing = [ { name: 'Name1', id: 'id1' } ];
+    const assets = [
+      { name: 'Name1', id: 'id3' },
+      { name: 'Create1', id: 'Create1' }
+    ];
+
+    const { create } = utils.calcChanges(assets, existing, [ 'id', 'name' ]);
+
+    expect(create).to.have.length(1);
+    expect(create).to.deep.include({ name: 'Create1', id: 'Create1' });
+  });
+
+  it('should calc delete', () => {
+    const existing = [
+      { name: 'Name1', id: 'id3' },
+      { name: 'Delete1', id: 'Delete1' }
+    ];
+    const assets = [ { name: 'Name1', id: 'id1' } ];
+
+    const { del } = utils.calcChanges(assets, existing, [ 'id', 'name' ]);
+
+    expect(del).to.have.length(1);
+    expect(del).to.deep.include({ name: 'Delete1', id: 'Delete1' });
+  });
+
+    it('should calc update', () => {
+    const existing = [
+      { name: 'Name1', id: 'id3' },
+      { name: 'Delete1', id: 'Delete1' }
+    ];
+    const assets = [ { name: 'Name1', id: 'id1' } ];
+
+    const { del } = utils.calcChanges(assets, existing, [ 'id', 'name' ]);
+
+    expect(del).to.have.length(1);
+    expect(del).to.deep.include({ name: 'Delete1', id: 'Delete1' });
+  });
+
 });

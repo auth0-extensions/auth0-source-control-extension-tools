@@ -1,3 +1,18 @@
-export constants from './constants';
-export deploy from './deploy';
-export * from './utils';
+import constants from './constants';
+import deploy from './deploy';
+import { keywordReplace, loadFile } from './utils';
+
+export default {
+  constants,
+  deploy,
+  keywordReplace,
+  loadFile
+};
+
+
+export {
+  constants,
+  deploy,
+  keywordReplace,
+  loadFile
+};

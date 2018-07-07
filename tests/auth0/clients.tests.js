@@ -116,9 +116,7 @@ describe('#clients', () => {
         // },
         getAll(options) {
           var returnClients = options && options.global === false ? existingNonGlobalClients : existingClients;
-          return Promise.resolve(
-            returnClients
-          );
+          return Promise.resolve(returnClients);
         }
       }
     };
@@ -471,11 +469,10 @@ describe('#clients', () => {
             return Promise.resolve();
           },
           getAll(filter) {
-            return Promise.resolve(
-              _.filter(existingGrants, function(grant) {
-                /* Actual API ignores everything but audience */
-                return grant.audience === filter.audience;
-              }));
+            return Promise.resolve(_.filter(existingGrants, function(grant) {
+              /* Actual API ignores everything but audience */
+              return grant.audience === filter.audience;
+            }));
           }
         },
 
@@ -484,9 +481,7 @@ describe('#clients', () => {
             return Promise.resolve(newGrantClients[payload.name]);
           },
           getAll() {
-            return Promise.resolve(
-              existingGrantClients
-            );
+            return Promise.resolve(existingGrantClients);
           }
         }
       };

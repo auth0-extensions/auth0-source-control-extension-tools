@@ -100,9 +100,7 @@ describe('#configurables', () => {
         // },
         getAll(options) {
           var returnClients = options && options.global === false ? existingNonGlobalClients : existingClients;
-          return Promise.resolve(
-            returnClients
-          );
+          return Promise.resolve(returnClients);
         }
       }
     };
