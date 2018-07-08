@@ -2,9 +2,15 @@ import DefaultHandler from './default';
 import constants from '../../constants';
 import { dumpJSON } from '../../utils';
 
-const supportedPages = constants.PAGE_NAMES
+export const supportedPages = constants.PAGE_NAMES
   .filter(p => p.includes('.json'))
   .map(p => p.replace('.json', ''));
+
+export const pageNameMap = {
+  guardian_multifactor: 'guardian_mfa_page',
+  password_reset: 'change_password',
+  error_page: 'error_page'
+};
 
 export const schema = {
   type: 'array',
@@ -19,11 +25,6 @@ export const schema = {
   }
 };
 
-const pageNameMap = {
-  guardian_multifactor: 'guardian_mfa_page',
-  password_reset: 'change_password',
-  error_page: 'error_page'
-};
 
 export default class PageHandler extends DefaultHandler {
   constructor(options) {

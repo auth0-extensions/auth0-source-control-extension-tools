@@ -5,6 +5,7 @@ import * as resourceServers from './resourceServers';
 import * as databases from './databases';
 import * as connections from './connections';
 import * as clients from './clients';
+import * as tenant from './tenant';
 
 export {
   rules,
@@ -13,5 +14,6 @@ export {
   resourceServers,
   clients,
   databases,
-  connections
+  connections,
+  tenant
 };

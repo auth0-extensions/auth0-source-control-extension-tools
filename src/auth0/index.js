@@ -28,7 +28,8 @@ export default class Auth0 {
       resourceServers: assets.resourceServers || [],
       rules: assets.rules || [],
       rulesConfigs: assets.rulesConfigs || [],
-      excludedRules: assets.excluded_rules || []
+      excludedRules: assets.excluded_rules || [],
+      tenant: assets.tenant || {}
     };
     this.tracker = tracker;
     const options = { client: this.client, tracker, config };
