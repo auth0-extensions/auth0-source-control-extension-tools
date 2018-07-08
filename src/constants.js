@@ -51,6 +51,40 @@ constants.DATABASE_SCRIPTS_IMPORT = [
   'login'
 ];
 
+constants.EMAIL_TEMPLATES_DIRECTORY = 'emails';
+
+constants.EMAIL_VERIFY = 'verify_email';
+constants.EMAIL_RESET = 'reset_email';
+constants.EMAIL_WELCOME = 'welcome_email';
+constants.EMAIL_BLOCKED = 'blocked_account';
+constants.EMAIL_STOLEN_CREDENTIALS = 'stolen_credentials';
+constants.EMAIL_ENROLLMENT = 'enrollment_email';
+constants.EMAIL_CHANGE_PASSWORD = 'change_password';
+constants.EMAIL_PASSWORD_RESET = 'password_reset';
+constants.EMAIL_MFA_OOB_CODE = 'mfa_oob_code';
+
+constants.EMAIL_TEMPLATES_NAMES = [
+  constants.EMAIL_VERIFY + '.json',
+  constants.EMAIL_VERIFY + '.html',
+  constants.EMAIL_RESET + '.json',
+  constants.EMAIL_RESET + '.html',
+  constants.EMAIL_WELCOME + '.json',
+  constants.EMAIL_WELCOME + '.html',
+  constants.EMAIL_BLOCKED + '.json',
+  constants.EMAIL_BLOCKED + '.html',
+  constants.EMAIL_STOLEN_CREDENTIALS + '.json',
+  constants.EMAIL_STOLEN_CREDENTIALS + '.html',
+  constants.EMAIL_ENROLLMENT + '.json',
+  constants.EMAIL_ENROLLMENT + '.html',
+  constants.EMAIL_CHANGE_PASSWORD + '.json',
+  constants.EMAIL_CHANGE_PASSWORD + '.html',
+  constants.EMAIL_PASSWORD_RESET + '.json',
+  constants.EMAIL_PASSWORD_RESET + '.html',
+  constants.EMAIL_MFA_OOB_CODE + '.json',
+  constants.EMAIL_MFA_OOB_CODE + '.html'
+];
+
+
 constants.RESOURCE_SERVERS_DIRECTORY = 'resource-servers';
 constants.RESOURCE_SERVERS_CLIENT_NAME = 'resourceServers';
 constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME = 'Auth0 Management API';
