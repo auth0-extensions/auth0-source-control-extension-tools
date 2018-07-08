@@ -43,14 +43,14 @@ export default class EmailProviderHandler extends DefaultHandler {
       // Now configure or update depending if it is configured already
       if (existing.name) {
         const provider = { name: emailProvider.name, enabled: emailProvider.enabled };
-        await this.client.emailProvider.update(provider, emailProvider);
+        const updated = await this.client.emailProvider.update(provider, emailProvider);
         this.updated += 1;
-        this.didUpdate(emailProvider);
+        this.didUpdate(updated);
       } else {
         const provider = { name: emailProvider.name, enabled: emailProvider.enabled };
-        await this.client.emailProvider.configure(provider, emailProvider);
+        const created = await this.client.emailProvider.configure(provider, emailProvider);
         this.created += 1;
-        this.didCreate(emailProvider);
+        this.didCreate(created);
       }
     }
   }

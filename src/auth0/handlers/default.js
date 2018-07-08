@@ -125,7 +125,7 @@ export default class DefaultHandler {
         const params = { [this.id]: updateItem[this.id] };
         const payload = stripFields({ ...updateItem }, this.stripUpdateFields);
         return updateFN(params, payload)
-          .then(() => this.didUpdate(updateItem))
+          .then(data => this.didUpdate(data))
           .catch((err) => {
             throw new Error(`Problem updating ${this.type} ${dumpJSON(updateItem, 1)}\n${err}`);
           });
@@ -138,8 +138,8 @@ export default class DefaultHandler {
       generator: (createItem) => {
         const createFunction = this.getClientFN(this.functions.create);
         return createFunction(createItem)
-          .then(() => {
-            this.didCreate(createItem);
+          .then((data) => {
+            this.didCreate(data);
             this.created += 1;
           })
           .catch((err) => {
@@ -156,8 +156,8 @@ export default class DefaultHandler {
         const params = { [this.id]: updateItem[this.id] };
         const payload = stripFields({ ...updateItem }, this.stripUpdateFields);
         return updateFN(params, payload)
-          .then(() => {
-            this.didUpdate(updateItem);
+          .then((data) => {
+            this.didUpdate(data);
             this.updated += 1;
           })
           .catch((err) => {
