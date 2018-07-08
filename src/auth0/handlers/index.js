@@ -8,6 +8,7 @@ import * as clients from './clients';
 import * as tenant from './tenant';
 import * as emailProvider from './emailProvider';
 import * as emailTemplates from './emailTemplates';
+import * as clientGrants from './clientGrants';
 
 export {
   rules,
@@ -19,5 +20,6 @@ export {
   connections,
   tenant,
   emailProvider,
-  emailTemplates
+  emailTemplates,
+  clientGrants
 };
