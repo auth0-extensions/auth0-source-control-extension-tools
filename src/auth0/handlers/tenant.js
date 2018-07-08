@@ -8,7 +8,7 @@ export const schema = {
   type: 'object'
 };
 
-export default class PageHandler extends DefaultHandler {
+export default class TenantHandler extends DefaultHandler {
   constructor(options) {
     super({
       ...options,
@@ -34,6 +34,8 @@ export default class PageHandler extends DefaultHandler {
     const { tenant } = assets;
     if (Object.keys(tenant).length > 0) {
       await this.client.tenant.updateSettings(tenant);
+      this.updated += 1;
+      this.didUpdate(tenant);
     }
   }
 }

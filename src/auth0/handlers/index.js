@@ -6,6 +6,7 @@ import * as databases from './databases';
 import * as connections from './connections';
 import * as clients from './clients';
 import * as tenant from './tenant';
+import * as emailProvider from './emailProvider';
 
 export {
   rules,
@@ -15,5 +16,6 @@ export {
   clients,
   databases,
   connections,
-  tenant
+  tenant,
+  emailProvider
 };

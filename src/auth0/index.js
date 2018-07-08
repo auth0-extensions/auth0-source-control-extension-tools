@@ -29,7 +29,9 @@ export default class Auth0 {
       rules: assets.rules || [],
       rulesConfigs: assets.rulesConfigs || [],
       excludedRules: assets.excluded_rules || [],
-      tenant: assets.tenant || {}
+      tenant: assets.tenant || {},
+      emailProvider: assets.emailProvider || {},
+      //emailTemplates: assets.emailTemplates || []
     };
     this.tracker = tracker;
     const options = { client: this.client, tracker, config };
