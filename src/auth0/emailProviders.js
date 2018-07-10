@@ -25,7 +25,15 @@ const updateEmailProvider = function(progress, client, files) {
   }
 
   progress.log('Updating email provider...');
-  return apiCall(client, client.emailProvider.update, [ {}, payload ]).then(() => true);
+  return apiCall(client, client.emailProvider.update, [ {}, payload ])
+    .then(() => true)
+    .catch((result) => {
+      if (result.statusCode === 404) {
+        progress.log('Email provider doesn\'t exist, configuring it...');
+        return apiCall(client, client.emailProvider.configure, [ payload ]);
+      }
+      return Promise.reject(result);
+    });
 };
 
 module.exports = {

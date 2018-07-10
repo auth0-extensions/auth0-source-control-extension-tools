@@ -81,5 +81,34 @@ describe('#emailProviders', () => {
           done();
         });
     });
+
+    it('should configure (create) the provider if it doesn\'t exist', (done) => {
+      let payload = null;
+      const auth0 = {
+        emailProvider: {
+          update() {
+            return Promise.reject({ statusCode: 404 });
+          },
+          configure(data) {
+            payload = data;
+            return Promise.resolve(true);
+          }
+        }
+      };
+
+      const files = {
+        default: {
+          name: 'default',
+          configFile: '{"name":"smtp"}'
+        }
+      };
+
+      emailProviders.updateEmailProvider(progress, auth0, files)
+        .then(function(result) {
+          expect(result).toEqual(true);
+          expect(payload.name).toEqual('smtp');
+          done();
+        });
+    });
   });
 });
