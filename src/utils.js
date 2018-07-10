@@ -84,6 +84,11 @@ module.exports.unifyDatabases = function(data, mappings) {
       scripts: unifyScripts(item.scripts, mappings)
     };
 
+    if (item.configurationFile) {
+      connection.configuration = module.exports.parseJsonFile(item.configurationFileName,
+        item.configurationFile, mappings);
+    }
+
     converted.push(connection);
   });
 

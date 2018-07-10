@@ -4,7 +4,7 @@ const utils = require('../src/utils');
 
 
 describe('#utils', function() {
-  it('should unify scripts', function(done) {
+  it('should unify database scripts', function(done) {
     const data = [ {
       name: 'database',
       scripts: [
@@ -41,6 +41,30 @@ describe('#utils', function() {
           metadataFile: '{"b":2}',
           scriptFile: 'console.log("goodbye");'
         }
+      }
+    } ];
+
+    expect(utils.unifyDatabases(data, mappings)).to.deep.equal(expectation);
+    done();
+  });
+
+  it('should read configuration when unifying database scripts', function(done) {
+    const data = [ {
+      name: 'database',
+      scripts: [],
+      configurationFile: '{"hello":@@hello@@}',
+      configurationFileName: 'configuration.json'
+    } ];
+
+    const mappings = {
+      hello: 'goodbye'
+    };
+
+    const expectation = [ {
+      name: 'database',
+      scripts: {},
+      configuration: {
+        hello: 'goodbye'
       }
     } ];
 
