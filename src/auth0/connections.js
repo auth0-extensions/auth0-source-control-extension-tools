@@ -42,7 +42,14 @@ const updateDatabase = function(progress, client, connections, database) {
     );
   }
 
-  const options = connection.options || {};
+  // Read configuration to be deployed. Possible keys:
+  // - options
+  // - metadata
+  const configuration = database.configuration || {};
+
+  const metadata = _.extend(connection.metadata || {}, configuration.metadata || {});
+
+  const options = _.extend(connection.options || {}, configuration.options || {});
   options.customScripts = {};
 
   const databaseScriptKeys = Object.keys(database.scripts);
@@ -75,7 +82,10 @@ const updateDatabase = function(progress, client, connections, database) {
 
   progress.connectionsUpdated += 1;
   progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, utils.checksumReplacer(Object.keys(options.customScripts)), 2));
-  return apiCall(client, client.connections.update, [ { id: connection.id }, { options: options } ]);
+  return apiCall(client, client.connections.update, [ { id: connection.id }, {
+    metadata: metadata,
+    options: options
+  } ]);
 };
 
 /*

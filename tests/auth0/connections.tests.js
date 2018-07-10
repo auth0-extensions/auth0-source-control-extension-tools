@@ -10,7 +10,14 @@ describe('#connections', () => {
 
   const existingConnections = [
     { id: 456, name: 'Username-Password' },
-    { id: 123, name: 'My-Other-Custom-DB' },
+    { id: 123,
+      name: 'My-Other-Custom-DB',
+      options: {
+        passwordPolicy: 'low',
+        requires_username: false
+      },
+      metadata: { meta: true }
+    },
     { id: 666, name: 'Bad-Connection' },
     { id: 789, name: 'My-Custom-DB', options: { import_mode: true } }
   ];
@@ -51,6 +58,14 @@ describe('#connections', () => {
       },
       get_user: {
         scriptFile: 'function get_user() { }'
+      }
+    },
+    configuration: {
+      options: {
+        requires_username: true
+      },
+      metadata: {
+        setting: 'test'
       }
     }
   };
@@ -117,6 +132,26 @@ describe('#connections', () => {
           expect(updatePayloads[0].options.customScripts.delete).toEqual('function delete() { }');
           expect(updatePayloads[0].options.customScripts.get_user).toEqual('function get_user() { }');
           expect(updatePayloads[0].options.customScripts.change_email).toEqual('function change_email() { }');
+          done();
+        });
+    });
+
+    it('should include custom options in the update', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, database)
+        .then(() => {
+          expect(updatePayloads[0].options).toExist();
+          expect(updatePayloads[0].options.requires_username).toEqual(true);
+          expect(updatePayloads[0].options.passwordPolicy).toEqual('low');
+          done();
+        });
+    });
+
+    it('should include custom metadata in the update', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, database)
+        .then(() => {
+          expect(updatePayloads[0].metadata).toExist();
+          expect(updatePayloads[0].metadata.setting).toEqual('test');
+          expect(updatePayloads[0].metadata.meta).toEqual(true);
           done();
         });
     });
