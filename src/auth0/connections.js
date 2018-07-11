@@ -52,6 +52,18 @@ const updateDatabase = function(progress, client, connections, database) {
   const options = _.extend(connection.options || {}, configuration.options || {});
   options.customScripts = {};
 
+  // Special handling of custom DB configuration, where values are encrypted. The client
+  // can send 'options.bareConfiguration' with plain text values, and the server will
+  // encrypt them. In this case, don't send 'options.configuration' for two reasons:
+  // 1. bareConfiguration values take precedence anyway.
+  // 2. It allows us to remove old configuration key/values.
+  // In other words, if 'options.bareConfiguration' is present we assume it represents
+  // the entire set of key/values. If not, we keep 'options.configuration' just as
+  // before.
+  if (options.bareConfiguration) {
+    delete options.configuration;
+  }
+
   const databaseScriptKeys = Object.keys(database.scripts);
 
   allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;

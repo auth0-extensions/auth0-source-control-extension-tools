@@ -1,5 +1,6 @@
 const expect = require('expect');
 const Promise = require('bluebird');
+const _ = require('lodash');
 
 const connections = require('../../src/auth0/connections');
 
@@ -14,12 +15,24 @@ describe('#connections', () => {
       name: 'My-Other-Custom-DB',
       options: {
         passwordPolicy: 'low',
-        requires_username: false
+        requires_username: false,
+        configuration: {
+          some_key: '$encrypted'
+        }
       },
       metadata: { meta: true }
     },
     { id: 666, name: 'Bad-Connection' },
-    { id: 789, name: 'My-Custom-DB', options: { import_mode: true } }
+    { id: 789, name: 'My-Custom-DB', options: { import_mode: true } },
+    {
+      id: 888,
+      name: 'With-Config',
+      options: {
+        configuration: {
+          some_key: '$encrypted'
+        }
+      }
+    }
   ];
 
   const auth0 = {
@@ -66,6 +79,18 @@ describe('#connections', () => {
       },
       metadata: {
         setting: 'test'
+      }
+    }
+  };
+
+  const databaseWithConfigurationKey = {
+    name: 'With-Config',
+    scripts: {},
+    configuration: {
+      options: {
+        bareConfiguration: {
+          some_key: 'new_value'
+        }
       }
     }
   };
@@ -132,6 +157,26 @@ describe('#connections', () => {
           expect(updatePayloads[0].options.customScripts.delete).toEqual('function delete() { }');
           expect(updatePayloads[0].options.customScripts.get_user).toEqual('function get_user() { }');
           expect(updatePayloads[0].options.customScripts.change_email).toEqual('function change_email() { }');
+          done();
+        });
+    });
+
+    it('should not send \'options.configuration\' from the connection if \'options.bareConfiguration\' exists in the DB', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, databaseWithConfigurationKey)
+        .then(() => {
+          expect(updatePayloads[0]).toExist();
+          expect(updatePayloads[0].options.configuration).toNotExist();
+          expect(updatePayloads[0].options.bareConfiguration).toEqual(databaseWithConfigurationKey.configuration.options.bareConfiguration);
+          done();
+        });
+    });
+
+    it('should preserve/send \'options.configuration\' from the connection if the DB doesn\'t have \'options.bareConfiguration\'', (done) => {
+      const expectedConfig = _.find(existingConnections, c => c.id === 123).options.configuration;
+      connections.updateDatabase(progress, auth0, existingConnections, database)
+        .then(() => {
+          expect(updatePayloads[0].options).toExist();
+          expect(updatePayloads[0].options.configuration).toEqual(expectedConfig);
           done();
         });
     });
