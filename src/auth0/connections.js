@@ -19,7 +19,7 @@ const getDatabaseConnections = function(progress, client, databases) {
     return database.name;
   });
 
-  return multipartRequest(client, 'connections', { strategy: 'auth0', fields: 'enabled_clients', include_fields: false })
+  return multipartRequest(client, 'connections', { fields: 'enabled_clients', include_fields: false })
     .then(function(connections) {
       progress.connections = connections.filter(function(connection) {
         return databaseNames.indexOf(connection.name) > -1;
@@ -67,30 +67,43 @@ const updateDatabase = function(progress, client, connections, database) {
   const databaseScriptKeys = Object.keys(database.scripts);
 
   allowedScripts = (options.import_mode) ? constants.DATABASE_SCRIPTS_IMPORT : constants.DATABASE_SCRIPTS_NO_IMPORT;
+
   /* Check if change_email is included and if it is, allow get_users for non-import */
   if (!options.import_mode) {
     if (databaseScriptKeys.indexOf(constants.DATABASE_SCRIPTS_CHANGE_EMAIL) >= 0) {
       if (databaseScriptKeys.indexOf(constants.DATABASE_SCRIPTS_GET_USER) >= 0) {
         allowedScripts = constants.DATABASE_SCRIPTS;
       } else {
-        throw new ValidationError('The ' + constants.DATABASE_SCRIPTS_CHANGE_EMAIL + ' script requires the ' + constants.DATABASE_SCRIPTS_GET_USER + ' script for ' + database.name + '.');
+        return Promise.reject(
+          new ValidationError('The ' + constants.DATABASE_SCRIPTS_CHANGE_EMAIL + ' script requires the ' + constants.DATABASE_SCRIPTS_GET_USER + ' script for ' + database.name + '.')
+        );
       }
     }
   }
+
+  // Scripts are only allowed for auth0 connections.
+  if (connection.strategy !== constants.DATABASE_STRATEGY_AUTH0) {
+    allowedScripts = [];
+  }
+
   progress.log('Import User to Auth0 enabled: ' + options.import_mode + '. Allowed scripts: ' + JSON.stringify(allowedScripts, null, 2));
 
   // Set all custom scripts
-  _(databaseScriptKeys).forEach(function(scriptName) {
-    if (allowedScripts.indexOf(scriptName) < 0) {
-      throw new ValidationError('The ' + scriptName + ' script is not allowed for ' + database.name + '.');
-    }
+  try {
+    _(databaseScriptKeys).forEach(function(scriptName) {
+      if (allowedScripts.indexOf(scriptName) < 0) {
+        throw new ValidationError('The ' + scriptName + ' script is not allowed for ' + database.name + '.');
+      }
 
-    if (!database.scripts[scriptName].scriptFile || database.scripts[scriptName].scriptFile.length === 0) {
-      throw new ValidationError('The ' + scriptName + ' script for ' + database.name + ' is empty.');
-    }
+      if (!database.scripts[scriptName].scriptFile || database.scripts[scriptName].scriptFile.length === 0) {
+        throw new ValidationError('The ' + scriptName + ' script for ' + database.name + ' is empty.');
+      }
 
-    options.customScripts[scriptName] = database.scripts[scriptName].scriptFile;
-  });
+      options.customScripts[scriptName] = database.scripts[scriptName].scriptFile;
+    });
+  } catch (e) {
+    return Promise.reject(e);
+  }
 
   progress.connectionsUpdated += 1;
   progress.log('Updating database ' + connection.id + ': ' + JSON.stringify(options, utils.checksumReplacer(Object.keys(options.customScripts)), 2));

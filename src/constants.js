@@ -52,6 +52,8 @@ constants.DATABASE_SCRIPTS_IMPORT = [
   'login'
 ];
 
+constants.DATABASE_STRATEGY_AUTH0 = 'auth0';
+
 constants.RESOURCE_SERVERS_DIRECTORY = 'resource-servers';
 constants.RESOURCE_SERVERS_CLIENT_NAME = 'resourceServers';
 constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME = 'Auth0 Management API';
