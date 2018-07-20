@@ -27,26 +27,31 @@ export default async function deploy(progressData, context, client, storage, con
 
     // Process changes
     await auth0.processChanges();
-
-    // TODO: What does this do
-    // before refactor
-    // appendProgress(storage, progress);
-
     tracking.log('Done.');
 
-    // TODO: Sort this
-    return {
-      connections: {
-        updated: tracking.connectionsUpdated
-      },
-      clients: tracking.configurables.clients,
-      resourceServers: tracking.configurables.resourceServers,
-      rules: {
-        created: tracking.rulesCreated,
-        updated: tracking.rulesUpdated,
-        deleted: tracking.rulesDeleted
-      }
-    };
+    tracking.data = auth0.handlers.reduce((accum, h) => {
+      accum[h.type] = {
+        deleted: h.deleted,
+        created: h.created,
+        updated: h.updated
+      };
+      return accum;
+    }, {});
+
+    // Send message to slack
+    if (config('SLACK_INCOMING_WEBHOOK_URL')) {
+      await pushToSlack(tracking, slackTemplate, `${config('WT_URL')}/login`, config('SLACK_INCOMING_WEBHOOK_URL'));
+    }
+
+    // Call custom Webhook URL
+    if (config('CUSTOM_WEBHOOK_URL')) {
+      await sendWebhook(tracking, config('CUSTOM_WEBHOOK_URL'));
+    }
+
+    // Append progress to storage
+    // await appendProgress(data, storage, tracking);
+
+    return tracking.data;
   } catch (err) {
     // Log error and persist.
     tracking.error = err;
@@ -54,13 +59,11 @@ export default async function deploy(progressData, context, client, storage, con
     tracking.log('StackTrace: ' + err.stack);
 
     // Final attempt to push to slack.
-    pushToSlack(tracking, slackTemplate, config('WT_URL') + '/login', config('SLACK_INCOMING_WEBHOOK_URL'))
-      .then(function() {
-        appendProgress(storage, tracking);
-      })
-      .catch(function() {
-        appendProgress(storage, tracking);
-      });
+    if (config('SLACK_INCOMING_WEBHOOK_URL')) {
+      await pushToSlack(tracking, slackTemplate, config('WT_URL') + '/login', config('SLACK_INCOMING_WEBHOOK_URL'));
+    }
+
+    await appendProgress(storage, tracking);
 
     // Continue.
     throw err;

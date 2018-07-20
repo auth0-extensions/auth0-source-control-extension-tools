@@ -64,5 +64,4 @@ export default class ResourceServersHandler extends DefaultHandler {
 
     return super.validate(assets);
   }
-
 }

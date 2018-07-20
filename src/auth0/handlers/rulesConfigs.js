@@ -30,15 +30,15 @@ export default class RulesConfigsHandler extends DefaultHandler {
   }
 
   didDelete(config) {
-    return super.didDelete(config.value);
+    return super.didDelete(config.key);
   }
 
   didCreate(config) {
-    return super.didCreate(config.value);
+    return super.didCreate(config.key);
   }
 
   didUpdate(config) {
-    return super.didUpdate(config.value);
+    return super.didUpdate(config.key);
   }
 
   async calcChanges(assets) { // eslint-disable-line

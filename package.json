@@ -4,6 +4,8 @@
   "description": "Supporting tools for the Source Control extensions",
   "main": "src/index.js",
   "scripts": {
+    "build": "babel src -d lib",
+    "prepare": "npm run build",
     "release": "git tag $npm_package_version && git push --tags && npm publish",
     "lint:js": "eslint --ignore-path .gitignore --ignore-pattern webpack .",
     "test": "npm run test:pre && cross-env NODE_ENV=test nyc mocha tests/mocha.js ./tests/**/*.tests.js ./tests/*.tests.js",

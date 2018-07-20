@@ -140,7 +140,6 @@ export default class RulesHandler extends DefaultHandler {
 
   async processChanges(assets) {
     // Figure out what needs to be updated vs created
-    console.log('test');
     const {
       del,
       update,

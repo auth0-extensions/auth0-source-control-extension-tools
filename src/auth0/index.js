@@ -20,35 +20,37 @@ function sortByOrder(toSort, stage) {
 export default class Auth0 {
   constructor(client, assets, tracker, config) {
     this.client = pagedClient(client);
-    this.assets = {
-      clients: assets.clients || [],
-      databases: assets.databases || [],
-      connections: assets.connections || [],
-      pages: assets.pages || [],
-      resourceServers: assets.resourceServers || [],
-      rules: assets.rules || [],
-      rulesConfigs: assets.rulesConfigs || [],
-      excludedRules: assets.excluded_rules || [],
-      tenant: assets.tenant || {},
-      emailProvider: assets.emailProvider || {},
-      emailTemplates: assets.emailTemplates || [],
-      clientGrants: assets.clientGrants || []
-    };
     this.tracker = tracker;
-    const options = { client: this.client, tracker, config };
-    this.handlers = Object.values(handlers).map(h => new h.default(options));
-    this.stats = {};
     this.config = config;
+    this.assets = {
+      excludedRules: assets.excluded_rules || []
+    };
+    this.handlers = [];
+    Object.values(handlers).forEach((h) => {
+      const handler = new h.default({ client: this.client, tracker, config });
+      this.handlers.push(handler);
+
+      // Set default asset value from schema
+      if (h.schema) {
+        let defaultValue = [];
+        if (h.schema.type === 'object') defaultValue = {};
+        this.assets[handler.type] = assets[handler.type] || defaultValue;
+      }
+    });
   }
 
   async runStage(stage) {
     // Sort by priority
     for (const handler of sortByOrder(this.handlers, stage)) { // eslint-disable-line
-      const stageFn = Object.getPrototypeOf(handler)[stage];
-      this.assets = {
-        ...this.assets,
-        ...await stageFn.apply(handler, [ this.assets ]) || {}
-      };
+      try {
+        const stageFn = Object.getPrototypeOf(handler)[stage];
+        this.assets = {
+          ...this.assets,
+          ...await stageFn.apply(handler, [ this.assets ]) || {}
+        };
+      } catch (err) {
+        throw new Error(`Error during ${stage} on ${handler.type} due to ${err}`);
+      }
     }
   }
 

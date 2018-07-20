@@ -86,7 +86,7 @@ export default class DefaultHandler {
     const duplicateIDs = duplicateItems(typeAssets, this.id);
     if (duplicateIDs.length > 0) {
       const formatted = duplicateIDs.map(dups => dups.map(d => `${d[this.id]}`));
-      throw new ValidationError(`There are multiple rules for the following stage-order combinations
+      throw new ValidationError(`There are multiple ${this.type} for the following stage-order combinations
       ${dumpJSON(formatted)}.
        Only one rule must be defined for the same order number in a stage.`);
     }

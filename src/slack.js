@@ -1,7 +1,6 @@
-const Promise = require('bluebird');
 const request = require('superagent');
 
-const createPayload = function(progress, template, extensionUrl) {
+function createPayload(progress, template, extensionUrl) {
   template = template || {};
 
   const msg = {
@@ -24,7 +23,7 @@ const createPayload = function(progress, template, extensionUrl) {
 
   const details = '(<' + extensionUrl + '|Details>)';
 
-  const fields = defaultTemplate.fields;
+  const { fields } = defaultTemplate;
 
   if (progress.error) {
     fields.push(defaultTemplate.error_field);
@@ -36,42 +35,17 @@ const createPayload = function(progress, template, extensionUrl) {
       fields: defaultTemplate.fields
     });
   } else {
-    if (progress.connectionsUpdated) {
-      fields.push({ title: 'Connections Updated', value: progress.connectionsUpdated, short: true });
-    }
-    if (progress.rulesCreated) {
-      fields.push({ title: 'Rules Created', value: progress.rulesCreated, short: true });
-    }
-    if (progress.rulesUpdated) {
-      fields.push({ title: 'Rules Updated', value: progress.rulesUpdated, short: true });
-    }
-    if (progress.rulesDeleted) {
-      fields.push({ title: 'Rules Deleted', value: progress.rulesDeleted, short: true });
-    }
-    if (progress.configurables) {
-      if (progress.configurables.clients) {
-        if (progress.configurables.clients.created) {
-          fields.push({ title: 'Clients Created', value: progress.configurables.clients.created, short: true });
-        }
-        if (progress.configurables.clients.updated) {
-          fields.push({ title: 'Clients Updated', value: progress.configurables.clients.updated, short: true });
-        }
-        if (progress.configurables.clients.deleted) {
-          fields.push({ title: 'Clients Deleted', value: progress.configurables.clients.deleted, short: true });
-        }
+    Object.entries(progress.data).forEach(([ type, data ]) => {
+      if (data.deleted) {
+        fields.push({ title: `${type} Deleted`, value: data.deleted, short: true });
       }
-      if (progress.configurables.resourceServers) {
-        if (progress.configurables.resourceServers.created) {
-          fields.push({ title: 'Resource Servers Created', value: progress.configurables.resourceServers.created, short: true });
-        }
-        if (progress.configurables.resourceServers.updated) {
-          fields.push({ title: 'Resource Servers Updated', value: progress.configurables.resourceServers.updated, short: true });
-        }
-        if (progress.configurables.resourceServers.deleted) {
-          fields.push({ title: 'Resource Servers Deleted', value: progress.configurables.resourceServers.deleted, short: true });
-        }
+      if (data.created) {
+        fields.push({ title: `${type} Created`, value: data.created, short: true });
       }
-    }
+      if (data.updated) {
+        fields.push({ title: `${type} Updated`, value: data.updated, short: true });
+      }
+    });
 
     msg.attachments.push({
       color: '#7CD197',
@@ -82,31 +56,15 @@ const createPayload = function(progress, template, extensionUrl) {
   }
 
   return msg;
-};
+}
 
-module.exports = function(progress, template, extensionUrl, hook) {
-  if (!hook) {
-    return Promise.resolve();
-  }
-
+export default async function(progress, template, extensionUrl, hook) {
   progress.log('Sending progress to Slack.');
 
   const msg = createPayload(progress, template, extensionUrl);
-  return new Promise(function(resolve) {
-    request
-      .post(hook)
-      .send(msg)
-      .set('Accept', 'application/json')
-      .end(function(err, res) {
-        if (err && err.status === 401) {
-          progress.log('Error sending to Slack: ' + err.status);
-        } else if (err && res && res.body) {
-          progress.log('Error sending to Slack: ' + err.status + ' - ' + res.body);
-        } else if (err) {
-          progress.log('Error sending to Slack: ' + err.status + ' - ' + err.message);
-        }
-
-        return resolve();
-      });
-  });
-};
+  try {
+    await request.post(hook).send(msg).set('Accept', 'application/json');
+  } catch (err) {
+    progress.log(`Error sending to Slack: ${err}`);
+  }
+}

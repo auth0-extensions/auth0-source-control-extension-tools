@@ -64,7 +64,7 @@ export default class DatabaseHandler extends DefaultHandler {
     const formatted = assets.databases.map(db => ({
       ...db,
       enabled_clients: [
-        ...db.enabled_clients.map(name => {
+        ...(db.enabled_clients || []).map(name => {
           const found = clients.filter(c => c.name === name)[0]
           if (found) return found.client_id
           return name;
@@ -75,18 +75,17 @@ export default class DatabaseHandler extends DefaultHandler {
     return super.calcChanges({...assets, databases: formatted});
   }
 
-
   // Run after clients are updated so we can convert all the enabled_clients names to id's
   @order('60')
   async processChanges(assets) {
     const changes = await this.calcChanges(assets);
 
     // Don't delete databases unless told as it's destructive and will delete all associated users
-    const shouldDelete = this.config('ALLOW_CONNECTION_DELETE') === 'true' || this.config('ALLOW_CONNECTION_DELETE') === true;
+    const shouldDelete = this.config('AUTH0_ALLOW_CONNECTION_DELETE') === 'true' || this.config('AUTH0_ALLOW_CONNECTION_DELETE') === true;
     if (!shouldDelete) {
       if (changes.del.length > 0) {
         this.log(`WARNING: Detected the following database connections should be deleted.
-        Doing so will be delete all the associated users. You can force deletes by setting 'ALLOW_CONNECTION_DELETE' to true in the config
+        Doing so will be delete all the associated users. You can force deletes by setting 'AUTH0_ALLOW_CONNECTION_DELETE' to true in the config
         \n${dumpJSON(changes.del.map(db => ({ name: db.name, id: db.id })), 2)})
          `);
       }
