@@ -518,7 +518,18 @@ auth0-oauth2-express@^1.1.8:
     snyk "^1.19.1"
     superagent "^1.2.0"
 
-auth0@^2.9.1, auth0@auth0/node-auth0#master:
+auth0@^2.11.0:
+  version "2.11.0"
+  resolved "https://registry.yarnpkg.com/auth0/-/auth0-2.11.0.tgz#a069abb3a33a236aa78855f87afa37adba961195"
+  dependencies:
+    bluebird "^2.10.2"
+    lru-memoizer "^1.11.1"
+    object.assign "^4.0.4"
+    request "^2.83.0"
+    rest-facade "^1.10.1"
+    retry "^0.10.1"
+
+auth0@^2.9.1:
   version "2.10.0"
   resolved "https://codeload.github.com/auth0/node-auth0/tar.gz/533f8824d5abe3ae3e15635275c7f92128354e58"
   dependencies:
