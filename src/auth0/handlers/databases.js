@@ -60,19 +60,19 @@ export default class DatabaseHandler extends DefaultHandler {
 
   async calcChanges(assets) {
     // Convert enabled_clients by name to the id
-    const clients = await this.client.clients.getAll({paginate: true});
+    const clients = await this.client.clients.getAll({ paginate: true });
     const formatted = assets.databases.map(db => ({
       ...db,
       enabled_clients: [
-        ...(db.enabled_clients || []).map(name => {
-          const found = clients.filter(c => c.name === name)[0]
-          if (found) return found.client_id
+        ...(db.enabled_clients || []).map((name) => {
+          const found = clients.filter(c => c.name === name)[0];
+          if (found) return found.client_id;
           return name;
         })
       ]
     }));
 
-    return super.calcChanges({...assets, databases: formatted});
+    return super.calcChanges({ ...assets, databases: formatted });
   }
 
   // Run after clients are updated so we can convert all the enabled_clients names to id's
