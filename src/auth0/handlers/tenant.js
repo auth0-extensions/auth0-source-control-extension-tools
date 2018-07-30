@@ -1,6 +1,6 @@
 import { ValidationError } from 'auth0-extension-tools';
 
-import DefaultHandler from './default';
+import DefaultHandler, { order } from './default';
 import { supportedPages, pageNameMap } from './pages';
 import { dumpJSON } from '../../utils';
 
@@ -30,6 +30,8 @@ export default class TenantHandler extends DefaultHandler {
     }
   }
 
+  // Run after other updates so objected can be referenced such as default directory
+  @order('100')
   async processChanges(assets) {
     const { tenant } = assets;
     if (Object.keys(tenant).length > 0) {

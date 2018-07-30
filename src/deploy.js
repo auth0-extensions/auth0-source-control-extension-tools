@@ -20,6 +20,9 @@ export default async function deploy(progressData, context, client, storage, con
       excluded_rules: data.excluded_rules || []
     };
 
+    // Todo: do we need to do this?
+    tracking.log('Assets: ' + assets, null, 2);
+
     const auth0 = new Auth0(client, assets, tracking, config);
 
     // Validate Assets
