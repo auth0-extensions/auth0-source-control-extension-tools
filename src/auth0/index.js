@@ -18,16 +18,15 @@ function sortByOrder(toSort, stage) {
 
 
 export default class Auth0 {
-  constructor(client, assets, tracker, config) {
+  constructor(client, assets, config) {
     this.client = pagedClient(client);
-    this.tracker = tracker;
     this.config = config;
     this.assets = {
       excludedRules: assets.excluded_rules || []
     };
     this.handlers = [];
     Object.values(handlers).forEach((h) => {
-      const handler = new h.default({ client: this.client, tracker, config });
+      const handler = new h.default({ client: this.client, config });
       this.handlers.push(handler);
 
       // Set default asset value from schema
