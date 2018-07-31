@@ -1,5 +1,6 @@
 import { ValidationError } from 'auth0-extension-tools';
 
+import log from '../../logger';
 import { stripFields, dumpJSON, calcChanges, duplicateItems } from '../../utils';
 
 export function order(value) {
@@ -16,7 +17,6 @@ export default class DefaultHandler {
     this.type = options.type;
     this.id = options.id || 'id';
     this.client = options.client;
-    this.log = options.tracker.log;
     this.existing = null;
     this.identifiers = options.identifiers || [ 'id', 'name' ];
     this.stripUpdateFields = [
@@ -42,15 +42,15 @@ export default class DefaultHandler {
   }
 
   didDelete(item) {
-    this.log(`Deleted [${this.type}]: ${dumpJSON(item)}`);
+    log.info(`Deleted [${this.type}]: ${dumpJSON(item)}`);
   }
 
   didCreate(item) {
-    this.log(`Created [${this.type}]: ${dumpJSON(item)}`);
+    log.info(`Created [${this.type}]: ${dumpJSON(item)}`);
   }
 
   didUpdate(item) {
-    this.log(`Updated [${this.type}]: ${dumpJSON(item)}`);
+    log.info(`Updated [${this.type}]: ${dumpJSON(item)}`);
   }
 
   async getType() {

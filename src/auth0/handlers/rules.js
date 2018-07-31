@@ -1,6 +1,7 @@
 import { ValidationError } from 'auth0-extension-tools';
 import { dumpJSON, calcChanges, stripFields, duplicateItems } from '../../utils';
 import DefaultHandler from './default';
+import log from '../../logger';
 
 export const schema = {
   type: 'array',
@@ -155,7 +156,7 @@ export default class RulesHandler extends DefaultHandler {
         const updated = {
           name: rule.name, stage: rule.stage, order: rule.order, id: rule.id
         };
-        this.log(`Temporally re-order Rule ${dumpJSON(updated)}`);
+        log.info(`Temporally re-order Rule ${dumpJSON(updated)}`);
       })
     }).promise();
 
