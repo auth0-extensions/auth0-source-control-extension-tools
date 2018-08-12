@@ -1,12 +1,9 @@
 import path from 'path';
 import fs from 'fs';
-import crypto from 'crypto';
 import dotProp from 'dot-prop';
 
-import { ValidationError, ArgumentError } from 'auth0-extension-tools';
-
-
 export function keywordReplace(input, mappings) {
+  // Replace keywords with mappings within input.
   if (mappings && Object.keys(mappings).length > 0) {
     Object.keys(mappings).forEach(function(key) {
       const re = new RegExp(`##${key}##`, 'g');
@@ -22,6 +19,7 @@ export function keywordReplace(input, mappings) {
 }
 
 export function loadFile(file, mappings) {
+  // Load file and replace keyword mappings
   const f = path.resolve(file);
   try {
     fs.accessSync(f, fs.F_OK);
@@ -34,41 +32,8 @@ export function loadFile(file, mappings) {
   }
 }
 
-export function generateChecksum(data) {
-  if (typeof data !== 'string') {
-    throw new ArgumentError('Must provide data as a string.');
-  }
-
-  return crypto.createHash('sha256').update(data).digest('hex');
-}
-
-export function parseJsonFile(fileName, contents, mappings) {
-  let json = contents;
-  try {
-    /* if mappings is defined, replace contents before parsing */
-    json = keywordReplace(contents, mappings);
-    return JSON.parse(json);
-  } catch (e) {
-    throw new ValidationError('Error parsing JSON from metadata file: ' + fileName + ', because: ' + e.message + ', contents: ' + contents + ', post-replace: ' + json);
-  }
-}
-
-export function checksumReplacer(exclusions) {
-  exclusions = exclusions || [];
-  if (typeof exclusions === 'string') {
-    exclusions = [ exclusions ];
-  }
-
-  return function(key, value) {
-    if (exclusions.indexOf(key) > -1 && typeof value === 'string') {
-      return generateChecksum(value);
-    }
-
-    return value;
-  };
-}
-
 export function flatten(list) {
+  // Flatten an multiple arrays to single array
   return list.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), []);
 }
 
@@ -76,14 +41,9 @@ export function dumpJSON(obj, spacing = 0) {
   return JSON.stringify(obj, null, spacing);
 }
 
-export function arrayToObject(array, keyField = 'name') {
-  return array.reduce((obj, item) => {
-    obj[item[keyField]] = item;
-    return obj;
-  }, {});
-}
 
 export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
+  // Calculate the changes required between two sets of assets.
   const update = [];
   let del = [ ...existing ];
   let create = [ ...assets ];
@@ -155,6 +115,7 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
 }
 
 export function stripFields(obj, fields) {
+  // Strip object fields supporting dot notation (ie: a.deep.field)
   const newObj = { ...obj };
   fields.forEach(f => dotProp.delete(newObj, f));
   return newObj;
@@ -162,6 +123,7 @@ export function stripFields(obj, fields) {
 
 
 export function duplicateItems(arr, key) {
+  // Find duplicates objects within array that have the same key value
   const duplicates = arr.reduce((accum, obj) => {
     const keyValue = obj[key];
     if (keyValue) {
