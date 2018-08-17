@@ -13,7 +13,6 @@ export function order(value) {
 export default class DefaultHandler {
   constructor(options) {
     this.config = options.config;
-    this.existing = null;
     this.type = options.type;
     this.id = options.id || 'id';
     this.client = options.client;
@@ -59,9 +58,12 @@ export default class DefaultHandler {
   }
 
   async calcChanges(assets) {
-    const existing = await this.getType();
-
     const typeAssets = assets[this.type] || [];
+
+    // Do nothing if not set
+    if (!typeAssets) return {};
+
+    const existing = await this.getType();
 
     // Figure out what needs to be updated vs created
     return calcChanges(typeAssets, existing, this.identifiers);
@@ -71,6 +73,7 @@ export default class DefaultHandler {
     // Ensure no duplication in id and name
     const typeAssets = assets[this.type];
 
+    // Do nothing if not set
     if (!Array.isArray(typeAssets)) return;
 
     // Do not allow items with same name

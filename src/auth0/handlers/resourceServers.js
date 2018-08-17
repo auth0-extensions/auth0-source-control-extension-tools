@@ -57,11 +57,14 @@ export default class ResourceServersHandler extends DefaultHandler {
   async validate(assets) {
     const { resourceServers } = assets;
 
+    // Do nothing if not set
+    if (!resourceServers) return;
+
     const mgmtAPIResource = resourceServers.filter(r => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME)[0];
     if (mgmtAPIResource) {
       throw new ValidationError(`You can not configure the '${constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME}.`);
     }
 
-    return super.validate(assets);
+    await super.validate(assets);
   }
 }

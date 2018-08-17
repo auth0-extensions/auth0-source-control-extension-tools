@@ -89,6 +89,9 @@ export default class PageHandler extends DefaultHandler {
   async processChanges(assets) {
     const { pages } = assets;
 
+    // Do nothing if not set
+    if (!pages) return;
+
     // Login page is handled via the global client
     const loginPage = pages.filter(p => p.name === 'login')[0];
     if (loginPage) {

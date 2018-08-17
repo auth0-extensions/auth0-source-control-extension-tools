@@ -50,6 +50,9 @@ export default class EmailTemplateHandler extends DefaultHandler {
   async processChanges(assets) {
     const { emailTemplates } = assets;
 
+    // Do nothing if not set
+    if (!emailTemplates) return;
+
     await Promise.all(emailTemplates.map(async (emailTemplate) => {
       await this.updateOrCreate(emailTemplate);
     }));

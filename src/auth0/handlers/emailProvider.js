@@ -27,6 +27,10 @@ export default class EmailProviderHandler extends DefaultHandler {
 
   async processChanges(assets) {
     const { emailProvider } = assets;
+
+    // Do nothing if not set
+    if (!emailProvider) return;
+
     if (Object.keys(emailProvider).length > 0) {
       let existing = await this.getType();
 

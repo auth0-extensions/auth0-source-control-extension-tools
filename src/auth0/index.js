@@ -28,13 +28,6 @@ export default class Auth0 {
     Object.values(handlers).forEach((h) => {
       const handler = new h.default({ client: this.client, config });
       this.handlers.push(handler);
-
-      // Set default asset value from schema
-      if (h.schema) {
-        let defaultValue = [];
-        if (h.schema.type === 'object') defaultValue = {};
-        this.assets[handler.type] = assets[handler.type] || defaultValue;
-      }
     });
   }
 

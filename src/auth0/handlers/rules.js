@@ -68,8 +68,9 @@ export default class RulesHandler extends DefaultHandler {
   }
 
   async calcChanges(assets, includeExcluded = false) {
-    let existing = await this.getType();
     let { rules } = assets;
+
+    let existing = await this.getType();
 
     // Filter excluded rules
     if (!includeExcluded) {
@@ -108,6 +109,11 @@ export default class RulesHandler extends DefaultHandler {
   }
 
   async validate(assets) {
+    const { rules } = assets;
+
+    // Do nothing if not set
+    if (!rules) return;
+
     // Figure out what needs to be updated vs created
     const { update, create, del } = await this.calcChanges(assets, true);
     // Include del rules which are actually not going to be deleted but are excluded
@@ -140,6 +146,11 @@ export default class RulesHandler extends DefaultHandler {
   }
 
   async processChanges(assets) {
+    const { rules } = assets;
+
+    // Do nothing if not set
+    if (!rules) return;
+
     // Figure out what needs to be updated vs created
     const {
       del,

@@ -41,11 +41,13 @@ export default class RulesConfigsHandler extends DefaultHandler {
     return super.didUpdate(config.key);
   }
 
-  async calcChanges(assets) { // eslint-disable-line
+  async calcChanges(assets) {
+    const { rulesConfigs } = assets;
+
     // Intention is to not delete/cleanup old configRules, that needs to be handled manually.
     return {
       del: [],
-      update: assets.rulesConfigs,
+      update: rulesConfigs || [],
       create: []
     };
   }

@@ -23,6 +23,10 @@ export default class TenantHandler extends DefaultHandler {
 
   async validate(assets) {
     const { tenant } = assets;
+
+    // Nothing to validate?
+    if (!tenant) return;
+
     const blockPageKeys = [ ...Object.keys(pageNameMap), ...supportedPages ];
     const pageKeys = Object.keys(tenant).filter(k => blockPageKeys.includes(k));
     if (pageKeys.length > 0) {
@@ -34,6 +38,10 @@ export default class TenantHandler extends DefaultHandler {
   @order('100')
   async processChanges(assets) {
     const { tenant } = assets;
+
+    // Nothing to process?
+    if (!tenant) return;
+
     if (Object.keys(tenant).length > 0) {
       await this.client.tenant.updateSettings(tenant);
       this.updated += 1;
