@@ -44,10 +44,13 @@ export default class RulesConfigsHandler extends DefaultHandler {
   async calcChanges(assets) {
     const { rulesConfigs } = assets;
 
+    // Do nothing if not set
+    if (!rulesConfigs) return {};
+
     // Intention is to not delete/cleanup old configRules, that needs to be handled manually.
     return {
       del: [],
-      update: rulesConfigs || [],
+      update: rulesConfigs,
       create: []
     };
   }

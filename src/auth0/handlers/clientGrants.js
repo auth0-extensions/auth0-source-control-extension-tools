@@ -43,6 +43,11 @@ export default class ClientHandler extends DefaultHandler {
   }
 
   async calcChanges(assets) {
+    const { clientGrants } = assets;
+
+    // Do nothing if not set
+    if (!clientGrants) return {};
+
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
     const formatted = assets.clientGrants.map((clientGrant) => {
@@ -57,7 +62,12 @@ export default class ClientHandler extends DefaultHandler {
   // Run after clients are updated so we can convert client_id names to id's
   @order('60')
   async processChanges(assets) {
+    const { clientGrants } = assets;
+
+    // Do nothing if not set
+    if (!clientGrants) return;
+
     const changes = await this.calcChanges(assets);
-    return super.processChanges(assets, { ...changes });
+    await super.processChanges(assets, { ...changes });
   }
 }

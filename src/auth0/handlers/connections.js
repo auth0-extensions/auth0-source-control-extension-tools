@@ -48,6 +48,11 @@ export default class ConnectionsHandler extends DefaultHandler {
   }
 
   async calcChanges(assets) {
+    const { connections } = assets;
+
+    // Do nothing if not set
+    if (!connections) return {};
+
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
     const formatted = assets.connections.map(connection => ({
@@ -68,13 +73,18 @@ export default class ConnectionsHandler extends DefaultHandler {
   // Run after clients are updated so we can convert all the enabled_clients names to id's
   @order('60')
   async processChanges(assets) {
+    const { connections } = assets;
+
+    // Do nothing if not set
+    if (!connections) return;
+
     const changes = await this.calcChanges(assets);
 
     // Don't delete connections unless told as it's destructive and will delete all associated users
     const shouldDelete = this.config('AUTH0_ALLOW_CONNECTION_DELETE') === 'true' || this.config('AUTH0_ALLOW_CONNECTION_DELETE') === true;
     if (!shouldDelete) {
       if (changes.del.length > 0) {
-        log(`WARNING: Detected the following connections should be deleted.
+        log.error(`WARNING: Detected the following connections should be deleted.
         Doing so will be delete all the associated users. You can force deletes by setting 'AUTH0_ALLOW_CONNECTION_DELETE' to true in the config
         \n${dumpJSON(changes.del.map(db => ({ name: db.name, id: db.id })), 2)})
          `);
@@ -82,6 +92,6 @@ export default class ConnectionsHandler extends DefaultHandler {
       changes.del = [];
     }
 
-    return super.processChanges(assets, { ...changes });
+    await super.processChanges(assets, { ...changes });
   }
 }

@@ -41,7 +41,7 @@ export default class Auth0 {
           ...await stageFn.apply(handler, [ this.assets ]) || {}
         };
       } catch (err) {
-        throw new Error(`Error during ${stage} on ${handler.type} due to ${err}`);
+        throw new Error(`Error during ${stage} on ${handler.type} due to\n${err.stack}`);
       }
     }
   }
