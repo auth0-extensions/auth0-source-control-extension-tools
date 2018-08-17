@@ -70,12 +70,14 @@ export default class RulesHandler extends DefaultHandler {
   async calcChanges(assets, includeExcluded = false) {
     let { rules } = assets;
 
+    const excludedRules = assets.excludedRules || [];
+
     let existing = await this.getType();
 
     // Filter excluded rules
     if (!includeExcluded) {
-      rules = rules.filter(r => !assets.excludedRules.includes(r.name));
-      existing = existing.filter(r => !assets.excludedRules.includes(r.name));
+      rules = rules.filter(r => !excludedRules.includes(r.name));
+      existing = existing.filter(r => !excludedRules.includes(r.name));
     }
 
     // Figure out what needs to be updated vs created
@@ -114,11 +116,13 @@ export default class RulesHandler extends DefaultHandler {
     // Do nothing if not set
     if (!rules) return;
 
+    const excludedRules = assets.excludedRules || [];
+
     // Figure out what needs to be updated vs created
     const { update, create, del } = await this.calcChanges(assets, true);
     // Include del rules which are actually not going to be deleted but are excluded
     // they can still muck up the ordering so we must take it into consideration.
-    const futureRules = [ ...create, ...update, ...del.filter(r => assets.excludedRules.includes(r.name)) ];
+    const futureRules = [ ...create, ...update, ...del.filter(r => excludedRules.includes(r.name)) ];
 
     // Detect rules with the same order
     const rulesSameOrder = duplicateItems(futureRules, 'order');

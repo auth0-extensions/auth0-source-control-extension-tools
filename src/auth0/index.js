@@ -21,9 +21,7 @@ export default class Auth0 {
   constructor(client, assets, config) {
     this.client = pagedClient(client);
     this.config = config;
-    this.assets = {
-      excludedRules: assets.excluded_rules || []
-    };
+    this.assets = assets;
     this.handlers = [];
     Object.values(handlers).forEach((h) => {
       const handler = new h.default({ client: this.client, config });
