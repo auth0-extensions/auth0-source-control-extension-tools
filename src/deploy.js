@@ -1,13 +1,8 @@
 import Auth0 from './auth0';
 import log from './logger';
 
-export default async function deploy(context, client, config) {
+export default async function deploy(assets, client, config) {
   log.info('Getting access token for ' + config('AUTH0_CLIENT_ID') + '/' + config('AUTH0_DOMAIN'));
-
-  // Send all changes to Auth0.
-  await context.init();
-
-  const { assets } = context;
 
   const auth0 = new Auth0(client, assets, config);
 
