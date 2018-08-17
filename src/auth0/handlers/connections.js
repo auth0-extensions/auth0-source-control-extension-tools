@@ -1,5 +1,6 @@
 import DefaultHandler, { order } from './default';
 import { dumpJSON } from '../../utils';
+import log from '../../logger';
 
 export const schema = {
   type: 'array',
@@ -73,7 +74,7 @@ export default class ConnectionsHandler extends DefaultHandler {
     const shouldDelete = this.config('AUTH0_ALLOW_CONNECTION_DELETE') === 'true' || this.config('AUTH0_ALLOW_CONNECTION_DELETE') === true;
     if (!shouldDelete) {
       if (changes.del.length > 0) {
-        this.log(`WARNING: Detected the following connections should be deleted.
+        log(`WARNING: Detected the following connections should be deleted.
         Doing so will be delete all the associated users. You can force deletes by setting 'AUTH0_ALLOW_CONNECTION_DELETE' to true in the config
         \n${dumpJSON(changes.del.map(db => ({ name: db.name, id: db.id })), 2)})
          `);
