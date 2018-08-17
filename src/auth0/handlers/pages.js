@@ -73,7 +73,9 @@ export default class PageHandler extends DefaultHandler {
       return accum;
     }, {});
 
-    await this.client.tenant.updateSettings(update);
+    if (Object.keys(update).length) {
+      await this.client.tenant.updateSettings(update);
+    }
 
     toUpdate.forEach((page) => {
       this.updated += 1;
