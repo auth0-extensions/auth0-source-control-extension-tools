@@ -39,9 +39,6 @@ export default class TenantHandler extends DefaultHandler {
   async processChanges(assets) {
     const { tenant } = assets;
 
-    // Nothing to process?
-    if (!tenant) return;
-
     if (Object.keys(tenant).length > 0) {
       await this.client.tenant.updateSettings(tenant);
       this.updated += 1;

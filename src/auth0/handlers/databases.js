@@ -63,7 +63,7 @@ export default class DatabaseHandler extends DefaultHandler {
     const { databases } = assets;
 
     // Do nothing if not set
-    if (!databases) return;
+    if (!databases || !databases.length) return {};
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
@@ -87,7 +87,7 @@ export default class DatabaseHandler extends DefaultHandler {
     const { databases } = assets;
 
     // Do nothing if not set
-    if (!databases) return;
+    if (!databases || !databases.length) return;
 
     const changes = await this.calcChanges(assets);
 

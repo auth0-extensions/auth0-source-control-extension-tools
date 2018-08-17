@@ -61,7 +61,7 @@ export default class DefaultHandler {
     const typeAssets = assets[this.type] || [];
 
     // Do nothing if not set
-    if (!typeAssets) return {};
+    if (!typeAssets.length) return {};
 
     const existing = await this.getType();
 

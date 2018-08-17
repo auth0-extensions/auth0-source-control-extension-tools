@@ -45,7 +45,7 @@ export default class RulesConfigsHandler extends DefaultHandler {
     const { rulesConfigs } = assets;
 
     // Do nothing if not set
-    if (!rulesConfigs) return {};
+    if (!rulesConfigs || !rulesConfigs.length) return {};
 
     // Intention is to not delete/cleanup old configRules, that needs to be handled manually.
     return {

@@ -44,7 +44,7 @@ export default class ClientHandler extends DefaultHandler {
     const { clients } = assets;
 
     // Do nothing if not set
-    if (!clients) return;
+    if (!clients || !clients.length) return;
 
     const changes = await this.calcChanges(assets);
 

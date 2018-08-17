@@ -3,6 +3,11 @@ import { dumpJSON, calcChanges, stripFields, duplicateItems } from '../../utils'
 import DefaultHandler from './default';
 import log from '../../logger';
 
+export const excludeSchema = {
+  type: 'array',
+  items: { type: 'string' }
+};
+
 export const schema = {
   type: 'array',
   items: {
@@ -70,7 +75,7 @@ export default class RulesHandler extends DefaultHandler {
   async calcChanges(assets, includeExcluded = false) {
     let { rules } = assets;
 
-    const excludedRules = assets.excludedRules || [];
+    const excludedRules = assets.exclude.rules || [];
 
     let existing = await this.getType();
 
@@ -114,9 +119,9 @@ export default class RulesHandler extends DefaultHandler {
     const { rules } = assets;
 
     // Do nothing if not set
-    if (!rules) return;
+    if (!rules || !rules.length) return;
 
-    const excludedRules = assets.excludedRules || [];
+    const excludedRules = assets.exclude.rules || [];
 
     // Figure out what needs to be updated vs created
     const { update, create, del } = await this.calcChanges(assets, true);
@@ -153,7 +158,7 @@ export default class RulesHandler extends DefaultHandler {
     const { rules } = assets;
 
     // Do nothing if not set
-    if (!rules) return;
+    if (!rules || !rules.length) return;
 
     // Figure out what needs to be updated vs created
     const {

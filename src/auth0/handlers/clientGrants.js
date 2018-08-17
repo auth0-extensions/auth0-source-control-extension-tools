@@ -46,7 +46,7 @@ export default class ClientHandler extends DefaultHandler {
     const { clientGrants } = assets;
 
     // Do nothing if not set
-    if (!clientGrants) return {};
+    if (!clientGrants || !clientGrants.length) return {};
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
@@ -65,7 +65,7 @@ export default class ClientHandler extends DefaultHandler {
     const { clientGrants } = assets;
 
     // Do nothing if not set
-    if (!clientGrants) return;
+    if (!clientGrants || !clientGrants.length) return;
 
     const changes = await this.calcChanges(assets);
     await super.processChanges(assets, { ...changes });

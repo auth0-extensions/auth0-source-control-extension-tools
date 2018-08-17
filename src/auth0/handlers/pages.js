@@ -90,7 +90,7 @@ export default class PageHandler extends DefaultHandler {
     const { pages } = assets;
 
     // Do nothing if not set
-    if (!pages) return;
+    if (!pages || !pages.length) return;
 
     // Login page is handled via the global client
     const loginPage = pages.filter(p => p.name === 'login')[0];
