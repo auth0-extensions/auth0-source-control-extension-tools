@@ -52,7 +52,7 @@ export default class ClientHandler extends DefaultHandler {
     const shouldDelete = this.config('AUTH0_ALLOW_CLIENT_DELETE') === 'true' || this.config('AUTH0_ALLOW_CLIENT_DELETE') === true;
     if (!shouldDelete) {
       if (changes.del.length > 0) {
-        log.warn(`WARNING: Detected the following clients should be deleted.
+        log.warn(`Detected the following clients should be deleted.
         Doing so will be prevent authentications using the client_id. You can force deletes by setting 'AUTH0_ALLOW_CLIENT_DELETE' to true in the config
         \n${dumpJSON(changes.del.map(client => ({ name: client.name, client_id: client.client_id })), 2)})
          `);
