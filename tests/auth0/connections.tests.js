@@ -1,5 +1,6 @@
 const expect = require('expect');
 const Promise = require('bluebird');
+const _ = require('lodash');
 
 const connections = require('../../src/auth0/connections');
 
@@ -7,12 +8,39 @@ describe('#connections', () => {
   let progress = null;
   let updateFilters = [ ];
   let updatePayloads = [ ];
+  let getAllPayload = null;
 
   const existingConnections = [
-    { id: 456, name: 'Username-Password' },
-    { id: 123, name: 'My-Other-Custom-DB' },
-    { id: 666, name: 'Bad-Connection' },
-    { id: 789, name: 'My-Custom-DB', options: { import_mode: true } }
+    { id: 456, name: 'Username-Password', strategy: 'auth0' },
+    { id: 123,
+      name: 'My-Other-Custom-DB',
+      options: {
+        passwordPolicy: 'low',
+        requires_username: false,
+        configuration: {
+          some_key: '$encrypted'
+        }
+      },
+      metadata: { meta: true },
+      strategy: 'auth0'
+    },
+    { id: 666, name: 'Bad-Connection', strategy: 'auth0' },
+    { id: 789, name: 'My-Custom-DB', options: { import_mode: true }, strategy: 'auth0' },
+    {
+      id: 888,
+      name: 'With-Config',
+      options: {
+        configuration: {
+          some_key: '$encrypted'
+        }
+      },
+      strategy: 'auth0'
+    },
+    {
+      id: 999,
+      name: 'Waad',
+      strategy: 'waad'
+    }
   ];
 
   const auth0 = {
@@ -26,7 +54,8 @@ describe('#connections', () => {
         updatePayloads.push(payload);
         return Promise.resolve();
       },
-      getAll() {
+      getAll(payload) {
+        getAllPayload = payload;
         return Promise.resolve(
           existingConnections
         );
@@ -51,6 +80,35 @@ describe('#connections', () => {
       },
       get_user: {
         scriptFile: 'function get_user() { }'
+      }
+    },
+    configuration: {
+      options: {
+        requires_username: true
+      },
+      metadata: {
+        setting: 'test'
+      }
+    }
+  };
+
+  const waadDatabaseWithScripts = {
+    name: 'Waad',
+    scripts: {
+      login: {
+        scriptFile: 'function login() { }'
+      }
+    }
+  };
+
+  const databaseWithConfigurationKey = {
+    name: 'With-Config',
+    scripts: {},
+    configuration: {
+      options: {
+        bareConfiguration: {
+          some_key: 'new_value'
+        }
       }
     }
   };
@@ -92,6 +150,15 @@ describe('#connections', () => {
           done();
         });
     });
+
+    it('should get all connections, not only \'auth0\' connections, to be able to update configuration', (done) => {
+      connections.getDatabaseConnections(progress, auth0, [ { name: 'My-Custom-DB' } ])
+        .then(() => {
+          expect(getAllPayload).toExist();
+          expect(getAllPayload.strategy).toNotExist();
+          done();
+        });
+    });
   });
 
   describe('#updateDatabase', () => {
@@ -121,10 +188,60 @@ describe('#connections', () => {
         });
     });
 
+    it('should not send \'options.configuration\' from the connection if \'options.bareConfiguration\' exists in the DB', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, databaseWithConfigurationKey)
+        .then(() => {
+          expect(updatePayloads[0]).toExist();
+          expect(updatePayloads[0].options.configuration).toNotExist();
+          expect(updatePayloads[0].options.bareConfiguration).toEqual(databaseWithConfigurationKey.configuration.options.bareConfiguration);
+          done();
+        });
+    });
+
+    it('should preserve/send \'options.configuration\' from the connection if the DB doesn\'t have \'options.bareConfiguration\'', (done) => {
+      const expectedConfig = _.find(existingConnections, c => c.id === 123).options.configuration;
+      connections.updateDatabase(progress, auth0, existingConnections, database)
+        .then(() => {
+          expect(updatePayloads[0].options).toExist();
+          expect(updatePayloads[0].options.configuration).toEqual(expectedConfig);
+          done();
+        });
+    });
+
+    it('should include custom options in the update', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, database)
+        .then(() => {
+          expect(updatePayloads[0].options).toExist();
+          expect(updatePayloads[0].options.requires_username).toEqual(true);
+          expect(updatePayloads[0].options.passwordPolicy).toEqual('low');
+          done();
+        });
+    });
+
+    it('should include custom metadata in the update', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, database)
+        .then(() => {
+          expect(updatePayloads[0].metadata).toExist();
+          expect(updatePayloads[0].metadata.setting).toEqual('test');
+          expect(updatePayloads[0].metadata.meta).toEqual(true);
+          done();
+        });
+    });
+
     it('should return error if cannot update', (done) => {
       connections.updateDatabase(progress, auth0, existingConnections, brokenDatabase)
         .catch((err) => {
           expect(err.message).toEqual('ERROR');
+          done();
+        });
+    });
+
+    it('should refuse to update a non-auth0 connection with scripts', (done) => {
+      connections.updateDatabase(progress, auth0, existingConnections, waadDatabaseWithScripts)
+        .then(() => done(new Error('Unexpected success')))
+        .catch((err) => {
+          expect(err).toExist();
+          expect(err.message).toEqual('The login script is not allowed for ' + waadDatabaseWithScripts.name + '.');
           done();
         });
     });

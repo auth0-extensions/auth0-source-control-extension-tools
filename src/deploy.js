@@ -55,7 +55,8 @@ module.exports = function(progressData, context, client, storage, config, slackT
         rules: context.rules,
         ruleConfigs: context.ruleConfigs,
         pages: context.pages,
-        databases: context.databases
+        databases: context.databases,
+        emailTemplates: context.emailTemplates
       }, utils.checksumReplacer([ 'htmlFile', 'scriptFile' ]));
       progress.log('Assets: ' + assets, null, 2);
     })
@@ -97,6 +98,14 @@ module.exports = function(progressData, context, client, storage, config, slackT
     })
     .then(function() {
       return auth0.updateClients(progress, client);
+    })
+    .then(function() {
+      // Update email provider _before_ templates, since a non-empty 'from' address in
+      // a template requires an enabled email provider.
+      return auth0.updateEmailProvider(progress, client, context.emailProviders);
+    })
+    .then(function() {
+      return auth0.updateAllEmailTemplates(progress, client, context.emailTemplates);
     })
     .then(function() {
       return progress.log('Done.');
