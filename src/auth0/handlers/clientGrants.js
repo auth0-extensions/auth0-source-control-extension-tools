@@ -1,5 +1,4 @@
-import DefaultHandler from './default';
-import { order } from './default';
+import DefaultHandler, { order } from './default';
 
 export const schema = {
   type: 'array',

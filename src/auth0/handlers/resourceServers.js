@@ -69,7 +69,7 @@ export default class ResourceServersHandler extends DefaultHandler {
 
     let existing = await this.getType();
 
-    // Filter excluded rules
+    // Filter excluded
     resourceServers = resourceServers.filter(r => !excluded.includes(r.name));
     existing = existing.filter(r => !excluded.includes(r.name));
 

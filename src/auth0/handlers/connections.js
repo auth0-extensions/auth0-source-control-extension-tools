@@ -81,7 +81,6 @@ export default class ConnectionsHandler extends DefaultHandler {
     const changes = await this.calcChanges(assets);
 
     // Don't delete connections unless told as it's destructive and will delete all associated users
-    const a = log;
     const shouldDelete = this.config('AUTH0_ALLOW_CONNECTION_DELETE') === 'true' || this.config('AUTH0_ALLOW_CONNECTION_DELETE') === true;
     if (!shouldDelete) {
       if (changes.del.length > 0) {
