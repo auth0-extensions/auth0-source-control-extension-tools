@@ -29,7 +29,7 @@ export default class EmailProviderHandler extends DefaultHandler {
     const { emailProvider } = assets;
 
     // Do nothing if not set
-    if (!emailProvider || !emailProvider.length) return;
+    if (!emailProvider) return;
 
     if (Object.keys(emailProvider).length > 0) {
       let existing = await this.getType();

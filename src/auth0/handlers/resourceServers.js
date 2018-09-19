@@ -65,7 +65,7 @@ export default class ResourceServersHandler extends DefaultHandler {
     // Do nothing if not set
     if (!resourceServers || !resourceServers.length) return {};
 
-    const excluded = assets.exclude.resourceServers || [];
+    const excluded = (assets.exclude && assets.exclude.resourceServers) || [];
 
     let existing = await this.getType();
 
@@ -84,7 +84,7 @@ export default class ResourceServersHandler extends DefaultHandler {
 
     const mgmtAPIResource = resourceServers.filter(r => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME)[0];
     if (mgmtAPIResource) {
-      throw new ValidationError(`You can not configure the '${constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME}.`);
+      throw new ValidationError(`You can not configure the '${constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME}'.`);
     }
 
     await super.validate(assets);

@@ -75,7 +75,7 @@ export default class RulesHandler extends DefaultHandler {
   async calcChanges(assets, includeExcluded = false) {
     let { rules } = assets;
 
-    const excludedRules = assets.exclude.rules || [];
+    const excludedRules = (assets.exclude && assets.exclude.rules) || [];
 
     let existing = await this.getType();
 
@@ -121,7 +121,7 @@ export default class RulesHandler extends DefaultHandler {
     // Do nothing if not set
     if (!rules || !rules.length) return;
 
-    const excludedRules = assets.exclude.rules || [];
+    const excludedRules = (assets.exclude && assets.exclude.rules) || [];
 
     // Figure out what needs to be updated vs created
     const { update, create, del } = await this.calcChanges(assets, true);

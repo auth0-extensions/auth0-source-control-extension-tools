@@ -1,9 +1,9 @@
-const expect = require('expect');
+const { expect } = require('chai');
 const tools = require('../src/index');
 
 describe('#constants', () => {
   it('should be exposed', () => {
-    expect(tools.constants.PAGE_NAMES).toExist();
-    expect(tools.constants.RULES_STAGES).toInclude('login_success');
+    expect(tools.constants.PAGE_NAMES).to.be.an('array');
+    expect(tools.constants.RULES_STAGES).to.include('login_success');
   });
 });
