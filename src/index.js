@@ -1,10 +1,21 @@
-const constants = require('./constants');
-const deploy = require('./deploy');
-const utils = require('./utils');
+import constants from './constants';
+import deploy from './deploy';
+import pagedClient from './auth0/client';
+import { keywordReplace, loadFile } from './utils';
 
-module.exports.constants = constants;
-module.exports.deploy = deploy;
+export default {
+  constants,
+  deploy,
+  keywordReplace,
+  loadFile,
+  pagedClient
+};
 
-module.exports.unifyDatabases = utils.unifyDatabases;
-module.exports.unifyScripts = utils.unifyScripts;
-module.exports.unifyConfigs = utils.unifyConfigs;
+
+export {
+  constants,
+  deploy,
+  keywordReplace,
+  loadFile,
+  pagedClient
+};
