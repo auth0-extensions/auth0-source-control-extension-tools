@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import dotProp from 'dot-prop';
+import log from './logger';
+
 
 export function keywordReplace(input, mappings) {
   // Replace keywords with mappings within input.
@@ -116,8 +118,20 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
 
 export function stripFields(obj, fields) {
   // Strip object fields supporting dot notation (ie: a.deep.field)
+  const stripped = [];
+
   const newObj = { ...obj };
-  fields.forEach(f => dotProp.delete(newObj, f));
+  fields.forEach((f) => {
+    if (dotProp.get(newObj, f) !== undefined) {
+      dotProp.delete(newObj, f);
+      stripped.push(f);
+    }
+  });
+
+  if (stripped) {
+    const name = [ 'id', 'client_id', 'template', 'name' ].reduce((n, k) => newObj[k] || n, '');
+    log.debug(`Stripping "${name}" read-only fields ${JSON.stringify(stripped)}`);
+  }
   return newObj;
 }
 

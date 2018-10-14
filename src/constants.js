@@ -84,6 +84,17 @@ constants.EMAIL_TEMPLATES_NAMES = [
   constants.EMAIL_MFA_OOB_CODE + '.html'
 ];
 
+constants.EMAIL_TEMPLATES_TYPES = [
+  'verify_email',
+  'reset_email',
+  'welcome_email',
+  'blocked_account',
+  'stolen_credentials',
+  'enrollment_email',
+  'mfa_oob_code',
+  'change_password',
+  'password_reset'
+];
 
 constants.RESOURCE_SERVERS_DIRECTORY = 'resource-servers';
 constants.RESOURCE_SERVERS_CLIENT_NAME = 'resourceServers';

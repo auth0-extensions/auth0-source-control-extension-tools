@@ -56,7 +56,22 @@ export default class DatabaseHandler extends DefaultHandler {
 
   async getType() {
     if (this.existing) return this.existing;
-    return this.client.connections.getAll({ strategy: 'auth0', paginate: true });
+    this.existing = this.client.connections.getAll({ strategy: 'auth0', paginate: true });
+
+    // Convert enabled_clients from id to name
+    const clients = await this.client.clients.getAll({ paginate: true });
+    this.existing = this.existing.map(db => ({
+      ...db,
+      enabled_clients: [
+        ...(db.enabled_clients || []).map((clientId) => {
+          const found = clients.filter(c => c.client_id === clientId)[0];
+          if (found) return found.name;
+          return clientId;
+        })
+      ]
+    }));
+
+    return this.existing;
   }
 
   async calcChanges(assets) {

@@ -1,12 +1,6 @@
 import DefaultHandler from './default';
 
-export const schema = {
-  type: 'object',
-  properties: {
-    name: { type: 'string' }
-  },
-  required: [ 'name' ]
-};
+export const schema = { type: 'object' };
 
 export default class EmailProviderHandler extends DefaultHandler {
   constructor(options) {

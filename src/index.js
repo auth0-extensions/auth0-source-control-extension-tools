@@ -1,6 +1,6 @@
 import constants from './constants';
 import deploy from './deploy';
-import pagedClient from './auth0/client';
+import Auth0 from './auth0';
 import { keywordReplace, loadFile } from './utils';
 
 export default {
@@ -8,7 +8,7 @@ export default {
   deploy,
   keywordReplace,
   loadFile,
-  pagedClient
+  Auth0
 };
 
 
@@ -17,5 +17,5 @@ export {
   deploy,
   keywordReplace,
   loadFile,
-  pagedClient
+  Auth0
 };

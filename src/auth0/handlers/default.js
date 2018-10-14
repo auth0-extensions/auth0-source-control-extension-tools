@@ -1,7 +1,9 @@
 import { ValidationError } from 'auth0-extension-tools';
 
 import log from '../../logger';
-import { stripFields, dumpJSON, calcChanges, duplicateItems } from '../../utils';
+import {
+  stripFields, dumpJSON, calcChanges, duplicateItems
+} from '../../utils';
 
 export function order(value) {
   return function decorator(t, n, descriptor) {
@@ -55,6 +57,12 @@ export default class DefaultHandler {
   async getType() {
     // Each type to impl how to get the existing as its not consistent across the mgnt api.
     throw new Error(`Must implement getType for type ${this.type}`);
+  }
+
+  async load() {
+    // Load Asset from Tenant
+    this.existing = await this.getType();
+    return { [this.type]: this.existing };
   }
 
   async calcChanges(assets) {

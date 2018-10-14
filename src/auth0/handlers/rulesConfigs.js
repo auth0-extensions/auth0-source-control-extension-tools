@@ -25,8 +25,7 @@ export default class RulesConfigsHandler extends DefaultHandler {
   }
 
   async getType() {
-    // Not required to return blank
-    return [];
+    return this.client.rulesConfigs.getAll({ paginate: true });
   }
 
   didDelete(config) {

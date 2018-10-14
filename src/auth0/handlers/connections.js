@@ -44,7 +44,22 @@ export default class ConnectionsHandler extends DefaultHandler {
     if (this.existing) return this.existing;
     const connections = await this.client.connections.getAll({ paginate: true });
     // Filter out database connections
-    return connections.filter(c => c.strategy !== 'auth0');
+    this.existing = connections.filter(c => c.strategy !== 'auth0');
+
+    // Convert enabled_clients from id to name
+    const clients = await this.client.clients.getAll({ paginate: true });
+    this.existing = this.existing.map(connection => ({
+      ...connection,
+      enabled_clients: [
+        ...(connection.enabled_clients || []).map((clientId) => {
+          const found = clients.filter(c => c.client_id === clientId)[0];
+          if (found) return found.name;
+          return clientId;
+        })
+      ]
+    }));
+
+    return this.existing;
   }
 
   async calcChanges(assets) {
