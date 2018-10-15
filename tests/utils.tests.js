@@ -76,7 +76,7 @@ describe('#utils', function() {
         deep: 'field'
       }
     };
-    expect(utils.stripFields(obj, [ 'a', 'other.deep' ])).to.deep.equal({ other: {} });
+    expect(utils.stripFields(obj, [ 'a', 'other.deep', 'notexist' ])).to.deep.equal({ other: {} });
   });
 
   it('should duplicate items', () => {
