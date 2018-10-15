@@ -102,6 +102,7 @@ constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME = 'Auth0 Management API';
 constants.RESOURCE_SERVERS_ID_NAME = 'id';
 
 constants.CLIENTS_DIRECTORY = 'clients';
+constants.CLIENTS_GRANTS_DIRECTORY = 'grants';
 constants.CLIENTS_CLIENT_NAME = 'clients';
 constants.CLIENTS_CLIENT_ID_NAME = 'client_id';
 

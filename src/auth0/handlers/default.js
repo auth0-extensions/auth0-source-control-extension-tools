@@ -61,6 +61,7 @@ export default class DefaultHandler {
 
   async load() {
     // Load Asset from Tenant
+    log.info(`Retrieving ${this.type} data from Auth0`);
     this.existing = await this.getType();
     return { [this.type]: this.existing };
   }

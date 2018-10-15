@@ -105,7 +105,7 @@ export default class PageHandler extends DefaultHandler {
       if (tenantSettings[name]) {
         pages.push({
           ...page,
-          key
+          name: key
         });
       }
     });
