@@ -64,7 +64,7 @@ export default class DatabaseHandler extends DefaultHandler {
       ...db,
       enabled_clients: [
         ...(db.enabled_clients || []).map((clientId) => {
-          const found = clients.filter(c => c.client_id === clientId)[0];
+          const found = clients.find(c => c.client_id === clientId);
           if (found) return found.name;
           return clientId;
         })
@@ -86,7 +86,7 @@ export default class DatabaseHandler extends DefaultHandler {
       ...db,
       enabled_clients: [
         ...(db.enabled_clients || []).map((name) => {
-          const found = clients.filter(c => c.name === name)[0];
+          const found = clients.find(c => c.name === name);
           if (found) return found.client_id;
           return name;
         })

@@ -120,7 +120,7 @@ export default class PageHandler extends DefaultHandler {
     if (!pages || !pages.length) return;
 
     // Login page is handled via the global client
-    const loginPage = pages.filter(p => p.name === 'login')[0];
+    const loginPage = pages.find(p => p.name === 'login');
     if (loginPage) {
       await this.updateLoginPage(loginPage);
     }

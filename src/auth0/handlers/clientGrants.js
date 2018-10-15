@@ -45,7 +45,7 @@ export default class ClientHandler extends DefaultHandler {
     const clients = await this.client.clients.getAll({ paginate: true });
     this.existing = this.existing.map((clientGrant) => {
       const grant = { ...clientGrant };
-      const found = clients.filter(c => c.client_id === grant.client_id)[0];
+      const found = clients.find(c => c.client_id === grant.client_id);
       if (found) grant.client_id = found.name;
       return grant;
     });
@@ -63,7 +63,7 @@ export default class ClientHandler extends DefaultHandler {
     const clients = await this.client.clients.getAll({ paginate: true });
     const formatted = assets.clientGrants.map((clientGrant) => {
       const grant = { ...clientGrant };
-      const found = clients.filter(c => c.name === grant.client_id)[0];
+      const found = clients.find(c => c.name === grant.client_id);
       if (found) grant.client_id = found.client_id;
       return grant;
     });

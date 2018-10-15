@@ -82,7 +82,7 @@ export default class ResourceServersHandler extends DefaultHandler {
     // Do nothing if not set
     if (!resourceServers || !resourceServers.length) return;
 
-    const mgmtAPIResource = resourceServers.filter(r => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME)[0];
+    const mgmtAPIResource = resourceServers.find(r => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME);
     if (mgmtAPIResource) {
       throw new ValidationError(`You can not configure the '${constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME}'.`);
     }

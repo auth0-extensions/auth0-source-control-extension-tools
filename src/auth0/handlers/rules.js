@@ -95,7 +95,7 @@ export default class RulesHandler extends DefaultHandler {
     let nextOrderNo = Math.max(...existing.map(r => r.order)) + 1;
 
     const reOrder = futureRules.reduce((accum, r) => {
-      const conflict = existing.filter(f => r.order === f.order && r.name !== f.name)[0];
+      const conflict = existing.find(f => r.order === f.order && r.name !== f.name);
       if (conflict) {
         nextOrderNo += 1;
         accum.push({
