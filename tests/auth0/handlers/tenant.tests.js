@@ -16,6 +16,24 @@ describe('#tenant handler', () => {
     });
   });
 
+  it('should get tenant', async () => {
+    const auth0 = {
+      tenant: {
+        getSettings: () => ({
+          friendly_name: 'Test',
+          default_directory: 'users'
+        })
+      }
+    };
+
+    const handler = new tenant.default({ client: auth0 });
+    const data = await handler.getType();
+    expect(data).to.deep.equal({
+      friendly_name: 'Test',
+      default_directory: 'users'
+    });
+  });
+
   describe('#tenant process', () => {
     it('should update tenant settings', async () => {
       const auth0 = {

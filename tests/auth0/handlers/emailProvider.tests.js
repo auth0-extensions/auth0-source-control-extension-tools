@@ -56,6 +56,18 @@ describe('#emailProvider handler', () => {
       await stageFn.apply(handler, [ { emailProvider: data } ]);
     });
 
+    it('should get email provider', async () => {
+      const auth0 = {
+        emailProvider: {
+          get: () => ({ name: 'smtp', enabled: true })
+        }
+      };
+
+      const handler = new emailProvider.default({ client: auth0 });
+      const data = await handler.getType();
+      expect(data).to.deep.equal({ name: 'smtp', enabled: true });
+    });
+
     it('should delete email provider and create another one instead', async () => {
       const auth0 = {
         emailProvider: {

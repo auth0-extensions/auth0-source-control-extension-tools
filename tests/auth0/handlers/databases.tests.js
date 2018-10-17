@@ -74,6 +74,27 @@ describe('#databases handler', () => {
       await stageFn.apply(handler, [ { databases: [ { name: 'someDatabase' } ] } ]);
     });
 
+    it('should get databases', async () => {
+      const clientId = 'rFeR6vyzQcDEgSUsASPeF4tXr3xbZhxE';
+      const auth0 = {
+        connections: {
+          getAll: () => [
+            { strategy: 'auth0', name: 'db', enabled_clients: [ clientId ] }
+          ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'test client', client_id: clientId }
+          ]
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([ { strategy: 'auth0', name: 'db', enabled_clients: [ 'test client' ] } ]);
+    });
+
     it('should update database', async () => {
       const auth0 = {
         connections: {

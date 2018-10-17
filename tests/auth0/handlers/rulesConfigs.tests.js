@@ -32,4 +32,19 @@ describe('#rulesConfigs handler', () => {
       await stageFn.apply(handler, [ { rulesConfigs: [ { key: 'someKey', value: 'some_value' } ] } ]);
     });
   });
+
+  it('should get rules configs', async () => {
+    const rulesConfigData = [
+      { key: 'SOME_SECRET' },
+      { key: 'SOME_OTHER_SECRET' }
+    ];
+
+    const auth0 = {
+      rulesConfigs: { getAll: () => rulesConfigData }
+    };
+
+    const handler = new rulesConfigs.default({ client: auth0 });
+    const data = await handler.getType();
+    expect(data).to.deep.equal(rulesConfigData);
+  });
 });

@@ -64,9 +64,9 @@ describe('#clients handler', () => {
             return Promise.resolve(data);
           },
           update: () => Promise.resolve([]),
-          delete: () => Promise.resolve([])
+          delete: () => Promise.resolve([]),
+          getAll: () => []
         },
-        getClients: () => [],
         pool
       };
 
@@ -74,6 +74,22 @@ describe('#clients handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { clients: [ { name: 'someClient' } ] } ]);
+    });
+
+    it('should get clients', async () => {
+      const auth0 = {
+        clients: {
+          getAll: () => [
+            { name: 'test client', client_id: 'FMfcgxvzLDvPsgpRFKkLVrnKqGgkHhQV' },
+            { name: 'deploy client', client_id: 'client_id' }
+          ]
+        },
+        pool
+      };
+
+      const handler = new clients.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([ { name: 'test client', client_id: 'FMfcgxvzLDvPsgpRFKkLVrnKqGgkHhQV' } ]);
     });
 
     it('should update client', async () => {
@@ -92,9 +108,9 @@ describe('#clients handler', () => {
 
             return Promise.resolve(data);
           },
-          delete: () => Promise.resolve([])
+          delete: () => Promise.resolve([]),
+          getAll: () => [ { client_id: 'client1', name: 'someClient' } ]
         },
-        getClients: () => [ { client_id: 'client1', name: 'someClient' } ],
         pool
       };
 
@@ -117,9 +133,10 @@ describe('#clients handler', () => {
             expect(params).to.be.an('object');
             expect(params.client_id).to.equal('client1');
             return Promise.resolve([]);
-          }
+          },
+          getAll: () => [ { client_id: 'client1', name: 'existingClient' } ]
+
         },
-        getClients: () => [ { client_id: 'client1', name: 'existingClient' } ],
         pool
       };
 
@@ -138,9 +155,9 @@ describe('#clients handler', () => {
           delete: (params) => {
             expect(params).to.be.an('undefined');
             return Promise.resolve([]);
-          }
+          },
+          getAll: () => [ { client_id: 'client1', name: 'existingClient' } ]
         },
-        getClients: () => [ { client_id: 'client1', name: 'existingClient' } ],
         pool
       };
 
@@ -151,3 +168,4 @@ describe('#clients handler', () => {
     });
   });
 });
+
