@@ -79,6 +79,29 @@ describe('#connections handler', () => {
       await stageFn.apply(handler, [ { connections: [ { name: 'someConnection' } ] } ]);
     });
 
+    it('should get connections', async () => {
+      const clientId = 'rFeR6vyzQcDEgSUsASPeF4tXr3xbZhxE';
+
+      const auth0 = {
+        connections: {
+          getAll: () => [
+            { strategy: 'github', name: 'github', enabled_clients: [ clientId ] },
+            { strategy: 'auth0', name: 'db-should-be-ignored', enabled_clients: [] }
+          ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'test client', client_id: clientId }
+          ]
+        },
+        pool
+      };
+
+      const handler = new connections.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([ { strategy: 'github', name: 'github', enabled_clients: [ 'test client' ] } ]);
+    });
+
     it('should update connection', async () => {
       const auth0 = {
         connections: {

@@ -54,6 +54,11 @@ export default class Auth0 {
     await this.runStage('validate');
   }
 
+  async loadAll() {
+    // Populate assets from auth0 tenant
+    await this.runStage('load');
+  }
+
   async processChanges() {
     await this.runStage('processChanges');
   }

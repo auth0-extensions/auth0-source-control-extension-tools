@@ -67,7 +67,7 @@ export default class ClientHandler extends DefaultHandler {
     if (this.existing) {
       return this.existing;
     }
-    this.existing = await this.client.getClients({ paginate: true, is_global: false });
+    this.existing = await this.client.clients.getAll({ paginate: true, is_global: false });
 
     // Always filter out the client we are using to access Auth0 Management API
     // As it could cause problems if it gets deleted or updated etc

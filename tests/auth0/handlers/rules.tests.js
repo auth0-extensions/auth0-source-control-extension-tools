@@ -135,6 +135,27 @@ describe('#rules handler', () => {
       await stageFn.apply(handler, [ { rules: [ { name: 'someRule', script: 'rule_script' } ] } ]);
     });
 
+    it('should get rules', async () => {
+      const script = 'function fake() {};';
+
+      const rulesData = [
+        {
+          enabled: false, name: 'test-rule-1', script, order: 1, stage: 'login_success'
+        },
+        {
+          enabled: false, name: 'test-rule-2', script, order: 2, stage: 'login_success'
+        }
+      ];
+
+      const auth0 = {
+        rules: { getAll: () => rulesData }
+      };
+
+      const handler = new rules.default({ client: auth0 });
+      const data = await handler.getType();
+      expect(data).to.deep.equal(rulesData);
+    });
+
     it('should update rule', async () => {
       const auth0 = {
         rules: {

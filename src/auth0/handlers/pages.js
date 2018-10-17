@@ -84,8 +84,33 @@ export default class PageHandler extends DefaultHandler {
   }
 
   async getType() {
-    // Override and return nothing as we don't need to get pages, just update them.
-    return [];
+    const pages = [];
+
+    // Login page is handled via the global client
+    const globalClient = await this.client.clients.getAll({ is_global: true });
+    if (!globalClient[0]) {
+      throw new Error('Unable to find global client id when trying to dump the login page');
+    }
+
+    pages.push({
+      name: 'login',
+      enabled: globalClient[0].custom_login_page_on,
+      html: globalClient[0].custom_login_page
+    });
+
+    const tenantSettings = await this.client.tenant.getSettings();
+
+    Object.entries(pageNameMap).forEach(([ key, name ]) => {
+      const page = tenantSettings[name];
+      if (tenantSettings[name]) {
+        pages.push({
+          ...page,
+          name: key
+        });
+      }
+    });
+
+    return pages;
   }
 
   async processChanges(assets) {
@@ -95,7 +120,7 @@ export default class PageHandler extends DefaultHandler {
     if (!pages || !pages.length) return;
 
     // Login page is handled via the global client
-    const loginPage = pages.filter(p => p.name === 'login')[0];
+    const loginPage = pages.find(p => p.name === 'login');
     if (loginPage) {
       await this.updateLoginPage(loginPage);
     }

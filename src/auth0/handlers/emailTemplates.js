@@ -27,6 +27,24 @@ export default class EmailTemplateHandler extends DefaultHandler {
     });
   }
 
+  async getType() {
+    const emailTemplates = [];
+
+    await Promise.all(constants.EMAIL_TEMPLATES_TYPES.map(async (name) => {
+      try {
+        const template = await this.client.emailTemplates.get({ name });
+        emailTemplates.push(template);
+      } catch (err) {
+      // Ignore if not found, else throw error
+        if (err.statusCode !== 404) {
+          throw err;
+        }
+      }
+    }));
+
+    return emailTemplates;
+  }
+
   async updateOrCreate(emailTemplate) {
     try {
       const params = { name: emailTemplate[this.id] };

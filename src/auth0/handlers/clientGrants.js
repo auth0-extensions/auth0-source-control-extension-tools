@@ -38,7 +38,19 @@ export default class ClientHandler extends DefaultHandler {
     // Always filter out the client we are using to access Auth0 Management API
     // As it could cause problems if the grants are deleted or updated etc
     const currentClient = this.config('AUTH0_CLIENT_ID');
-    return this.existing.filter(grant => grant.client_id !== currentClient);
+
+    this.existing = this.existing.filter(grant => grant.client_id !== currentClient);
+
+    // Convert enabled_clients from id to name
+    const clients = await this.client.clients.getAll({ paginate: true });
+    this.existing = this.existing.map((clientGrant) => {
+      const grant = { ...clientGrant };
+      const found = clients.find(c => c.client_id === grant.client_id);
+      if (found) grant.client_id = found.name;
+      return grant;
+    });
+
+    return this.existing;
   }
 
   async calcChanges(assets) {
@@ -51,7 +63,7 @@ export default class ClientHandler extends DefaultHandler {
     const clients = await this.client.clients.getAll({ paginate: true });
     const formatted = assets.clientGrants.map((clientGrant) => {
       const grant = { ...clientGrant };
-      const found = clients.filter(c => c.name === grant.client_id)[0];
+      const found = clients.find(c => c.name === grant.client_id);
       if (found) grant.client_id = found.client_id;
       return grant;
     });

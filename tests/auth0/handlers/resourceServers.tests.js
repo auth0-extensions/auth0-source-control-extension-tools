@@ -84,6 +84,21 @@ describe('#resourceServers handler', () => {
       await stageFn.apply(handler, [ { resourceServers: [ { name: 'someAPI' } ] } ]);
     });
 
+    it('should get resource servers', async () => {
+      const auth0 = {
+        resourceServers: {
+          getAll: () => [
+            { name: 'Auth0 Management API', identifier: 'https://test.auth0.com/api/v2/' },
+            { name: 'Company API', identifier: 'http://company.com/api' }
+          ]
+        }
+      };
+
+      const handler = new resourceServers.default({ client: auth0 });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([ { name: 'Company API', identifier: 'http://company.com/api' } ]);
+    });
+
     it('should update resource server', async () => {
       const auth0 = {
         resourceServers: {

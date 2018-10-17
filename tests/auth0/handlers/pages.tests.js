@@ -24,6 +24,39 @@ describe('#pages handler', () => {
       await stageFn.apply(handler, [ { pages: [ { name: 'login', html: 'login_body', enabled: true } ] } ]);
     });
 
+    it('should get pages', async () => {
+      const html = '<html>custom login page</html>';
+
+      const auth0 = {
+        clients: {
+          getAll: () => [
+            {
+              name: 'Global Client',
+              client_id: 'FMfcgxvzLDvPsgpRFKkLVrnKqGgkHhQV',
+              custom_login_page_on: true,
+              custom_login_page: html
+            }
+          ]
+        },
+        tenant: {
+          getSettings: () => ({
+            guardian_mfa_page: { enabled: true, html: html },
+            change_password: { enabled: true, html: html },
+            error_page: { enabled: true, html: html }
+          })
+        }
+      };
+
+      const handler = new pages.default({ client: auth0 });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([
+        { enabled: true, html: html, name: 'login' },
+        { enabled: true, html: html, name: 'guardian_multifactor' },
+        { enabled: true, html: html, name: 'password_reset' },
+        { enabled: true, html: html, name: 'error_page' }
+      ]);
+    });
+
     it('should update password_reset page', async () => {
       const auth0 = {
         tenant: {

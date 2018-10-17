@@ -57,6 +57,13 @@ export default class DefaultHandler {
     throw new Error(`Must implement getType for type ${this.type}`);
   }
 
+  async load() {
+    // Load Asset from Tenant
+    log.info(`Retrieving ${this.type} data from Auth0`);
+    this.existing = await this.getType();
+    return { [this.type]: this.existing };
+  }
+
   async calcChanges(assets) {
     const typeAssets = assets[this.type] || [];
 

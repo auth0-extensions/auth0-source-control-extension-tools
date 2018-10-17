@@ -2,6 +2,10 @@ const { expect } = require('chai');
 const emailTemplates = require('../../../src/auth0/handlers/emailTemplates');
 
 describe('#emailTemplates handler', () => {
+  const config = function(key) {
+    return config.data && config.data[key];
+  };
+
   describe('#emailTemplates process', () => {
     it('should update email template', async () => {
       const auth0 = {
@@ -23,6 +27,29 @@ describe('#emailTemplates handler', () => {
 
       await stageFn.apply(handler, [ { emailTemplates: [ { template: 'verify_email', body: 'body' } ] } ]);
     });
+
+    it('should get email templates', async () => {
+      const auth0 = {
+        emailTemplates: {
+          get: template => ({
+            template: template.name,
+            enabled: true,
+            body: '<html>some email</html>'
+          })
+        }
+      };
+
+      const handler = new emailTemplates.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data.length).to.be.above(1);
+      const verify = data.find(t => t.template === 'verify_email');
+      expect(verify).to.deep.equal({
+        template: 'verify_email',
+        enabled: true,
+        body: '<html>some email</html>'
+      });
+    });
+
 
     it('should create email template', async () => {
       const auth0 = {

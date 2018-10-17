@@ -83,6 +83,33 @@ describe('#clientGrants handler', () => {
       await stageFn.apply(handler, [ { clientGrants: data } ]);
     });
 
+    it('should get client grants', async () => {
+      const clientId = 'rFeR6vyzQcDEgSUsASPeF4tXr3xbZhxE';
+      const clientGrant = {
+        audience: 'https://test.auth0.com/api/v2/',
+        client_id: clientId,
+        id: 'cgr_0TLisL4eNHzhSR6j',
+        scope: [
+          'read:logs'
+        ]
+      };
+      const auth0 = {
+        clientGrants: {
+          getAll: () => [ clientGrant ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'test client', client_id: clientId }
+          ]
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([ { ...clientGrant, client_id: 'test client' } ]);
+    });
+
     it('should convert client_name to client_id', async () => {
       const auth0 = {
         clientGrants: {
@@ -154,7 +181,7 @@ describe('#clientGrants handler', () => {
       await stageFn.apply(handler, [ { clientGrants: data } ]);
     });
 
-    it('should delete client grant and create another one instead', async () => {
+    it('should delete client garant and create another one instead', async () => {
       const auth0 = {
         clientGrants: {
           create: (data) => {
