@@ -112,6 +112,19 @@ describe('#utils calcChanges', () => {
     expect(create).to.deep.include({ name: 'Create1', id: 'Create1' });
   });
 
+  it('should calc create grouped identifiers', () => {
+    const existing = [ { client_id: 'client1', audience: 'audience1', id: 'id1' } ];
+    const assets = [
+      { client_id: 'client1', audience: 'audience1', id: 'id3' },
+      { client_id: 'create1', audience: 'create1', id: 'create1' }
+    ];
+
+    const { create } = utils.calcChanges(assets, existing, [ 'id', [ 'client_id', 'audience' ] ]);
+
+    expect(create).to.have.length(1);
+    expect(create).to.deep.include({ client_id: 'create1', audience: 'create1', id: 'create1' });
+  });
+
   it('should calc delete', () => {
     const existing = [
       { name: 'Name1', id: 'id3' },
@@ -128,13 +141,26 @@ describe('#utils calcChanges', () => {
   it('should calc update', () => {
     const existing = [
       { name: 'Name1', id: 'id3' },
-      { name: 'Delete1', id: 'Delete1' }
+      { name: 'Update1', id: 'Update1' }
     ];
     const assets = [ { name: 'Name1', id: 'id1' } ];
 
-    const { del } = utils.calcChanges(assets, existing, [ 'id', 'name' ]);
+    const { update } = utils.calcChanges(assets, existing, [ 'id', 'name' ]);
 
-    expect(del).to.have.length(1);
-    expect(del).to.deep.include({ name: 'Delete1', id: 'Delete1' });
+    expect(update).to.have.length(1);
+    expect(update).to.deep.include({ name: 'Name1', id: 'id1' });
+  });
+
+  it('should calc update grouped identifiers', () => {
+    const existing = [
+      { client_id: 'client1', audience: 'audience1', id: 'id1' },
+      { client_id: 'Update1', audience: 'Update1', id: 'Update1' }
+    ];
+    const assets = [ { client_id: 'client1', audience: 'audience1', id: 'id3' } ];
+
+    const { update } = utils.calcChanges(assets, existing, [ 'id', [ 'client_id', 'audience' ] ]);
+
+    expect(update).to.have.length(1);
+    expect(update).to.deep.include({ client_id: 'client1', audience: 'audience1', id: 'id3' });
   });
 });

@@ -46,7 +46,19 @@ export default class ClientHandler extends DefaultHandler {
     // Do nothing if not set
     if (!clients || !clients.length) return;
 
-    const changes = await this.calcChanges(assets);
+    const {
+      del, update, create, conflicts
+    } = await this.calcChanges(assets);
+
+    // Always filter out the client we are using to access Auth0 Management API
+    // As it could cause problems if it gets deleted or updated etc
+    const currentClient = this.config('AUTH0_CLIENT_ID');
+    const changes = {
+      del: del.filter(c => c.client_id !== currentClient),
+      update: update.filter(c => c.client_id !== currentClient),
+      create: create.filter(c => c.client_id !== currentClient),
+      conflicts: conflicts.filter(c => c.client_id !== currentClient)
+    };
 
     // Don't delete clients unless told as you cannot recover client_id's if deleted.
     const shouldDelete = this.config('AUTH0_ALLOW_CLIENT_DELETE') === 'true' || this.config('AUTH0_ALLOW_CLIENT_DELETE') === true;
@@ -60,7 +72,9 @@ export default class ClientHandler extends DefaultHandler {
       changes.del = [];
     }
 
-    await super.processChanges(assets, { ...changes });
+    await super.processChanges(assets, {
+      ...changes
+    });
   }
 
   async getType() {
@@ -68,10 +82,6 @@ export default class ClientHandler extends DefaultHandler {
       return this.existing;
     }
     this.existing = await this.client.clients.getAll({ paginate: true, is_global: false });
-
-    // Always filter out the client we are using to access Auth0 Management API
-    // As it could cause problems if it gets deleted or updated etc
-    const currentClient = this.config('AUTH0_CLIENT_ID');
-    return this.existing.filter(c => c.client_id !== currentClient);
+    return this.existing;
   }
 }
