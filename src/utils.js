@@ -51,11 +51,30 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
   let create = [ ...assets ];
   const conflicts = [];
 
-  const findByKeyValue = (key, value, arr) => arr.filter(e => e[key] === value)[0];
+  const findByKeyValue = (key, value, arr) => arr.find((e) => {
+    if (Array.isArray(key)) {
+      const values = key.map(k => e[k]);
+      if (values.every(v => v)) {
+        return value === values.join('-');
+      }
+    } else {
+      return e[key] === value;
+    }
+    return false;
+  });
 
   const processAssets = (id, arr) => {
     arr.forEach((asset) => {
-      const assetIdValue = asset[id];
+      let assetIdValue;
+      if (Array.isArray(id)) {
+        const values = id.map(i => asset[i]);
+        if (values.every(v => v)) {
+          assetIdValue = values.join('-');
+        }
+      } else {
+        assetIdValue = asset[id];
+      }
+
       if (assetIdValue) {
         const found = findByKeyValue(id, assetIdValue, del);
         if (found) {

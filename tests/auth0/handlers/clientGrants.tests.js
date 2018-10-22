@@ -145,8 +145,8 @@ describe('#clientGrants handler', () => {
       const auth0 = {
         clientGrants: {
           create: (data) => {
-            expect(data).to.be.an('array');
-            expect(data.length).to.equal(0);
+            expect(data).to.be.an('object');
+            expect(data).to.equal({});
             return Promise.resolve(data);
           },
           update: (params, data) => {
@@ -171,9 +171,8 @@ describe('#clientGrants handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
       const data = [
         {
-          name: 'someClientGrant',
           client_id: 'client1',
-          audience: 'audience1',
+          audience: 'audience',
           scope: [ 'read:messages' ]
         }
       ];

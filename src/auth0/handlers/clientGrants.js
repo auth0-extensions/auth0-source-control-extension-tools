@@ -24,7 +24,7 @@ export default class ClientHandler extends DefaultHandler {
       ...config,
       type: 'clientGrants',
       id: 'id',
-      identifiers: [ 'id', 'client_id' ],
+      identifiers: [ 'id', [ 'client_id', 'audience' ] ],
       stripUpdateFields: [ 'audience', 'client_id' ]
     });
   }
