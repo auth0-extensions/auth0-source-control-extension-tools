@@ -92,7 +92,7 @@ describe('#databases handler', () => {
 
       const handler = new databases.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ { strategy: 'auth0', name: 'db', enabled_clients: [ 'test client' ] } ]);
+      expect(data).to.deep.equal([ { strategy: 'auth0', name: 'db', enabled_clients: [ clientId ] } ]);
     });
 
     it('should update database', async () => {

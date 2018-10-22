@@ -41,15 +41,6 @@ export default class ClientHandler extends DefaultHandler {
 
     this.existing = this.existing.filter(grant => grant.client_id !== currentClient);
 
-    // Convert enabled_clients from id to name
-    const clients = await this.client.clients.getAll({ paginate: true });
-    this.existing = this.existing.map((clientGrant) => {
-      const grant = { ...clientGrant };
-      const found = clients.find(c => c.client_id === grant.client_id);
-      if (found) grant.client_id = found.name;
-      return grant;
-    });
-
     return this.existing;
   }
 

@@ -107,7 +107,7 @@ describe('#clientGrants handler', () => {
 
       const handler = new clientGrants.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ { ...clientGrant, client_id: 'test client' } ]);
+      expect(data).to.deep.equal([ clientGrant ]);
     });
 
     it('should convert client_name to client_id', async () => {

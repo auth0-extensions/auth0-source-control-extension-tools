@@ -99,7 +99,7 @@ describe('#connections handler', () => {
 
       const handler = new connections.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ { strategy: 'github', name: 'github', enabled_clients: [ 'test client' ] } ]);
+      expect(data).to.deep.equal([ { strategy: 'github', name: 'github', enabled_clients: [ clientId ] } ]);
     });
 
     it('should update connection', async () => {
