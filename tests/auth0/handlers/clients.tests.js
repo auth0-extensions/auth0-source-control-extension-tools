@@ -89,7 +89,10 @@ describe('#clients handler', () => {
 
       const handler = new clients.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ { name: 'test client', client_id: 'FMfcgxvzLDvPsgpRFKkLVrnKqGgkHhQV' } ]);
+      expect(data).to.deep.equal([
+        { client_id: 'FMfcgxvzLDvPsgpRFKkLVrnKqGgkHhQV', name: 'test client' },
+        { client_id: 'client_id', name: 'deploy client' }
+      ]);
     });
 
     it('should update client', async () => {
@@ -134,7 +137,7 @@ describe('#clients handler', () => {
             expect(params.client_id).to.equal('client1');
             return Promise.resolve([]);
           },
-          getAll: () => [ { client_id: 'client1', name: 'existingClient' } ]
+          getAll: () => [ { client_id: 'client1', name: 'existingClient' }, { client_id: 'client_id', name: 'deploy client' } ]
 
         },
         pool
