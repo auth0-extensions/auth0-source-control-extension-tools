@@ -17,7 +17,7 @@ describe('#databases handler', () => {
 
   config.data = {
     AUTH0_CLIENT_ID: 'client_id',
-    AUTH0_ALLOW_CONNECTION_DELETE: true
+    AUTH0_ALLOW_DELETE: true
   };
 
   describe('#databases validate', () => {
@@ -105,9 +105,10 @@ describe('#databases handler', () => {
           update: (params, data) => {
             expect(params).to.be.an('object');
             expect(params.id).to.equal('con1');
-            expect(data).to.be.an('object');
-            expect(data.options).to.be.an('object');
-            expect(data.options.passwordPolicy).to.equal('testPolicy');
+            expect(data).to.deep.equal({
+              enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
+              options: { passwordPolicy: 'testPolicy' }
+            });
 
             return Promise.resolve({ ...params, ...data });
           },
@@ -115,7 +116,7 @@ describe('#databases handler', () => {
           getAll: () => [ { name: 'someDatabase', id: 'con1', strategy: 'auth0' } ]
         },
         clients: {
-          getAll: () => []
+          getAll: () => [ { name: 'client1', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' } ]
         },
         pool
       };
@@ -126,7 +127,8 @@ describe('#databases handler', () => {
         {
           name: 'someDatabase',
           strategy: 'auth0',
-          options: { passwordPolicy: 'testPolicy' }
+          options: { passwordPolicy: 'testPolicy' },
+          enabled_clients: [ 'client1' ]
         }
       ];
 
@@ -169,7 +171,7 @@ describe('#databases handler', () => {
     });
 
     it('should not remove if it is not allowed by config', async () => {
-      config.data.AUTH0_ALLOW_CONNECTION_DELETE = false;
+      config.data.AUTH0_ALLOW_DELETE = false;
       const auth0 = {
         connections: {
           create: data => Promise.resolve(data),

@@ -41,15 +41,19 @@ export default class DefaultHandler {
   }
 
   didDelete(item) {
-    log.info(`Deleted [${this.type}]: ${dumpJSON(item)}`);
+    log.info(`Deleted [${this.type}]: ${this.objString(item)}`);
   }
 
   didCreate(item) {
-    log.info(`Created [${this.type}]: ${dumpJSON(item)}`);
+    log.info(`Created [${this.type}]: ${this.objString(item)}`);
   }
 
   didUpdate(item) {
-    log.info(`Updated [${this.type}]: ${dumpJSON(item)}`);
+    log.info(`Updated [${this.type}]: ${this.objString(item)}`);
+  }
+
+  objString(item) {
+    return dumpJSON(item);
   }
 
   async getType() {
@@ -112,20 +116,29 @@ export default class DefaultHandler {
     } = changes;
 
     // Process Deleted
-    await this.client.pool.addEachTask({
-      data: del || [],
-      generator: (delItem) => {
-        const delFunction = this.getClientFN(this.functions.delete);
-        return delFunction({ [this.id]: delItem[this.id] })
-          .then(() => {
-            this.didDelete(delItem);
-            this.deleted += 1;
-          })
-          .catch((err) => {
-            throw new Error(`Problem deleting ${this.type} ${dumpJSON(delItem, 1)}\n${err}`);
-          });
+    if (del.length > 0) {
+      const shouldDelete = this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true;
+      if (!shouldDelete) {
+        log.warn(`Detected the following ${this.type} should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
+        \n${changes.del.map(i => this.objString(i)).join('\n')}
+         `);
+      } else {
+        await this.client.pool.addEachTask({
+          data: del || [],
+          generator: (delItem) => {
+            const delFunction = this.getClientFN(this.functions.delete);
+            return delFunction({ [this.id]: delItem[this.id] })
+              .then(() => {
+                this.didDelete(delItem);
+                this.deleted += 1;
+              })
+              .catch((err) => {
+                throw new Error(`Problem deleting ${this.type} ${this.objString(delItem)}\n${err}`);
+              });
+          }
+        }).promise();
       }
-    }).promise();
+    }
 
     // Process Renaming Entries Temp due to conflicts in names
     await this.client.pool.addEachTask({
@@ -137,7 +150,7 @@ export default class DefaultHandler {
         return updateFN(params, payload)
           .then(data => this.didUpdate(data))
           .catch((err) => {
-            throw new Error(`Problem updating ${this.type} ${dumpJSON(updateItem, 1)}\n${err}`);
+            throw new Error(`Problem updating ${this.type} ${this.objString(updateItem)}\n${err}`);
           });
       }
     }).promise();
@@ -153,7 +166,7 @@ export default class DefaultHandler {
             this.created += 1;
           })
           .catch((err) => {
-            throw new Error(`Problem creating ${this.type} ${dumpJSON(createItem, 1)}\n${err}`);
+            throw new Error(`Problem creating ${this.type} ${this.objString(createItem)}\n${err}`);
           });
       }
     }).promise();
@@ -171,7 +184,7 @@ export default class DefaultHandler {
             this.updated += 1;
           })
           .catch((err) => {
-            throw new Error(`Problem updating ${this.type} ${dumpJSON(updateItem, 1)}\n${err}`);
+            throw new Error(`Problem updating ${this.type} ${this.objString(updateItem)}\n${err}`);
           });
       }
     }).promise();

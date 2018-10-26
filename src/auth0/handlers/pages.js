@@ -1,7 +1,5 @@
 import DefaultHandler from './default';
 import constants from '../../constants';
-import { dumpJSON } from '../../utils';
-import log from '../../logger';
 
 export const supportedPages = constants.PAGE_NAMES
   .filter(p => p.includes('.json'))
@@ -35,10 +33,8 @@ export default class PageHandler extends DefaultHandler {
     });
   }
 
-  didUpdate(page) {
-    const dump = { ...page };
-    delete dump.html;
-    log.info(`Updated [${this.type}]: ${dumpJSON(dump)}`);
+  objString(page) {
+    return super.objString({ name: page.name, enabled: page.enabled });
   }
 
   async updateLoginPage(page) {

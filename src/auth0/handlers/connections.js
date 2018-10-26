@@ -1,6 +1,4 @@
 import DefaultHandler, { order } from './default';
-import { dumpJSON } from '../../utils';
-import log from '../../logger';
 
 export const schema = {
   type: 'array',
@@ -28,16 +26,8 @@ export default class ConnectionsHandler extends DefaultHandler {
     });
   }
 
-  didDelete(connection) {
-    return super.didDelete({ name: connection.name, id: connection.id });
-  }
-
-  didCreate(connection) {
-    return super.didCreate({ name: connection.name, id: connection.id });
-  }
-
-  didUpdate(connection) {
-    return super.didUpdate({ name: connection.name, id: connection.id });
+  objString(connection) {
+    return super.objString({ name: connection.name, id: connection.id });
   }
 
   async getType() {
@@ -80,20 +70,6 @@ export default class ConnectionsHandler extends DefaultHandler {
     // Do nothing if not set
     if (!connections || !connections.length) return;
 
-    const changes = await this.calcChanges(assets);
-
-    // Don't delete connections unless told as it's destructive and will delete all associated users
-    const shouldDelete = this.config('AUTH0_ALLOW_CONNECTION_DELETE') === 'true' || this.config('AUTH0_ALLOW_CONNECTION_DELETE') === true;
-    if (!shouldDelete) {
-      if (changes.del.length > 0) {
-        log.warn(`Detected the following connections should be deleted.
-        Doing so will be delete all the associated users. You can force deletes by setting 'AUTH0_ALLOW_CONNECTION_DELETE' to true in the config
-        \n${dumpJSON(changes.del.map(db => ({ name: db.name, id: db.id })), 2)})
-         `);
-      }
-      changes.del = [];
-    }
-
-    await super.processChanges(assets, { ...changes });
+    await super.processChanges(assets);
   }
 }
