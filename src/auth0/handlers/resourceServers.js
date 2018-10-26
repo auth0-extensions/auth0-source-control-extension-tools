@@ -41,16 +41,8 @@ export default class ResourceServersHandler extends DefaultHandler {
     });
   }
 
-  didDelete(resourceServer) {
-    return super.didDelete({ name: resourceServer.name, identifier: resourceServer.identifier });
-  }
-
-  didCreate(resourceServer) {
-    return super.didCreate({ name: resourceServer.name, identifier: resourceServer.identifier });
-  }
-
-  didUpdate(resourceServer) {
-    return super.didUpdate({ name: resourceServer.name, identifier: resourceServer.identifier });
+  objString(resourceServer) {
+    return super.objString({ name: resourceServer.name, identifier: resourceServer.identifier });
   }
 
   async getType() {

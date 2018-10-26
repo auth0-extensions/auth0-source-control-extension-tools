@@ -1,6 +1,4 @@
 import DefaultHandler from './default';
-import { dumpJSON } from '../../utils';
-import log from '../../logger';
 
 export const schema = {
   type: 'array',
@@ -28,16 +26,8 @@ export default class ClientHandler extends DefaultHandler {
     });
   }
 
-  didDelete(client) {
-    return super.didDelete({ name: client.name, client_id: client.client_id });
-  }
-
-  didCreate(client) {
-    return super.didCreate({ name: client.name, client_id: client.client_id });
-  }
-
-  didUpdate(client) {
-    return super.didUpdate({ name: client.name, client_id: client.client_id });
+  objString(item) {
+    return super.objString({ name: item.name, client_id: item.client_id });
   }
 
   async processChanges(assets) {
@@ -59,18 +49,6 @@ export default class ClientHandler extends DefaultHandler {
       create: create.filter(c => c.client_id !== currentClient),
       conflicts: conflicts.filter(c => c.client_id !== currentClient)
     };
-
-    // Don't delete clients unless told as you cannot recover client_id's if deleted.
-    const shouldDelete = this.config('AUTH0_ALLOW_CLIENT_DELETE') === 'true' || this.config('AUTH0_ALLOW_CLIENT_DELETE') === true;
-    if (!shouldDelete) {
-      if (changes.del.length > 0) {
-        log.warn(`Detected the following clients should be deleted.
-        Doing so will be prevent authentications using the client_id. You can force deletes by setting 'AUTH0_ALLOW_CLIENT_DELETE' to true in the config
-        \n${dumpJSON(changes.del.map(client => ({ name: client.name, client_id: client.client_id })), 2)})
-         `);
-      }
-      changes.del = [];
-    }
 
     await super.processChanges(assets, {
       ...changes

@@ -11,9 +11,17 @@ const pool = {
 };
 
 describe('#resourceServers handler', () => {
+  const config = function(key) {
+    return config.data && config.data[key];
+  };
+
+  config.data = {
+    AUTH0_ALLOW_DELETE: true
+  };
+
   describe('#resourceServers validate', () => {
     it('should not allow same names', async () => {
-      const handler = new resourceServers.default({ client: {} });
+      const handler = new resourceServers.default({ client: {}, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = [
         {
@@ -33,7 +41,7 @@ describe('#resourceServers handler', () => {
     });
 
     it('should not allow "Auth0 Management API" name', async () => {
-      const handler = new resourceServers.default({ client: {} });
+      const handler = new resourceServers.default({ client: {}, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = [
         {
@@ -50,7 +58,7 @@ describe('#resourceServers handler', () => {
     });
 
     it('should pass validation', async () => {
-      const handler = new resourceServers.default({ client: {} });
+      const handler = new resourceServers.default({ client: {}, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = [
         {
@@ -78,7 +86,7 @@ describe('#resourceServers handler', () => {
         pool
       };
 
-      const handler = new resourceServers.default({ client: auth0 });
+      const handler = new resourceServers.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { resourceServers: [ { name: 'someAPI' } ] } ]);
@@ -94,7 +102,7 @@ describe('#resourceServers handler', () => {
         }
       };
 
-      const handler = new resourceServers.default({ client: auth0 });
+      const handler = new resourceServers.default({ client: auth0, config });
       const data = await handler.getType();
       expect(data).to.deep.equal([ { name: 'Company API', identifier: 'http://company.com/api' } ]);
     });
@@ -116,7 +124,7 @@ describe('#resourceServers handler', () => {
         pool
       };
 
-      const handler = new resourceServers.default({ client: auth0 });
+      const handler = new resourceServers.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { resourceServers: [ { name: 'someAPI', identifier: 'some-api', scope: 'new:scope' } ] } ]);
@@ -137,7 +145,7 @@ describe('#resourceServers handler', () => {
         pool
       };
 
-      const handler = new resourceServers.default({ client: auth0 });
+      const handler = new resourceServers.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { resourceServers: [ {} ] } ]);
@@ -163,7 +171,7 @@ describe('#resourceServers handler', () => {
         pool
       };
 
-      const handler = new resourceServers.default({ client: auth0 });
+      const handler = new resourceServers.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
       const data = {
         resourceServers: [ { name: 'someAPI', identifier: 'some-api', scope: 'new:scope' } ],

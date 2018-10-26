@@ -11,6 +11,14 @@ const pool = {
 };
 
 describe('#rules handler', () => {
+  const config = function(key) {
+    return config.data && config.data[key];
+  };
+
+  config.data = {
+    AUTH0_ALLOW_DELETE: true
+  };
+
   describe('#rules validate', () => {
     it('should not allow same names', async () => {
       const auth0 = {
@@ -19,7 +27,7 @@ describe('#rules handler', () => {
         }
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = [
         {
@@ -45,7 +53,7 @@ describe('#rules handler', () => {
         }
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = [
         {
@@ -76,7 +84,7 @@ describe('#rules handler', () => {
         }
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = [
         {
@@ -100,7 +108,7 @@ describe('#rules handler', () => {
         }
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = [
         {
@@ -129,7 +137,7 @@ describe('#rules handler', () => {
         pool
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { rules: [ { name: 'someRule', script: 'rule_script' } ] } ]);
@@ -151,7 +159,7 @@ describe('#rules handler', () => {
         rules: { getAll: () => rulesData }
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const data = await handler.getType();
       expect(data).to.deep.equal(rulesData);
     });
@@ -173,7 +181,7 @@ describe('#rules handler', () => {
         pool
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { rules: [ { name: 'someRule', script: 'new_script' } ] } ]);
@@ -194,7 +202,7 @@ describe('#rules handler', () => {
         pool
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { rules: [ {} ] } ]);
@@ -220,7 +228,7 @@ describe('#rules handler', () => {
         pool
       };
 
-      const handler = new rules.default({ client: auth0 });
+      const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
       const data = {
         rules: [ { name: 'Rule1', script: 'new-rule-one-script' } ],

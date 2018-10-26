@@ -161,17 +161,11 @@ export default class RulesHandler extends DefaultHandler {
     if (!rules || !rules.length) return;
 
     // Figure out what needs to be updated vs created
-    const {
-      del,
-      update,
-      create,
-      reOrder,
-      conflicts
-    } = await this.calcChanges(assets);
+    const changes = await this.calcChanges(assets);
 
     // Temporally re-order rules with conflicting ordering
     await this.client.pool.addEachTask({
-      data: reOrder,
+      data: changes.reOrder,
       generator: rule => this.client.updateRule({ id: rule.id }, stripFields(rule, this.stripUpdateFields)).then(() => {
         const updated = {
           name: rule.name, stage: rule.stage, order: rule.order, id: rule.id
@@ -181,7 +175,10 @@ export default class RulesHandler extends DefaultHandler {
     }).promise();
 
     await super.processChanges(assets, {
-      del, create, update, conflicts
+      del: changes.del,
+      create: changes.create,
+      update: changes.update,
+      conflicts: changes.conflicts
     });
   }
 }

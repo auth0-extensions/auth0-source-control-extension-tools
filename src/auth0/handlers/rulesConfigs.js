@@ -28,16 +28,8 @@ export default class RulesConfigsHandler extends DefaultHandler {
     return this.client.rulesConfigs.getAll({ paginate: true });
   }
 
-  didDelete(config) {
-    return super.didDelete(config.key);
-  }
-
-  didCreate(config) {
-    return super.didCreate(config.key);
-  }
-
-  didUpdate(config) {
-    return super.didUpdate(config.key);
+  objString(item) {
+    return super.objString({ key: item.key });
   }
 
   async calcChanges(assets) {

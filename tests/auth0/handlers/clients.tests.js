@@ -17,7 +17,7 @@ describe('#clients handler', () => {
 
   config.data = {
     AUTH0_CLIENT_ID: 'client_id',
-    AUTH0_ALLOW_CLIENT_DELETE: true
+    AUTH0_ALLOW_DELETE: true
   };
 
   describe('#clients validate', () => {
@@ -150,7 +150,7 @@ describe('#clients handler', () => {
     });
 
     it('should not remove client if it is not allowed by config', async () => {
-      config.data.AUTH0_ALLOW_CLIENT_DELETE = false;
+      config.data.AUTH0_ALLOW_DELETE = false;
       const auth0 = {
         clients: {
           create: () => Promise.resolve([]),

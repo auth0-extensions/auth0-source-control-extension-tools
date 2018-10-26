@@ -16,7 +16,8 @@ describe('#clientGrants handler', () => {
   };
 
   config.data = {
-    AUTH0_CLIENT_ID: 'client_id'
+    AUTH0_CLIENT_ID: 'client_id',
+    AUTH0_ALLOW_DELETE: true
   };
 
   describe('#clientGrants validate', () => {
@@ -180,7 +181,7 @@ describe('#clientGrants handler', () => {
       await stageFn.apply(handler, [ { clientGrants: data } ]);
     });
 
-    it('should delete client garant and create another one instead', async () => {
+    it('should delete client grant and create another one instead', async () => {
       const auth0 = {
         clientGrants: {
           create: (data) => {

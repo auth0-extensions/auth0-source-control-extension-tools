@@ -29,6 +29,10 @@ export default class ClientHandler extends DefaultHandler {
     });
   }
 
+  objString(item) {
+    return super.objString({ id: item.id, client_id: item.client_id, audience: item.audience });
+  }
+
   async getType() {
     if (this.existing) {
       return this.existing;
@@ -64,12 +68,6 @@ export default class ClientHandler extends DefaultHandler {
   // Run after clients are updated so we can convert client_id names to id's
   @order('60')
   async processChanges(assets) {
-    const { clientGrants } = assets;
-
-    // Do nothing if not set
-    if (!clientGrants || !clientGrants.length) return;
-
-    const changes = await this.calcChanges(assets);
-    await super.processChanges(assets, { ...changes });
+    await super.processChanges(assets);
   }
 }
