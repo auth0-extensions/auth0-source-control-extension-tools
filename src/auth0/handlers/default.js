@@ -111,9 +111,12 @@ export default class DefaultHandler {
       changes = await this.calcChanges(assets);
     }
 
-    const {
-      del, update, create, conflicts
-    } = changes;
+    const del = changes.del || [];
+    const update = changes.del || [];
+    const create = changes.del || [];
+    const conflicts = changes.del || [];
+
+    log.debug(`Start processChanges for ${this.type} [delete:${del.length}] [update:${update.length}], [create:${create.length}], [conflicts:${conflicts.length}]`);
 
     // Process Deleted
     if (del.length > 0) {
