@@ -112,9 +112,9 @@ export default class DefaultHandler {
     }
 
     const del = changes.del || [];
-    const update = changes.del || [];
-    const create = changes.del || [];
-    const conflicts = changes.del || [];
+    const update = changes.update || [];
+    const create = changes.create || [];
+    const conflicts = changes.conflicts || [];
 
     log.debug(`Start processChanges for ${this.type} [delete:${del.length}] [update:${update.length}], [create:${create.length}], [conflicts:${conflicts.length}]`);
 
