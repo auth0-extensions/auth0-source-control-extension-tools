@@ -22,7 +22,7 @@ export const schema = {
       name: {
         type: 'string',
         description: 'The name of the rule. Can only contain alphanumeric characters, spaces and \'-\'. Can neither start nor end with \'-\' or spaces',
-        pattern: '^[^-][a-zA-Z0-9-]+[^-]$'
+        pattern: '^[^-\\s][a-zA-Z0-9-\\s]+[^-\\s]$'
       },
       order: {
         type: 'number',
