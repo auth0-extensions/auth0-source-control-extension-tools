@@ -87,12 +87,13 @@ export default class PageHandler extends DefaultHandler {
     if (!globalClient[0]) {
       throw new Error('Unable to find global client id when trying to dump the login page');
     }
-
-    pages.push({
-      name: 'login',
-      enabled: globalClient[0].custom_login_page_on,
-      html: globalClient[0].custom_login_page
-    });
+    if (globalClient[0].custom_login_page_on) {
+      pages.push({
+        name: 'login',
+        enabled: globalClient[0].custom_login_page_on,
+        html: globalClient[0].custom_login_page
+      });
+    }
 
     const tenantSettings = await this.client.tenant.getSettings();
 
