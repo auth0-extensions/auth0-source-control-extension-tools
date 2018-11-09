@@ -1,4 +1,4 @@
-import DefaultHandler from './default';
+import DefaultHandler, { order } from './default';
 import constants from '../../constants';
 
 export const supportedTemplates = constants.EMAIL_TEMPLATES_NAMES
@@ -65,6 +65,8 @@ export default class EmailTemplateHandler extends DefaultHandler {
     }
   }
 
+  // Run after email provider changes
+  @order('60')
   async processChanges(assets) {
     const { emailTemplates } = assets;
 
