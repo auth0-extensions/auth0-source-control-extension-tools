@@ -96,7 +96,10 @@ constants.EMAIL_TEMPLATES_TYPES = [
   'password_reset'
 ];
 
-
+constants.GUARDIAN_DIRECTORY = 'guardian';
+constants.GUARDIAN_FACTORS_DIRECTORY = 'factors';
+constants.GUARDIAN_PROVIDERS_DIRECTORY = 'providers';
+constants.GUARDIAN_TEMPLATES_DIRECTORY = 'templates';
 constants.GUARDIAN_FACTORS = [
   'sms',
   'push-notification',
