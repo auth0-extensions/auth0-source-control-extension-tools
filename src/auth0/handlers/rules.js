@@ -60,16 +60,8 @@ export default class RulesHandler extends DefaultHandler {
     return this.existing;
   }
 
-  didDelete(rule) {
-    return super.didDelete({ name: rule.name, order: rule.order });
-  }
-
-  didCreate(rule) {
-    return super.didCreate({ name: rule.name, order: rule.order });
-  }
-
-  didUpdate(rule) {
-    return super.didUpdate({ name: rule.name, order: rule.order });
+  objString(rule) {
+    return super.objString({ name: rule.name, order: rule.order });
   }
 
   async calcChanges(assets, includeExcluded = false) {

@@ -96,6 +96,27 @@ constants.EMAIL_TEMPLATES_TYPES = [
   'password_reset'
 ];
 
+constants.GUARDIAN_DIRECTORY = 'guardian';
+constants.GUARDIAN_FACTORS_DIRECTORY = 'factors';
+constants.GUARDIAN_PROVIDERS_DIRECTORY = 'providers';
+constants.GUARDIAN_TEMPLATES_DIRECTORY = 'templates';
+constants.GUARDIAN_FACTORS = [
+  'sms',
+  'push-notification',
+  'otp',
+  'email',
+  'duo'
+];
+
+constants.GUARDIAN_FACTOR_TEMPLATES = [
+  'sms'
+];
+
+constants.GUARDIAN_FACTOR_PROVIDERS = {
+  sms: [ 'twilio' ],
+  'push-notification': [ 'sns' ]
+};
+
 constants.RESOURCE_SERVERS_DIRECTORY = 'resource-servers';
 constants.RESOURCE_SERVERS_CLIENT_NAME = 'resourceServers';
 constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME = 'Auth0 Management API';

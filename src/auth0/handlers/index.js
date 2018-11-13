@@ -9,6 +9,9 @@ import * as tenant from './tenant';
 import * as emailProvider from './emailProvider';
 import * as emailTemplates from './emailTemplates';
 import * as clientGrants from './clientGrants';
+import * as guardianFactors from './guardianFactors';
+import * as guardianFactorProviders from './guardianFactorProviders';
+import * as guardianFactorTemplates from './guardianFactorTemplates';
 
 export {
   rules,
@@ -21,5 +24,8 @@ export {
   tenant,
   emailProvider,
   emailTemplates,
-  clientGrants
+  clientGrants,
+  guardianFactors,
+  guardianFactorProviders,
+  guardianFactorTemplates
 };
