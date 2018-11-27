@@ -1,5 +1,7 @@
 import { ValidationError } from 'auth0-extension-tools';
-import { dumpJSON, calcChanges, stripFields, duplicateItems } from '../../utils';
+import {
+  dumpJSON, calcChanges, stripFields, duplicateItems
+} from '../../utils';
 import DefaultHandler from './default';
 import log from '../../logger';
 
