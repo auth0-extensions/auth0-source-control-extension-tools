@@ -47,14 +47,14 @@ describe('#utils', function() {
   });
 
   it('should do keyword replacements', (done) => {
-    const kwContents = '{ "a": 1, "string_key": @@string@@, "array_key": @@array@@, "object_key": @@object@@,' +
-      ' "int_key": @@int@@, "simple_string_key": "Some ##string##", "simple_array_key": "Some' +
-      ' ##array##", "simple_object_key": "Some ##object##", "simple_int_key": ##int## }';
+    const kwContents = '{ "a": 1, "string_key": @@string@@, "array_key": @@array@@, "object_key": @@object@@,'
+      + ' "int_key": @@int@@, "simple_string_key": "Some ##string##", "simple_array_key": "Some'
+      + ' ##array##", "simple_object_key": "Some ##object##", "simple_int_key": ##int## }';
 
-    const kwExpectations = '{ "a": 1, "string_key": "some string", "array_key": ["some value","some other value"],' +
-      ' "object_key": {"key1":"value1","key2":"value2"}, "int_key": 5, "simple_string_key": "Some some string",' +
-      ' "simple_array_key": "Some some value,some other value", "simple_object_key": "Some [object Object]",' +
-      ' "simple_int_key": 5 }';
+    const kwExpectations = '{ "a": 1, "string_key": "some string", "array_key": ["some value","some other value"],'
+      + ' "object_key": {"key1":"value1","key2":"value2"}, "int_key": 5, "simple_string_key": "Some some string",'
+      + ' "simple_array_key": "Some some value,some other value", "simple_object_key": "Some [object Object]",'
+      + ' "simple_int_key": 5 }';
 
     expect(utils.keywordReplace(kwContents, mappings)).to.deep.equal(kwExpectations);
     done();

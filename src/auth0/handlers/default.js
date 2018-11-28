@@ -1,7 +1,9 @@
 import { ValidationError } from 'auth0-extension-tools';
 
 import log from '../../logger';
-import { stripFields, dumpJSON, calcChanges, duplicateItems } from '../../utils';
+import {
+  stripFields, dumpJSON, calcChanges, duplicateItems
+} from '../../utils';
 
 export function order(value) {
   return function decorator(t, n, descriptor) {
