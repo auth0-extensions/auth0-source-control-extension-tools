@@ -98,6 +98,11 @@ describe('#databases handler', () => {
     it('should update database', async () => {
       const auth0 = {
         connections: {
+          get: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            return Promise.resolve({ options: { someOldOption: true } });
+          },
           create: (data) => {
             expect(data).to.be.an('undefined');
             return Promise.resolve(data);
@@ -107,7 +112,7 @@ describe('#databases handler', () => {
             expect(params.id).to.equal('con1');
             expect(data).to.deep.equal({
               enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
-              options: { passwordPolicy: 'testPolicy' }
+              options: { passwordPolicy: 'testPolicy', someOldOption: true }
             });
 
             return Promise.resolve({ ...params, ...data });

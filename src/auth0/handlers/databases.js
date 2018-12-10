@@ -41,6 +41,13 @@ export default class DatabaseHandler extends DefaultHandler {
 
   getClientFN(fn) {
     // Override this as a database is actually a connection but we are treating them as a different object
+    // If we going to update database, we need to get current options first
+    if (fn === this.functions.update) {
+      return (params, payload) => this.client.connections.get(params)
+        .then(connection => Object.assign({}, connection.options, payload.options))
+        .then(data => this.client.connections.update(params, data));
+    }
+
     return Reflect.get(this.client.connections, fn, this.client.connections);
   }
 
