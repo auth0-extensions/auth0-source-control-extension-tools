@@ -44,8 +44,10 @@ export default class DatabaseHandler extends DefaultHandler {
     // If we going to update database, we need to get current options first
     if (fn === this.functions.update) {
       return (params, payload) => this.client.connections.get(params)
-        .then(connection => Object.assign({}, connection.options, payload.options))
-        .then(data => this.client.connections.update(params, data));
+        .then((connection) => {
+          payload.options = Object.assign({}, connection.options, payload.options);
+          return this.client.connections.update(params, payload);
+        });
     }
 
     return Reflect.get(this.client.connections, fn, this.client.connections);
