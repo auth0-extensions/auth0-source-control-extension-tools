@@ -140,6 +140,49 @@ describe('#databases handler', () => {
       await stageFn.apply(handler, [ { databases: data } ]);
     });
 
+    it('should update database without "enabled_clients" setting', async () => {
+      const auth0 = {
+        connections: {
+          get: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            return Promise.resolve({});
+          },
+          create: (data) => {
+            expect(data).to.be.an('undefined');
+            return Promise.resolve(data);
+          },
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            expect(data).to.deep.equal({
+              options: { passwordPolicy: 'testPolicy' }
+            });
+
+            return Promise.resolve({ ...params, ...data });
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [ { name: 'someDatabase', id: 'con1', strategy: 'auth0' } ]
+        },
+        clients: {
+          getAll: () => [ { name: 'client1', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' } ]
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someDatabase',
+          strategy: 'auth0',
+          options: { passwordPolicy: 'testPolicy' }
+        }
+      ];
+
+      await stageFn.apply(handler, [ { databases: data } ]);
+    });
+
     it('should delete database and create another one instead', async () => {
       const auth0 = {
         connections: {
