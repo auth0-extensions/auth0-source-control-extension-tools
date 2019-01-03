@@ -68,16 +68,20 @@ export default class DatabaseHandler extends DefaultHandler {
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
-    const formatted = databases.map(db => ({
-      ...db,
-      enabled_clients: [
-        ...(db.enabled_clients || []).map((name) => {
-          const found = clients.find(c => c.name === name);
-          if (found) return found.client_id;
-          return name;
-        })
-      ]
-    }));
+    const formatted = databases.map((db) => {
+      if (db.enabled_clients) {
+        return {
+          ...db,
+          enabled_clients: db.enabled_clients.map((name) => {
+            const found = clients.find(c => c.name === name);
+            if (found) return found.client_id;
+            return name;
+          })
+        };
+      }
+
+      return db;
+    });
 
     return super.calcChanges({ ...assets, databases: formatted });
   }
