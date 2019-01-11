@@ -13,7 +13,7 @@ export const schema = {
     realms: { type: 'array', items: { type: 'string' } },
     metadata: { type: 'object' }
   },
-  require: [ 'name', 'strategy' ]
+  required: [ 'name', 'strategy' ]
 };
 
 
