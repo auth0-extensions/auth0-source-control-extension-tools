@@ -13,7 +13,7 @@ export const schema = {
       template: { type: 'string', enum: supportedTemplates },
       body: { type: 'string', default: '' }
     },
-    require: [ 'template', 'body' ]
+    required: [ 'template', 'body' ]
   }
 };
 

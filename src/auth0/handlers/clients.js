@@ -7,7 +7,7 @@ export const schema = {
     properties: {
       name: { type: 'string', minLength: 1, pattern: '[^<>]+' }
     },
-    require: [ 'name' ]
+    required: [ 'name' ]
   }
 };
 

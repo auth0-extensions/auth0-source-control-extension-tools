@@ -9,7 +9,7 @@ export const schema = {
     properties: {
       name: { type: 'string', enum: constants.GUARDIAN_FACTOR_TEMPLATES }
     },
-    require: [ 'name' ]
+    required: [ 'name' ]
   }
 };
 

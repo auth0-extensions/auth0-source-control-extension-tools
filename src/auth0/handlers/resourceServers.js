@@ -27,7 +27,7 @@ export const schema = {
         }
       }
     },
-    require: [ 'name', 'identifier' ]
+    required: [ 'name', 'identifier' ]
   }
 };
 

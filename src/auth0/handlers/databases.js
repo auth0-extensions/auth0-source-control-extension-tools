@@ -16,12 +16,12 @@ export const schema = {
             properties: {
               ...constants.DATABASE_SCRIPTS.reduce((o, script) => ({ ...o, [script]: { type: 'string' } }), {})
             },
-            require: [ 'login', 'get_user' ]
+            required: [ 'login', 'get_user' ]
           }
         }
       }
     },
-    require: [ 'name', 'import_mode' ]
+    required: [ 'name', 'import_mode' ]
   }
 };
 

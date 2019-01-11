@@ -8,7 +8,7 @@ export const schema = {
     properties: {
       name: { type: 'string', enum: constants.GUARDIAN_FACTORS }
     },
-    require: [ 'name' ]
+    required: [ 'name' ]
   }
 };
 

@@ -13,7 +13,7 @@ export const schema = {
         uniqueItems: true
       }
     },
-    require: [ 'name' ]
+    required: [ 'name' ]
   }
 };
 

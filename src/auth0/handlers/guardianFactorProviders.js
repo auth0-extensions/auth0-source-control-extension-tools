@@ -17,7 +17,7 @@ export const schema = {
       name: { type: 'string', enum: constants.GUARDIAN_FACTORS },
       provider: { type: 'string', enum: mappings.map(p => p.provider) }
     },
-    require: [ 'name', 'provider' ]
+    required: [ 'name', 'provider' ]
   }
 };
 
