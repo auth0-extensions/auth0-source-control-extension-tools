@@ -18,10 +18,11 @@ export const schema = {
             },
             required: [ 'login', 'get_user' ]
           }
-        }
+        },
+        required: [ 'import_mode' ]
       }
     },
-    required: [ 'name', 'import_mode' ]
+    required: [ 'name' ]
   }
 };
 
