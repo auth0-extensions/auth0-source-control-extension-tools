@@ -7,7 +7,8 @@ export const schema = {
     properties: {
       key: { type: 'string', pattern: '^[A-Za-z0-9_-]*$' },
       value: { type: 'string' }
-    }
+    },
+    required: [ 'key', 'value' ]
   },
   additionalProperties: false
 };
