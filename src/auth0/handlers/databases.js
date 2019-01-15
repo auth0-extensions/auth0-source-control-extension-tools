@@ -15,11 +15,9 @@ export const schema = {
             type: 'object',
             properties: {
               ...constants.DATABASE_SCRIPTS.reduce((o, script) => ({ ...o, [script]: { type: 'string' } }), {})
-            },
-            required: [ 'login', 'get_user' ]
+            }
           }
-        },
-        required: [ 'import_mode' ]
+        }
       }
     },
     required: [ 'name' ]
