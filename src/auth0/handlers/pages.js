@@ -20,7 +20,7 @@ export const schema = {
       html: { type: 'string', default: '' },
       enabled: { type: 'boolean' }
     },
-    required: [ 'html', 'name' ]
+    required: [ 'name' ]
   }
 };
 

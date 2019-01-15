@@ -7,13 +7,13 @@ export const schema = {
     properties: {
       name: { type: 'string' },
       strategy: { type: 'string' },
-      options: { type: 'object' }
+      options: { type: 'object' },
+      enabled_clients: { type: 'array', items: { type: 'string' } },
+      realms: { type: 'array', items: { type: 'string' } },
+      metadata: { type: 'object' }
     },
-    enabled_clients: { type: 'array', items: { type: 'string' } },
-    realms: { type: 'array', items: { type: 'string' } },
-    metadata: { type: 'object' }
-  },
-  required: [ 'name', 'strategy' ]
+    required: [ 'name', 'strategy' ]
+  }
 };
 
 

@@ -27,7 +27,7 @@ export const schema = {
         pattern: '^[^-\\s][a-zA-Z0-9-\\s]+[^-\\s]$'
       },
       order: {
-        type: 'number',
+        type: [ 'number', 'null' ],
         description: 'The rule\'s order in relation to other rules. A rule with a lower order than another rule executes first.',
         default: null
       },
@@ -42,7 +42,8 @@ export const schema = {
         default: 'login_success',
         enum: [ 'login_success', 'login_failure', 'pre_authorize' ]
       }
-    }
+    },
+    required: [ 'name' ]
   }
 };
 
