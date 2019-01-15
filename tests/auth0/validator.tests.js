@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Auth0 from '../../src/auth0';
 
-describe.only('#schema validation tests', () => {
+describe('#schema validation tests', () => {
   const client = {
     rules: {
       getAll: () => []
@@ -187,26 +187,11 @@ describe.only('#schema validation tests', () => {
       checkEnum({ databases: data }, done);
     });
 
-    it('should fail validation if no "options.import_mode" provided', (done) => {
-      const data = [
-        {
-          name: 'name',
-          options: {
-            passwordPolicy: ''
-          }
-        }
-      ];
-
-      checkRequired('.import_mode', { databases: data }, done);
-    });
-
     it('should pass validation', (done) => {
       const data = [
         {
           name: 'name',
-          options: {
-            import_mode: 'import_mode'
-          }
+          options: {}
         }
       ];
 
