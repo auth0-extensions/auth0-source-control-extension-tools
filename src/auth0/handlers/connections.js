@@ -68,7 +68,7 @@ export default class ConnectionsHandler extends DefaultHandler {
     const { connections } = assets;
 
     // Do nothing if not set
-    if (!connections || !connections.length) return;
+    if (!connections) return;
 
     await super.processChanges(assets);
   }

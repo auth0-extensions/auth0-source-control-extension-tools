@@ -34,7 +34,7 @@ export default class ClientHandler extends DefaultHandler {
     const { clients } = assets;
 
     // Do nothing if not set
-    if (!clients || !clients.length) return;
+    if (!clients) return;
 
     const {
       del, update, create, conflicts

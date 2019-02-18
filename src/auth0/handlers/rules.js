@@ -114,7 +114,7 @@ export default class RulesHandler extends DefaultHandler {
     const { rules } = assets;
 
     // Do nothing if not set
-    if (!rules || !rules.length) return;
+    if (!rules) return;
 
     const excludedRules = (assets.exclude && assets.exclude.rules) || [];
 
@@ -153,7 +153,7 @@ export default class RulesHandler extends DefaultHandler {
     const { rules } = assets;
 
     // Do nothing if not set
-    if (!rules || !rules.length) return;
+    if (!rules) return;
 
     // Figure out what needs to be updated vs created
     const changes = await this.calcChanges(assets);
