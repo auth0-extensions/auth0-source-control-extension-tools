@@ -43,7 +43,7 @@ export default class ConnectionsHandler extends DefaultHandler {
     const { connections } = assets;
 
     // Do nothing if not set
-    if (!connections || !connections.length) return {};
+    if (!connections) return {};
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });

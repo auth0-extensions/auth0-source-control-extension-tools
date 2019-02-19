@@ -55,7 +55,7 @@ export default class ResourceServersHandler extends DefaultHandler {
     let { resourceServers } = assets;
 
     // Do nothing if not set
-    if (!resourceServers || !resourceServers.length) return {};
+    if (!resourceServers) return {};
 
     const excluded = (assets.exclude && assets.exclude.resourceServers) || [];
 
@@ -72,7 +72,7 @@ export default class ResourceServersHandler extends DefaultHandler {
     const { resourceServers } = assets;
 
     // Do nothing if not set
-    if (!resourceServers || !resourceServers.length) return;
+    if (!resourceServers) return;
 
     const mgmtAPIResource = resourceServers.find(r => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME);
     if (mgmtAPIResource) {
