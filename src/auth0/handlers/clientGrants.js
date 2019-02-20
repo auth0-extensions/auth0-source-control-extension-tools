@@ -52,7 +52,7 @@ export default class ClientHandler extends DefaultHandler {
     const { clientGrants } = assets;
 
     // Do nothing if not set
-    if (!clientGrants || !clientGrants.length) return {};
+    if (!clientGrants) return {};
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });

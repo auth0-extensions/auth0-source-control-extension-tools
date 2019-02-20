@@ -71,10 +71,10 @@ export default class DefaultHandler {
   }
 
   async calcChanges(assets) {
-    const typeAssets = assets[this.type] || [];
+    const typeAssets = assets[this.type];
 
     // Do nothing if not set
-    if (!typeAssets.length) return {};
+    if (!typeAssets) return {};
 
     const existing = await this.getType();
 
