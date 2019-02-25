@@ -150,6 +150,7 @@ describe('#clients handler', () => {
     });
 
     it('should delete all clients', async () => {
+      let removed = false;
       const auth0 = {
         clients: {
           create: () => Promise.resolve([]),
@@ -157,6 +158,7 @@ describe('#clients handler', () => {
           delete: (params) => {
             expect(params).to.be.an('object');
             expect(params.client_id).to.equal('client1');
+            removed = true;
             return Promise.resolve([]);
           },
           getAll: () => [ { client_id: 'client1', name: 'existingClient' }, { client_id: 'client_id', name: 'deploy client' } ]
@@ -168,6 +170,7 @@ describe('#clients handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { clients: [] } ]);
+      expect(removed).to.equal(true);
     });
 
     it('should not remove client if it is not allowed by config', async () => {

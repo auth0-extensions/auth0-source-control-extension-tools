@@ -209,6 +209,7 @@ describe('#rules handler', () => {
     });
 
     it('should remove all rules', async () => {
+      let removed = false;
       const auth0 = {
         rules: {
           create: () => Promise.resolve([]),
@@ -216,6 +217,7 @@ describe('#rules handler', () => {
           delete: (data) => {
             expect(data).to.be.an('object');
             expect(data.id).to.equal('rule1');
+            removed = true;
             return Promise.resolve(data);
           },
           getAll: () => [ { id: 'rule1', name: 'existingRule', order: '10' } ]
@@ -227,6 +229,7 @@ describe('#rules handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { rules: [] } ]);
+      expect(removed).to.equal(true);
     });
 
     it('should not touch excluded rules', async () => {

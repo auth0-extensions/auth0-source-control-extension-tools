@@ -180,6 +180,7 @@ describe('#connections handler', () => {
     });
 
     it('should delete all connections', async () => {
+      let removed = false;
       const auth0 = {
         connections: {
           create: () => Promise.resolve([]),
@@ -187,7 +188,7 @@ describe('#connections handler', () => {
           delete: (params) => {
             expect(params).to.be.an('object');
             expect(params.id).to.equal('con1');
-
+            removed = true;
             return Promise.resolve([]);
           },
           getAll: () => [ { id: 'con1', name: 'existingConnection', strategy: 'custom' } ]
@@ -202,6 +203,7 @@ describe('#connections handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { connections: [] } ]);
+      expect(removed).to.equal(true);
     });
 
     it('should not remove if it is not allowed by config', async () => {

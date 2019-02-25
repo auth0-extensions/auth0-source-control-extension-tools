@@ -219,6 +219,7 @@ describe('#databases handler', () => {
     });
 
     it('should delete all databases', async () => {
+      let removed = false;
       const auth0 = {
         connections: {
           create: () => Promise.resolve([]),
@@ -226,7 +227,7 @@ describe('#databases handler', () => {
           delete: (params) => {
             expect(params).to.be.an('object');
             expect(params.id).to.equal('con1');
-
+            removed = true;
             return Promise.resolve([]);
           },
           getAll: () => [ { id: 'con1', name: 'existingConnection', strategy: 'auth0' } ]
@@ -241,6 +242,7 @@ describe('#databases handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { databases: [] } ]);
+      expect(removed).to.equal(true);
     });
 
     it('should not remove if it is not allowed by config', async () => {
