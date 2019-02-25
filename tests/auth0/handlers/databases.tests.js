@@ -218,6 +218,31 @@ describe('#databases handler', () => {
       await stageFn.apply(handler, [ { databases: data } ]);
     });
 
+    it('should delete all databases', async () => {
+      const auth0 = {
+        connections: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'con1', name: 'existingConnection', strategy: 'auth0' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { databases: [] } ]);
+    });
+
     it('should not remove if it is not allowed by config', async () => {
       config.data.AUTH0_ALLOW_DELETE = false;
       const auth0 = {
