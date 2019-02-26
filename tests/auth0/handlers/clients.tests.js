@@ -149,6 +149,30 @@ describe('#clients handler', () => {
       await stageFn.apply(handler, [ { clients: [ { name: 'someClient' } ] } ]);
     });
 
+    it('should delete all clients', async () => {
+      let removed = false;
+      const auth0 = {
+        clients: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.client_id).to.equal('client1');
+            removed = true;
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { client_id: 'client1', name: 'existingClient' }, { client_id: 'client_id', name: 'deploy client' } ]
+        },
+        pool
+      };
+
+      const handler = new clients.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { clients: [] } ]);
+      expect(removed).to.equal(true);
+    });
+
     it('should not remove client if it is not allowed by config', async () => {
       config.data.AUTH0_ALLOW_DELETE = false;
       const auth0 = {

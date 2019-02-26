@@ -151,6 +151,30 @@ describe('#resourceServers handler', () => {
       await stageFn.apply(handler, [ { resourceServers: [ {} ] } ]);
     });
 
+    it('should all remove resource servers', async () => {
+      let removed = false;
+      const auth0 = {
+        resourceServers: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (data) => {
+            expect(data).to.be.an('object');
+            expect(data.id).to.equal('rs1');
+            removed = true;
+            return Promise.resolve(data);
+          },
+          getAll: () => [ { id: 'rs1', identifier: 'some-api', name: 'someAPI' } ]
+        },
+        pool
+      };
+
+      const handler = new resourceServers.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { resourceServers: [] } ]);
+      expect(removed).to.equal(true);
+    });
+
     it('should not touch excluded resource servers', async () => {
       const auth0 = {
         resourceServers: {

@@ -12,7 +12,7 @@ const pool = {
 
 describe('#clientGrants handler', () => {
   const config = function(key) {
-    return this.data && this.data[key];
+    return config.data && config.data[key];
   };
 
   config.data = {
@@ -216,6 +216,33 @@ describe('#clientGrants handler', () => {
       ];
 
       await stageFn.apply(handler, [ { clientGrants: data } ]);
+    });
+
+    it('should delete all client grants', async () => {
+      let removed = false;
+      const auth0 = {
+        clientGrants: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('cg1');
+            removed = true;
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'cg1', client_id: 'client1', audience: 'audience1' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { clientGrants: [] } ]);
+      expect(removed).to.equal(true);
     });
   });
 });
