@@ -22,6 +22,10 @@ export default class EmailProviderHandler extends DefaultHandler {
     }
   }
 
+  objString(provider) {
+    return super.objString({ name: provider.name, enabled: provider.enabled });
+  }
+
   async processChanges(assets) {
     const { emailProvider } = assets;
 
