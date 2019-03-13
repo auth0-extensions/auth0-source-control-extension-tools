@@ -46,8 +46,13 @@ export default class ClientHandler extends DefaultHandler {
     // As it could cause problems if it gets deleted or updated etc
     const currentClient = this.config('AUTH0_CLIENT_ID');
 
-    const filterClients = list => list
-      .filter(item => item.client_id !== currentClient && !excludedClients.includes(item.name));
+    const filterClients = (list) => {
+      if (excludedClients.length) {
+        return list.filter(item => item.client_id !== currentClient && !excludedClients.includes(item.name));
+      }
+
+      return list.filter(item => item.client_id !== currentClient);
+    };
 
     const changes = {
       del: filterClients(del),
