@@ -193,5 +193,49 @@ describe('#clients handler', () => {
 
       await stageFn.apply(handler, [ { clients: [ { name: 'newClient' } ] } ]);
     });
+
+    it('should not remove, update or create client if it is excluded', async () => {
+      config.data.AUTH0_ALLOW_DELETE = true;
+      const auth0 = {
+        clients: {
+          create: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          update: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          getAll: () => [
+            { client_id: 'client1', name: 'existingClient' },
+            { client_id: 'client2', name: 'existingClient2' }
+          ]
+        },
+        pool
+      };
+
+      const assets = {
+        clients: [
+          { name: 'excludedClient' },
+          { name: 'existingClient' }
+        ],
+        exclude: {
+          clients: [
+            'excludedClient',
+            'existingClient',
+            'existingClient2'
+          ]
+        }
+      };
+
+      const handler = new clients.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ assets ]);
+    });
   });
 });

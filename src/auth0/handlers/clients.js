@@ -36,6 +36,8 @@ export default class ClientHandler extends DefaultHandler {
     // Do nothing if not set
     if (!clients) return;
 
+    const excludedClients = (assets.exclude && assets.exclude.clients) || [];
+
     const {
       del, update, create, conflicts
     } = await this.calcChanges(assets);
@@ -43,11 +45,20 @@ export default class ClientHandler extends DefaultHandler {
     // Always filter out the client we are using to access Auth0 Management API
     // As it could cause problems if it gets deleted or updated etc
     const currentClient = this.config('AUTH0_CLIENT_ID');
+
+    const filterClients = (list) => {
+      if (excludedClients.length) {
+        return list.filter(item => item.client_id !== currentClient && !excludedClients.includes(item.name));
+      }
+
+      return list.filter(item => item.client_id !== currentClient);
+    };
+
     const changes = {
-      del: del.filter(c => c.client_id !== currentClient),
-      update: update.filter(c => c.client_id !== currentClient),
-      create: create.filter(c => c.client_id !== currentClient),
-      conflicts: conflicts.filter(c => c.client_id !== currentClient)
+      del: filterClients(del),
+      update: filterClients(update),
+      create: filterClients(create),
+      conflicts: filterClients(conflicts)
     };
 
     await super.processChanges(assets, {
