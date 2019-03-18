@@ -218,6 +218,45 @@ describe('#clientGrants handler', () => {
       await stageFn.apply(handler, [ { clientGrants: data } ]);
     });
 
+    it('should not delete nor create client grant for own client', async () => {
+      const auth0 = {
+        clientGrants: {
+          create: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          update: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'id', client_id: 'client_id', audience: 'audience' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someClientGrant',
+          client_id: 'client_id',
+          audience: 'audience'
+        }
+      ];
+
+      await stageFn.apply(handler, [ { clientGrants: data } ]);
+    });
+
     it('should delete all client grants', async () => {
       let removed = false;
       const auth0 = {
