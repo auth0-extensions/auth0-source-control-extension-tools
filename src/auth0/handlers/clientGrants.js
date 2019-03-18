@@ -62,7 +62,13 @@ export default class ClientHandler extends DefaultHandler {
       if (found) grant.client_id = found.client_id;
       return grant;
     });
-    return super.calcChanges({ ...assets, clientGrants: formatted });
+
+    // Always filter out the client we are using to access Auth0 Management API
+    const currentClient = this.config('AUTH0_CLIENT_ID');
+
+    const filtered = formatted.filter(grant => grant.client_id !== currentClient);
+
+    return super.calcChanges({ ...assets, clientGrants: filtered });
   }
 
   // Run after clients are updated so we can convert client_id names to id's
