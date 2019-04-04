@@ -275,7 +275,7 @@ describe('#databases handler', () => {
       await stageFn.apply(handler, [ { databases: data } ]);
     });
 
-    it('should not remove if it is not allowed by config', async () => {
+    it('should not remove databases if run by extension', async () => {
       config.data = {
         EXTENSION_SECRET: 'some-secret'
       };
