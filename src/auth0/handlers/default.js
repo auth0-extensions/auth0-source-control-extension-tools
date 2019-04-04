@@ -122,7 +122,9 @@ export default class DefaultHandler {
 
     // Process Deleted
     if (del.length > 0) {
-      const shouldDelete = this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true;
+      const allowDelete = this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true;
+      const byExtension = this.config('EXTENSION_SECRET') && (this.type === 'rules' || this.type === 'resourceServers');
+      const shouldDelete = allowDelete || byExtension;
       if (!shouldDelete) {
         log.warn(`Detected the following ${this.type} should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
         \n${changes.del.map(i => this.objString(i)).join('\n')}
