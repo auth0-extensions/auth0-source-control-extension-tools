@@ -67,8 +67,6 @@ export default class RoleHandler extends DefaultHandler {
 
     // Gets roles from destination tenant
     const existing = await this.getType();
-    
-    //Calculate changes
     const changes = calcChanges(roles, existing, [ 'id', 'name' ]);
 
     log.debug(`Start processChanges for roles [delete:${changes.del.length}] [update:${changes.update.length}], [create:${changes.create.length}]`);
