@@ -25,7 +25,9 @@ export const schema = {
             description: { type: 'string' }
           }
         }
-      }
+      },
+      enforce_policies: { type: 'boolean' },
+      token_dialect: { type: 'string' }
     },
     required: [ 'name', 'identifier' ]
   }

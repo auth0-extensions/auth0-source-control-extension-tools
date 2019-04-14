@@ -1,5 +1,6 @@
 import DefaultHandler, { order } from './default';
 import { calcChanges } from '../../utils';
+import log from '../../logger';
 
 export const schema = {
   type: 'array',
@@ -66,8 +67,11 @@ export default class RoleHandler extends DefaultHandler {
 
     // Gets roles from destination tenant
     const existing = await this.getType();
-
+    
+    //Calculate changes
     const changes = calcChanges(roles, existing, [ 'id', 'name' ]);
+
+    log.debug(`Start processChanges for roles [delete:${changes.del.length}] [update:${changes.update.length}], [create:${changes.create.length}]`);
 
     await Promise.all(changes.create.map(async (createRole) => {
       const data = { ...createRole };
@@ -97,8 +101,16 @@ export default class RoleHandler extends DefaultHandler {
       this.updated += 1;
     }));
 
-    await super.processChanges(assets, {
-      del: changes.del
-    });
+    if (changes.del.length > 0) {
+      const shouldDelete = this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true;
+      if (!shouldDelete) {
+        log.warn(`Detected the following roles should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
+        \n${changes.del.map(i => this.objString(i)).join('\n')}`);
+      } else {
+        await Promise.all(changes.del.map(async (roleToDelete) => {
+          await this.client.roles.delete({ id: roleToDelete.id });
+        }));
+      }
+    }
   }
 }
