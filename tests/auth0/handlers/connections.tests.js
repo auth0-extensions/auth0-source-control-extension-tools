@@ -235,5 +235,31 @@ describe('#connections handler', () => {
 
       await stageFn.apply(handler, [ { connections: data } ]);
     });
+
+    it('should not remove connections if run by extension', async () => {
+      config.data = {
+        EXTENSION_SECRET: 'some-secret'
+      };
+      const auth0 = {
+        connections: {
+          create: () => Promise.resolve(),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'con1', name: 'existingConnection', strategy: 'custom' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new connections.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { connections: [] } ]);
+    });
   });
 });
