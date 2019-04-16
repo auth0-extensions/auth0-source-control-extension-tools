@@ -35,10 +35,6 @@ export default class RoleHandler extends DefaultHandler {
     });
   }
 
-  objString(item) {
-    return super.objString({ name: item.name, id: item.id });
-  }
-
   async createRoles(creates) {
     await Promise.all(creates.map(async (roleData) => {
       const data = { ...roleData };
