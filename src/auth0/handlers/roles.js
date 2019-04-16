@@ -36,7 +36,7 @@ export default class RoleHandler extends DefaultHandler {
   }
 
   objString(item) {
-    return super.objString({ name: item.name, id: item.id, description: item.description });
+    return super.objString({ name: item.name, id: item.id });
   }
 
   async createRoles(creates) {
