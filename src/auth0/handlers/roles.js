@@ -61,16 +61,14 @@ export default class RoleHandler extends DefaultHandler {
 
   async updateRoles(updates, roles) {
     await Promise.all(updates.map(async (updateRole) => {
-      const data = await roles.find(roleDataForUpdate => roleDataForUpdate.name === updateRole.name);
+      const existingRole = await roles.find(roleDataForUpdate => roleDataForUpdate.name === updateRole.name);
       const params = { id: updateRole.id };
-      const newPermissions = data.permissions;
-      delete data.permissions;
-      await this.client.roles.update(params, data);
-      if (typeof updateRole.permissions !== 'undefined' && updateRole.permissions.length > 0) {
-        const deleteAllowed = this.config.AUTH0_ALLOW_DELETE;
-        if (!deleteAllowed) this.config.AUTH0_ALLOW_DELETE = true;
-        await this.client.roles.permissions.delete(params, { permissions: updateRole.permissions });
-        if (!deleteAllowed) this.config.AUTH0_ALLOW_DELETE = false;
+      const newPermissions = updateRole.permissions;
+      delete updateRole.permissions;
+      delete updateRole.id;
+      await this.client.roles.update(params, updateRole);
+      if (typeof existingRole.permissions !== 'undefined' && existingRole.permissions.length > 0) {
+        await this.client.roles.permissions.delete(params, { permissions: existingRole.permissions });
       }
       if (typeof newPermissions !== 'undefined' && newPermissions.length > 0) await this.client.roles.permissions.create(params, { permissions: newPermissions });
       this.didUpdate(params);
@@ -116,7 +114,7 @@ export default class RoleHandler extends DefaultHandler {
           await this.createRoles(changes.create);
           break;
         case change.update && change.update.length > 0:
-          await this.updateRoles(change.update, roles);
+          await this.updateRoles(change.update, existing);
           break;
         default:
           break;
