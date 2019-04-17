@@ -71,26 +71,33 @@ describe('#roles handler', () => {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
             ],
-            create: (data) => {
-              expect(data).to.be.an('Array');
-              expect(data.length).to.equal(1);
-              return Promise.resolve(data);
-            },
-            update: (params, data) => {
+            create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
-              expect(data).to.be.an('Array');
-              expect(data[0].permission_name).to.equal('Create:cal_entry');
-              expect(data[0].descrresource_server_identifieription).to.equal('organise');
-              return Promise.resolve(data);
-            }
+              expect(data).to.be.an('object');
+              expect(data.permissions).to.not.equal(null);
+              expect(data.permissions).to.be.an('Array');
+              return Promise.resolve(data.permissions);
+            },
+            update: Promise.resolve([])
           }
         },
         pool
       };
       const handler = new roles.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
-      await stageFn.apply(handler, [ { roles: [ { name: 'myRole', description: 'myDescription' } ] } ]);
+      await stageFn.apply(handler, [
+        {
+          roles: [
+            {
+              name: 'myRole',
+              id: 'myRoleId',
+              description: 'myDescription',
+              permissions: []
+            }
+          ]
+        }
+      ]);
     });
 
     it('should get roles', async () => {
@@ -136,29 +143,39 @@ describe('#roles handler', () => {
             expect(params).to.be.an('object');
             expect(params.id).to.equal('myRoleId');
             expect(data).to.be.an('object');
-            expect(data.name).to.equal('myNewRoleName');
-            expect(data.description).to.equal('myNewDescription');
+            expect(data.name).to.equal('myRole');
+            expect(data.description).to.equal('myDescription');
 
             return Promise.resolve(data);
           },
           delete: () => Promise.resolve([]),
-          getAll: () => [ { id: 'myRoleId', name: 'myRole', description: 'myDescription' } ],
+          getAll: () => [
+            {
+              name: 'myRole',
+              id: 'myRoleId',
+              description: 'myDescription'
+            }
+          ],
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
             ],
-            create: (data) => {
-              expect(data).to.be.an('Array');
-              expect(data.length).to.equal(1);
-              return Promise.resolve(data);
-            },
-            update: (params, data) => {
+            getAll: () => [
+              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+            ],
+            create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
-              expect(data).to.be.an('Array');
-              expect(data[0].permission_name).to.equal('Create:cal_entry');
-              expect(data[0].descrresource_server_identifieription).to.equal('organise');
+              expect(data).to.be.an('object');
+              expect(data.permissions).to.not.equal(null);
+              expect(data.permissions).to.be.an('Array');
               return Promise.resolve(data);
+            },
+            delete: (params, data) => {
+              expect(params).to.be.an('object');
+              expect(params.id).to.equal('myRoleId');
+              expect(data.permissions).to.be.an('Array');
+              return Promise.resolve(data.permissions);
             }
           }
 
@@ -169,7 +186,22 @@ describe('#roles handler', () => {
       const handler = new roles.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
-      await stageFn.apply(handler, [ { roles: [ { id: 'myRoleId', name: 'myNewRoleName', description: 'myNewDescription' } ] } ]);
+      await stageFn.apply(handler, [
+        {
+          roles: [
+            {
+              name: 'myRole',
+              id: 'myRoleId',
+              description: 'myDescription',
+              permissions: [
+                {
+                  permission_name: 'Create:cal_entry', resource_server_identifier: 'organise'
+                }
+              ]
+            }
+          ]
+        }
+      ]);
     });
 
     it('should delete role', async () => {
@@ -182,24 +214,20 @@ describe('#roles handler', () => {
             expect(data.id).to.equal('myRoleId');
             return Promise.resolve(data);
           },
-          getAll: () => [ { id: 'myRoleId', name: 'myRole', description: 'myDescription' } ],
-          permissions: {
-            get: () => [
-              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-            ],
-            create: (data) => {
-              expect(data).to.be.an('Array');
-              expect(data.length).to.equal(1);
-              return Promise.resolve(data);
-            },
-            update: (params, data) => {
-              expect(params).to.be.an('object');
-              expect(params.id).to.equal('myRoleId');
-              expect(data).to.be.an('Array');
-              expect(data[0].permission_name).to.equal('Create:cal_entry');
-              expect(data[0].descrresource_server_identifieription).to.equal('organise');
-              return Promise.resolve(data);
+          getAll: () => [
+            {
+              name: 'myRole',
+              id: 'myRoleId',
+              description: 'myDescription',
+              permissions: [
+                {
+                  permission_name: 'Create:cal_entry', resource_server_identifier: 'organise'
+                }
+              ]
             }
+          ],
+          permissions: {
+            get: () => []
           }
         },
         pool
