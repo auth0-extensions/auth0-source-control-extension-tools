@@ -12,6 +12,7 @@ import * as clientGrants from './clientGrants';
 import * as guardianFactors from './guardianFactors';
 import * as guardianFactorProviders from './guardianFactorProviders';
 import * as guardianFactorTemplates from './guardianFactorTemplates';
+import * as roles from './roles';
 
 export {
   rules,
@@ -27,5 +28,6 @@ export {
   clientGrants,
   guardianFactors,
   guardianFactorProviders,
-  guardianFactorTemplates
+  guardianFactorTemplates,
+  roles
 };

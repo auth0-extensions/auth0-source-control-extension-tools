@@ -132,5 +132,6 @@ constants.CONNECTIONS_CLIENT_NAME = 'connections';
 constants.CONNECTIONS_ID_NAME = 'id';
 
 constants.CONCURRENT_CALLS = 5;
+constants.ROLES_DIRECTORY = 'roles';
 
 export default constants;
