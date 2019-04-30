@@ -67,6 +67,7 @@ describe('#roles handler', () => {
           update: () => Promise.resolve([]),
           delete: () => Promise.resolve([]),
           getAll: () => [],
+          get: () => ({ name: 'myRole', id: 'myRoleId', description: 'myDescription' }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
@@ -106,6 +107,7 @@ describe('#roles handler', () => {
           getAll: () => [
             { name: 'myRole', id: 'myRoleId', description: 'myDescription' }
           ],
+          get: () => ({ name: 'myRole', id: 'myRoleId', description: 'myDescription' }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }

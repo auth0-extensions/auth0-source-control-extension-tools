@@ -80,7 +80,12 @@ export default class RoleHandler extends DefaultHandler {
     if (this.existing) {
       return this.existing;
     }
+    this.existing = [];
 
+    const continueProcessing = await this.checkTenantSupportsRoles();
+    if (!continueProcessing) {
+      return this.existing;
+    }
     const roles = await this.client.roles.getAll();
     for (let index = 0; index < roles.length; index++) {
       const permissions = await this.client.roles.permissions.get({ id: roles[index].id });
@@ -97,6 +102,8 @@ export default class RoleHandler extends DefaultHandler {
 
   @order('60')
   async processChanges(assets) {
+    const continueProcessing = await this.checkTenantSupportsRoles();
+    if (!continueProcessing) return;
     const { roles } = assets;
     // Do nothing if not set
     if (!roles) return;
@@ -120,5 +127,24 @@ export default class RoleHandler extends DefaultHandler {
           break;
       }
     }));
+  }
+
+  async checkTenantSupportsRoles() {
+    try {
+      await this.client.roles.get({ id: 'rol_0000000000000000' });
+      return true;
+    } catch (error) {
+      // this means the tenant does not have roles implemented yet
+      if (error.statusCode === 501) {
+        log.info(`Role processing ignored - ${error.message}`);
+        return false;
+      }
+      // tenant api calls for get role works but role does not exist or some other error. This is ok!
+      if ([ 404, 200, 401, 403, 429 ].indexOf(error.statusCode) >= 0) {
+        return true;
+      }
+      log.error(`Error while checking support for roles in this tenant. Error: ${error}. Role processing will be ignored.`);
+      return false;
+    }
   }
 }
