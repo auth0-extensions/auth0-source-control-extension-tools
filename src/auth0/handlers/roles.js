@@ -140,7 +140,7 @@ export default class RoleHandler extends DefaultHandler {
         return false;
       }
       // tenant api calls for get role works but role does not exist or some other error. This is ok!
-      if ([ 404, 200, 401, 403, 429 ].indexOf(error.statusCode) >= 0) {
+      if ([ 404, 401, 403, 429 ].indexOf(error.statusCode) >= 0) {
         return true;
       }
       log.error(`Error while checking support for roles in this tenant. Error: ${error}. Role processing will be ignored.`);
