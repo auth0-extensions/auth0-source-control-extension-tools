@@ -283,5 +283,33 @@ describe('#clientGrants handler', () => {
       await stageFn.apply(handler, [ { clientGrants: [] } ]);
       expect(removed).to.equal(true);
     });
+
+    it('should not delete client grants if run by extensions', async () => {
+      config.data = {
+        EXTENSION_SECRET: 'some-secret'
+      };
+
+      const auth0 = {
+        clientGrants: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'cg1', client_id: 'client1', audience: 'audience1' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { clientGrants: [] } ]);
+    });
   });
 });

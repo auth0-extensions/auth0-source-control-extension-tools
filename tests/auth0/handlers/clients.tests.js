@@ -237,5 +237,33 @@ describe('#clients handler', () => {
 
       await stageFn.apply(handler, [ assets ]);
     });
+
+    it('should not remove clients if run by extension', async () => {
+      config.data = {
+        EXTENSION_SECRET: 'some-secret'
+      };
+
+      const auth0 = {
+        clients: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          getAll: () => [
+            { client_id: 'client1', name: 'existingClient' },
+            { client_id: 'client2', name: 'existingClient2' }
+          ]
+        },
+        pool
+      };
+
+
+      const handler = new clients.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { clients: [] } ]);
+    });
   });
 });
