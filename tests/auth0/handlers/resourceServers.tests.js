@@ -130,6 +130,33 @@ describe('#resourceServers handler', () => {
       await stageFn.apply(handler, [ { resourceServers: [ { name: 'someAPI', identifier: 'some-api', scope: 'new:scope' } ] } ]);
     });
 
+    it('should create new resource server with same name but different identifier', async () => {
+      const auth0 = {
+        resourceServers: {
+          create: (data) => {
+            expect(data).to.be.an('object');
+            expect(data.name).to.equal('someAPI');
+            expect(data.scope).to.equal('new:scope');
+            expect(data.identifier).to.equal('another-api');
+            return Promise.resolve(data);
+          },
+          update: (params, data) => {
+            expect(params).to.be('undefined');
+            expect(data).to.be('undefined');
+            return Promise.resolve(data);
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [ { id: 'rs1', identifier: 'some-api', name: 'someAPI' } ]
+        },
+        pool
+      };
+
+      const handler = new resourceServers.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { resourceServers: [ { name: 'someAPI', identifier: 'another-api', scope: 'new:scope' } ] } ]);
+    });
+
     it('should remove resource server', async () => {
       const auth0 = {
         resourceServers: {
