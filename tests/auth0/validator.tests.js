@@ -18,80 +18,96 @@ describe('#schema validation tests', () => {
   const checkPassed = (data, done) => {
     const auth0 = new Auth0(client, data, {});
 
-    auth0.validate()
-      .then(passedCb(done), failedCb(done));
+    auth0.validate().then(passedCb(done), failedCb(done));
   };
 
   const checkRequired = (field, data, done) => {
     const auth0 = new Auth0({}, data, {});
 
-    auth0.validate()
-      .then(failedCb(done), passedCb(done, `should have required property '${field}'`));
+    auth0
+      .validate()
+      .then(
+        failedCb(done),
+        passedCb(done, `should have required property '${field}'`)
+      );
   };
 
   const checkEnum = (data, done) => {
     const auth0 = new Auth0({}, data, {});
 
-    auth0.validate()
-      .then(failedCb(done), passedCb(done, 'should be equal to one of the allowed values'));
+    auth0
+      .validate()
+      .then(
+        failedCb(done),
+        passedCb(done, 'should be equal to one of the allowed values')
+      );
   };
+
+  describe('#branding validate', () => {
+    it('should fail validation if branding is not an object', (done) => {
+      const data = [ {
+        anything: 'anything'
+      } ];
+
+      const auth0 = new Auth0({}, { branding: data }, {});
+
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be object'));
+    });
+
+    it('should pass validation', (done) => {
+      const data = {
+        anything: 'anything'
+      };
+
+      checkPassed({ branding: data }, done);
+    });
+  });
 
   describe('#clientGrants validate', () => {
     it('should fail validation if no "client_id" provided', (done) => {
-      const data = [
-        {
-          name: 'name'
-        }
-      ];
+      const data = [ {
+        name: 'name'
+      } ];
 
       checkRequired('client_id', { clientGrants: data }, done);
     });
 
     it('should fail validation if no "scope" provided', (done) => {
-      const data = [
-        {
-          client_id: 'client_id',
-          audience: 'audience'
-        }
-      ];
+      const data = [ {
+        client_id: 'client_id',
+        audience: 'audience'
+      } ];
 
       checkRequired('scope', { clientGrants: data }, done);
     });
 
     it('should fail validation if no "audience" provided', (done) => {
-      const data = [
-        {
-          client_id: 'client_id',
-          scope: [ 'scope' ]
-        }
-      ];
+      const data = [ {
+        client_id: 'client_id',
+        scope: [ 'scope' ]
+      } ];
 
       checkRequired('audience', { clientGrants: data }, done);
     });
 
     it('should fail validation if bad "scope" provided', (done) => {
-      const data = [
-        {
-          client_id: 'client_id',
-          scope: 'scope',
-          audience: 'audience'
-        }
-      ];
+      const data = [ {
+        client_id: 'client_id',
+        scope: 'scope',
+        audience: 'audience'
+      } ];
 
       const auth0 = new Auth0({}, { clientGrants: data }, {});
 
-      auth0.validate()
-        .then(failedCb(done), passedCb(done, 'should be array'));
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be array'));
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          client_id: 'client_id',
-          scope: [ 'scope' ],
-          audience: 'audience'
-        }
-      ];
+      const data = [ {
+        client_id: 'client_id',
+        scope: [ 'scope' ],
+        audience: 'audience'
+      } ];
 
       checkPassed({ clientGrants: data }, done);
     });
@@ -99,34 +115,32 @@ describe('#schema validation tests', () => {
 
   describe('#clients validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          id: 'id'
-        }
-      ];
+      const data = [ {
+        id: 'id'
+      } ];
 
       checkRequired('name', { clients: data }, done);
     });
 
     it('should fail validation if bad "name" provided', (done) => {
-      const data = [
-        {
-          name: ''
-        }
-      ];
+      const data = [ {
+        name: ''
+      } ];
 
       const auth0 = new Auth0({}, { clients: data }, {});
 
-      auth0.validate()
-        .then(failedCb(done), passedCb(done, 'should NOT be shorter than 1 characters'));
+      auth0
+        .validate()
+        .then(
+          failedCb(done),
+          passedCb(done, 'should NOT be shorter than 1 characters')
+        );
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'name'
-        }
-      ];
+      const data = [ {
+        name: 'name'
+      } ];
 
       checkPassed({ clients: data }, done);
     });
@@ -134,32 +148,26 @@ describe('#schema validation tests', () => {
 
   describe('#connections validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          id: 'id'
-        }
-      ];
+      const data = [ {
+        id: 'id'
+      } ];
 
       checkRequired('name', { connections: data }, done);
     });
 
     it('should fail validation if no "strategy" provided', (done) => {
-      const data = [
-        {
-          name: 'name'
-        }
-      ];
+      const data = [ {
+        name: 'name'
+      } ];
 
       checkRequired('strategy', { connections: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'name',
-          strategy: 'strategy'
-        }
-      ];
+      const data = [ {
+        name: 'name',
+        strategy: 'strategy'
+      } ];
 
       checkPassed({ connections: data }, done);
     });
@@ -167,33 +175,27 @@ describe('#schema validation tests', () => {
 
   describe('#databases validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          id: 'id'
-        }
-      ];
+      const data = [ {
+        id: 'id'
+      } ];
 
       checkRequired('name', { databases: data }, done);
     });
 
     it('should fail validation if bad "strategy" provided', (done) => {
-      const data = [
-        {
-          name: 'name',
-          strategy: 'strategy'
-        }
-      ];
+      const data = [ {
+        name: 'name',
+        strategy: 'strategy'
+      } ];
 
       checkEnum({ databases: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'name',
-          options: {}
-        }
-      ];
+      const data = [ {
+        name: 'name',
+        options: {}
+      } ];
 
       checkPassed({ databases: data }, done);
     });
@@ -201,16 +203,13 @@ describe('#schema validation tests', () => {
 
   describe('#emailProvider validate', () => {
     it('should fail validation if emailProvider is not an object', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       const auth0 = new Auth0({}, { emailProvider: data }, {});
 
-      auth0.validate()
-        .then(failedCb(done), passedCb(done, 'should be object'));
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be object'));
     });
 
     it('should pass validation', (done) => {
@@ -224,33 +223,27 @@ describe('#schema validation tests', () => {
 
   describe('#emailTemplates validate', () => {
     it('should fail validation if no "template" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('template', { emailTemplates: data }, done);
     });
 
     it('should fail validation if bad "template" provided', (done) => {
-      const data = [
-        {
-          template: 'template',
-          body: 'body'
-        }
-      ];
+      const data = [ {
+        template: 'template',
+        body: 'body'
+      } ];
 
       checkEnum({ emailTemplates: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          template: 'verify_email',
-          body: 'body'
-        }
-      ];
+      const data = [ {
+        template: 'verify_email',
+        body: 'body'
+      } ];
 
       checkPassed({ emailTemplates: data }, done);
     });
@@ -258,54 +251,44 @@ describe('#schema validation tests', () => {
 
   describe('#guardianFactorProviders validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('name', { guardianFactorProviders: data }, done);
     });
 
     it('should fail validation if no "provider" provided', (done) => {
-      const data = [
-        {
-          name: 'sms'
-        }
-      ];
+      const data = [ {
+        name: 'sms'
+      } ];
 
       checkRequired('provider', { guardianFactorProviders: data }, done);
     });
 
     it('should fail validation if bad "name" provided', (done) => {
-      const data = [
-        {
-          name: 'name',
-          provider: 'provider'
-        }
-      ];
+      const data = [ {
+        name: 'name',
+        provider: 'provider'
+      } ];
 
       checkEnum({ guardianFactorProviders: data }, done);
     });
 
     it('should fail validation if bad "provider" provided', (done) => {
-      const data = [
-        {
-          name: 'sms',
-          provider: 'provider'
-        }
-      ];
+      const data = [ {
+        name: 'sms',
+        provider: 'provider'
+      } ];
 
       checkEnum({ guardianFactorProviders: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'sms',
-          provider: 'twilio'
-        }
-      ];
+      const data = [ {
+        name: 'sms',
+        provider: 'twilio'
+      } ];
 
       checkPassed({ guardianFactorProviders: data }, done);
     });
@@ -313,31 +296,25 @@ describe('#schema validation tests', () => {
 
   describe('#guardianFactors validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('name', { guardianFactors: data }, done);
     });
 
     it('should fail validation if bad "name" provided', (done) => {
-      const data = [
-        {
-          name: 'name'
-        }
-      ];
+      const data = [ {
+        name: 'name'
+      } ];
 
       checkEnum({ guardianFactors: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'sms'
-        }
-      ];
+      const data = [ {
+        name: 'sms'
+      } ];
 
       checkPassed({ guardianFactors: data }, done);
     });
@@ -345,31 +322,25 @@ describe('#schema validation tests', () => {
 
   describe('#guardianFactorTemplates validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('name', { guardianFactorTemplates: data }, done);
     });
 
     it('should fail validation if bad "name" provided', (done) => {
-      const data = [
-        {
-          name: 'name'
-        }
-      ];
+      const data = [ {
+        name: 'name'
+      } ];
 
       checkEnum({ guardianFactorTemplates: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'sms'
-        }
-      ];
+      const data = [ {
+        name: 'sms'
+      } ];
 
       checkPassed({ guardianFactorTemplates: data }, done);
     });
@@ -377,64 +348,72 @@ describe('#schema validation tests', () => {
 
   describe('#pages validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('name', { pages: data }, done);
     });
 
     it('should fail validation if bad "name" provided', (done) => {
-      const data = [
-        {
-          name: 'name'
-        }
-      ];
+      const data = [ {
+        name: 'name'
+      } ];
 
       checkEnum({ pages: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'login'
-        }
-      ];
+      const data = [ {
+        name: 'login'
+      } ];
 
       checkPassed({ pages: data }, done);
     });
   });
 
+  describe('#prompts validate', () => {
+    it('should fail validation if prompts is not an object', (done) => {
+      const data = [ {
+        anything: 'anything'
+      } ];
+
+      const auth0 = new Auth0({}, { prompts: data }, {});
+
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be object'));
+    });
+
+    it('should pass validation', (done) => {
+      const data = {
+        anything: 'anything'
+      };
+
+      checkPassed({ prompts: data }, done);
+    });
+  });
+
   describe('#resourceServers validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('name', { resourceServers: data }, done);
     });
 
     it('should fail validation if no "identifier" provided', (done) => {
-      const data = [
-        {
-          name: 'name'
-        }
-      ];
+      const data = [ {
+        name: 'name'
+      } ];
 
       checkRequired('identifier', { resourceServers: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'name',
-          identifier: 'identifier'
-        }
-      ];
+      const data = [ {
+        name: 'name',
+        identifier: 'identifier'
+      } ];
 
       checkPassed({ resourceServers: data }, done);
     });
@@ -442,47 +421,40 @@ describe('#schema validation tests', () => {
 
   describe('#rules validate', () => {
     it('should fail validation if no "name" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('name', { rules: data }, done);
     });
 
     it('should fail validation if bad "name" provided', (done) => {
-      const data = [
-        {
-          name: '-rule-'
-        }
-      ];
+      const data = [ {
+        name: '-rule-'
+      } ];
 
       const auth0 = new Auth0({}, { rules: data }, {});
 
-      auth0.validate()
+      auth0
+        .validate()
         .then(failedCb(done), passedCb(done, 'should match pattern'));
     });
 
     it('should fail validation if bad "stage" provided', (done) => {
-      const data = [
-        {
-          name: 'rule',
-          stage: 'stage'
-        }
-      ];
+      const data = [ {
+        name: 'rule',
+        stage: 'stage'
+      } ];
 
       checkEnum({ rules: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          name: 'name',
-          order: 1,
-          stage: 'login_failure'
-        }
-      ];
+      const data = [ {
+        name: 'name',
+        order: 1,
+        stage: 'login_failure'
+      } ];
 
       checkPassed({ rules: data }, done);
     });
@@ -490,46 +462,39 @@ describe('#schema validation tests', () => {
 
   describe('#rulesConfigs validate', () => {
     it('should fail validation if no "key" provided', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       checkRequired('key', { rulesConfigs: data }, done);
     });
 
     it('should fail validation if no "value" provided', (done) => {
-      const data = [
-        {
-          key: 'key'
-        }
-      ];
+      const data = [ {
+        key: 'key'
+      } ];
 
       checkRequired('value', { rulesConfigs: data }, done);
     });
 
     it('should fail validation if bad "key" provided', (done) => {
-      const data = [
-        {
-          key: ':-?',
-          value: 'value'
-        }
-      ];
+      const data = [ {
+        key: ':-?',
+        value: 'value'
+      } ];
 
       const auth0 = new Auth0({}, { rulesConfigs: data }, {});
 
-      auth0.validate()
+      auth0
+        .validate()
         .then(failedCb(done), passedCb(done, 'should match pattern'));
     });
 
     it('should pass validation', (done) => {
-      const data = [
-        {
-          key: 'key',
-          value: 'value'
-        }
-      ];
+      const data = [ {
+        key: 'key',
+        value: 'value'
+      } ];
 
       checkPassed({ rulesConfigs: data }, done);
     });
@@ -537,16 +502,13 @@ describe('#schema validation tests', () => {
 
   describe('#tenant validate', () => {
     it('should fail validation if tenant is not an object', (done) => {
-      const data = [
-        {
-          anything: 'anything'
-        }
-      ];
+      const data = [ {
+        anything: 'anything'
+      } ];
 
       const auth0 = new Auth0({}, { tenant: data }, {});
 
-      auth0.validate()
-        .then(failedCb(done), passedCb(done, 'should be object'));
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be object'));
     });
 
     it('should pass validation', (done) => {
