@@ -11,6 +11,11 @@ export default class BrandingHandler extends DefaultHandler {
   }
 
   async getType() {
+    // in case client version does not support branding
+    if (!this.client.branding || typeof this.client.branding.getSettings !== 'function') {
+      return {};
+    }
+
     try {
       return await this.client.branding.getSettings();
     } catch (err) {
