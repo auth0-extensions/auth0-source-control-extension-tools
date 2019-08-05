@@ -167,3 +167,23 @@ export function duplicateItems(arr, key) {
   }, {});
   return Object.values(duplicates).filter(g => g.length > 1);
 }
+
+
+export function filterExcluded(changes, exclude) {
+  const {
+    del, update, create, conflicts
+  } = changes;
+
+  if (!exclude.length) {
+    return changes;
+  }
+
+  const filter = list => list.filter(item => !exclude.includes(item.name));
+
+  return {
+    del: filter(del),
+    update: filter(update),
+    create: filter(create),
+    conflicts: filter(conflicts)
+  };
+}

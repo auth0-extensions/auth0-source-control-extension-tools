@@ -300,5 +300,47 @@ describe('#databases handler', () => {
 
       await stageFn.apply(handler, [ { databases: [] } ]);
     });
+
+    it('should not remove/create/update excluded connections', async () => {
+      config.data = {
+        EXTENSION_SECRET: false,
+        AUTH0_ALLOW_DELETE: true
+      };
+      const auth0 = {
+        connections: {
+          create: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          update: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          getAll: () => [
+            { id: 'con1', name: 'existing1', strategy: 'auth0' },
+            { id: 'con2', name: 'existing2', strategy: 'auth0' }
+          ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const assets = {
+        exclude: {
+          databases: [ 'existing1', 'existing2', 'existing3' ]
+        },
+        databases: [ { name: 'existing3', strategy: 'auth0' } ]
+      };
+
+      await stageFn.apply(handler, [ assets ]);
+    });
   });
 });
