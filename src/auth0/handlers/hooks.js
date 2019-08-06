@@ -62,7 +62,7 @@ export default class HooksHandler extends DefaultHandler {
     return super.objString({ name: hook.name, triggerId: hook.triggerId });
   }
 
-  async calcChanges(assets, includeExcluded = false) {
+  async calcChanges(assets) {
     const { hooks } = assets;
 
     // Figure out what needs to be updated vs created
