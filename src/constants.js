@@ -7,6 +7,8 @@ constants.RULES_STAGES = [
 
 constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];  // eslint-disable-line
 
+constants.HOOKS_DIRECTORY = 'hooks';
+
 constants.RULES_CONFIGS_DIRECTORY = 'rules-configs';
 
 constants.PAGES_DIRECTORY = 'pages';
