@@ -48,14 +48,22 @@ export default class ClientHandler extends DefaultHandler {
     return this.existing;
   }
 
-  async calcChanges(assets) {
+  // Run after clients are updated so we can convert client_id names to id's
+  @order('60')
+  async processChanges(assets) {
     const { clientGrants } = assets;
 
     // Do nothing if not set
-    if (!clientGrants) return {};
+    if (!clientGrants) return;
 
-    // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
+    const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
+    const excludedClients = excludedClientsByNames.map((clientName) => {
+      const found = clients.find(c => c.name === clientName);
+      return (found && found.client_id) || clientName;
+    });
+
+    // Convert clients by name to the id
     const formatted = assets.clientGrants.map((clientGrant) => {
       const grant = { ...clientGrant };
       const found = clients.find(c => c.name === grant.client_id);
@@ -66,14 +74,27 @@ export default class ClientHandler extends DefaultHandler {
     // Always filter out the client we are using to access Auth0 Management API
     const currentClient = this.config('AUTH0_CLIENT_ID');
 
-    const filtered = formatted.filter(grant => grant.client_id !== currentClient);
+    const {
+      del, update, create, conflicts
+    } = await this.calcChanges({ ...assets, clientGrants: formatted });
 
-    return super.calcChanges({ ...assets, clientGrants: filtered });
-  }
+    const filterGrants = (list) => {
+      if (excludedClients.length) {
+        return list.filter(item => item.client_id !== currentClient && !excludedClients.includes(item.client_id));
+      }
 
-  // Run after clients are updated so we can convert client_id names to id's
-  @order('60')
-  async processChanges(assets) {
-    await super.processChanges(assets);
+      return list.filter(item => item.client_id !== currentClient);
+    };
+
+    const changes = {
+      del: filterGrants(del),
+      update: filterGrants(update),
+      create: filterGrants(create),
+      conflicts: filterGrants(conflicts)
+    };
+
+    await super.processChanges(assets, {
+      ...changes
+    });
   }
 }
