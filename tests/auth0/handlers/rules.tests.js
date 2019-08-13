@@ -263,7 +263,10 @@ describe('#rules handler', () => {
     it('should not touch excluded rules', async () => {
       const auth0 = {
         rules: {
-          create: () => Promise.resolve([]),
+          create: (data) => {
+            expect(data).to.be.an('undefined');
+            return Promise.resolve(data);
+          },
           update: (data) => {
             expect(data).to.be.an('undefined');
             return Promise.resolve(data);
@@ -283,11 +286,12 @@ describe('#rules handler', () => {
       const handler = new rules.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
       const data = {
-        rules: [ { name: 'Rule1', script: 'new-rule-one-script' } ],
+        rules: [ { name: 'Rule1', script: 'new-rule-one-script' }, { name: 'Rule3', script: 'new-rule-three-script' } ],
         exclude: {
           rules: [
             'Rule1',
-            'Rule2'
+            'Rule2',
+            'Rule3'
           ]
         }
       };

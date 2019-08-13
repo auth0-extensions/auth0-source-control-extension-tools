@@ -20,6 +20,7 @@ export default class BrandingHandler extends DefaultHandler {
       return await this.client.branding.getSettings();
     } catch (err) {
       if (err.statusCode === 404) return {};
+      if (err.statusCode === 501) return {};
       throw err;
     }
   }
