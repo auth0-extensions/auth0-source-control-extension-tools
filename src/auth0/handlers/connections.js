@@ -1,4 +1,5 @@
 import DefaultHandler, { order } from './default';
+import { filterExcluded } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -7,13 +8,13 @@ export const schema = {
     properties: {
       name: { type: 'string' },
       strategy: { type: 'string' },
-      options: { type: 'object' }
+      options: { type: 'object' },
+      enabled_clients: { type: 'array', items: { type: 'string' } },
+      realms: { type: 'array', items: { type: 'string' } },
+      metadata: { type: 'object' }
     },
-    enabled_clients: { type: 'array', items: { type: 'string' } },
-    realms: { type: 'array', items: { type: 'string' } },
-    metadata: { type: 'object' }
-  },
-  require: [ 'name', 'strategy' ]
+    required: [ 'name', 'strategy' ]
+  }
 };
 
 
@@ -43,7 +44,7 @@ export default class ConnectionsHandler extends DefaultHandler {
     const { connections } = assets;
 
     // Do nothing if not set
-    if (!connections || !connections.length) return {};
+    if (!connections) return {};
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
@@ -68,8 +69,12 @@ export default class ConnectionsHandler extends DefaultHandler {
     const { connections } = assets;
 
     // Do nothing if not set
-    if (!connections || !connections.length) return;
+    if (!connections) return;
 
-    await super.processChanges(assets);
+    const excludedConnections = (assets.exclude && assets.exclude.connections) || [];
+
+    const changes = await this.calcChanges(assets);
+
+    await super.processChanges(assets, filterExcluded(changes, excludedConnections));
   }
 }

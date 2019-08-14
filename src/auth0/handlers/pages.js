@@ -20,7 +20,7 @@ export const schema = {
       html: { type: 'string', default: '' },
       enabled: { type: 'boolean' }
     },
-    require: [ 'html', 'name' ]
+    required: [ 'name' ]
   }
 };
 
@@ -115,7 +115,7 @@ export default class PageHandler extends DefaultHandler {
     const { pages } = assets;
 
     // Do nothing if not set
-    if (!pages || !pages.length) return;
+    if (!pages) return;
 
     // Login page is handled via the global client
     const loginPage = pages.find(p => p.name === 'login');

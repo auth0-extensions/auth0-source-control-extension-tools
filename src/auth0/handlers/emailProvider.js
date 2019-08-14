@@ -2,6 +2,9 @@ import DefaultHandler from './default';
 
 export const schema = { type: 'object' };
 
+// The Management API requires the fields to be specified
+const defaultFields = [ 'name', 'enabled', 'credentials', 'settings', 'default_from_address' ];
+
 export default class EmailProviderHandler extends DefaultHandler {
   constructor(options) {
     super({
@@ -12,11 +15,15 @@ export default class EmailProviderHandler extends DefaultHandler {
 
   async getType() {
     try {
-      return await this.client.emailProvider.get();
+      return await this.client.emailProvider.get({ include_fields: true, fields: defaultFields });
     } catch (err) {
       if (err.statusCode === 404) return {};
       throw err;
     }
+  }
+
+  objString(provider) {
+    return super.objString({ name: provider.name, enabled: provider.enabled });
   }
 
   async processChanges(assets) {

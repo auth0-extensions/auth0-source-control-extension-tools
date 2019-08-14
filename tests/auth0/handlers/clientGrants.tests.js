@@ -12,7 +12,7 @@ const pool = {
 
 describe('#clientGrants handler', () => {
   const config = function(key) {
-    return this.data && this.data[key];
+    return config.data && config.data[key];
   };
 
   config.data = {
@@ -216,6 +216,154 @@ describe('#clientGrants handler', () => {
       ];
 
       await stageFn.apply(handler, [ { clientGrants: data } ]);
+    });
+
+    it('should not delete nor create client grant for own client', async () => {
+      const auth0 = {
+        clientGrants: {
+          create: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          update: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'id', client_id: 'client_id', audience: 'audience' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someClientGrant',
+          client_id: 'client_id',
+          audience: 'audience'
+        }
+      ];
+
+      await stageFn.apply(handler, [ { clientGrants: data } ]);
+    });
+
+    it('should delete all client grants', async () => {
+      let removed = false;
+      const auth0 = {
+        clientGrants: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('cg1');
+            removed = true;
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'cg1', client_id: 'client1', audience: 'audience1' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { clientGrants: [] } ]);
+      expect(removed).to.equal(true);
+    });
+
+    it('should not delete client grants if run by extensions', async () => {
+      config.data = {
+        EXTENSION_SECRET: 'some-secret'
+      };
+
+      const auth0 = {
+        clientGrants: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'cg1', client_id: 'client1', audience: 'audience1' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { clientGrants: [] } ]);
+    });
+
+    it('should not touch client grants of excluded clients', async () => {
+      config.data = {
+        EXTENSION_SECRET: 'some-secret'
+      };
+
+      const auth0 = {
+        clientGrants: {
+          create: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          update: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          getAll: () => [
+            { id: 'cg1', client_id: 'client1', audience: 'audience1' },
+            { id: 'cg2', client_id: 'client2', audience: 'audience2' }
+          ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'client_delete', client_id: 'client1', audience: 'audience1' },
+            { name: 'client_update', client_id: 'client2', audience: 'audience2' },
+            { name: 'client_create', client_id: 'client3', audience: 'audience3' }
+          ]
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      const assets = {
+        clientGrants: [
+          {
+            name: 'newClientGrant',
+            client_id: 'client_create',
+            audience: 'audience3'
+          }
+        ],
+        exclude: { clients: [ 'client_delete', 'client_update', 'client_create' ] }
+      };
+
+      await stageFn.apply(handler, [ assets ]);
     });
   });
 });

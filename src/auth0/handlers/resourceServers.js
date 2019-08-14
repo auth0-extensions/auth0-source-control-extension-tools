@@ -25,9 +25,11 @@ export const schema = {
             description: { type: 'string' }
           }
         }
-      }
+      },
+      enforce_policies: { type: 'boolean' },
+      token_dialect: { type: 'string' }
     },
-    require: [ 'name', 'identifier' ]
+    required: [ 'name', 'identifier' ]
   }
 };
 
@@ -55,7 +57,7 @@ export default class ResourceServersHandler extends DefaultHandler {
     let { resourceServers } = assets;
 
     // Do nothing if not set
-    if (!resourceServers || !resourceServers.length) return {};
+    if (!resourceServers) return {};
 
     const excluded = (assets.exclude && assets.exclude.resourceServers) || [];
 
@@ -65,14 +67,14 @@ export default class ResourceServersHandler extends DefaultHandler {
     resourceServers = resourceServers.filter(r => !excluded.includes(r.name));
     existing = existing.filter(r => !excluded.includes(r.name));
 
-    return calcChanges(resourceServers, existing, [ 'id', 'name' ]);
+    return calcChanges(resourceServers, existing, [ 'id', 'identifier' ]);
   }
 
   async validate(assets) {
     const { resourceServers } = assets;
 
     // Do nothing if not set
-    if (!resourceServers || !resourceServers.length) return;
+    if (!resourceServers) return;
 
     const mgmtAPIResource = resourceServers.find(r => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME);
     if (mgmtAPIResource) {

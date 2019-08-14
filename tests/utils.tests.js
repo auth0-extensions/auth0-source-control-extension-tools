@@ -163,4 +163,25 @@ describe('#utils calcChanges', () => {
     expect(update).to.have.length(1);
     expect(update).to.deep.include({ client_id: 'client1', audience: 'audience1', id: 'id3' });
   });
+
+  it('should filter excluded items', () => {
+    const changes = {
+      del: [ { name: 'excluded_delete' }, { name: 'delete' } ],
+      create: [ { name: 'excluded_create' }, { name: 'create' } ],
+      update: [ { name: 'excluded_update' }, { name: 'update' } ],
+      conflicts: [ { name: 'excluded_conflicts' }, { name: 'conflicts' } ]
+    };
+
+    const exclude = [ 'excluded_create', 'excluded_update', 'excluded_delete', 'excluded_conflicts' ];
+
+    const result = utils.filterExcluded(changes, exclude);
+
+    expect(Object.keys(result)).to.have.length(4);
+    expect(result).to.deep.equal({
+      del: [ { name: 'delete' } ],
+      create: [ { name: 'create' } ],
+      update: [ { name: 'update' } ],
+      conflicts: [ { name: 'conflicts' } ]
+    });
+  });
 });

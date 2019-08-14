@@ -98,6 +98,11 @@ describe('#databases handler', () => {
     it('should update database', async () => {
       const auth0 = {
         connections: {
+          get: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            return Promise.resolve({ options: { someOldOption: true } });
+          },
           create: (data) => {
             expect(data).to.be.an('undefined');
             return Promise.resolve(data);
@@ -107,7 +112,7 @@ describe('#databases handler', () => {
             expect(params.id).to.equal('con1');
             expect(data).to.deep.equal({
               enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
-              options: { passwordPolicy: 'testPolicy' }
+              options: { passwordPolicy: 'testPolicy', someOldOption: true }
             });
 
             return Promise.resolve({ ...params, ...data });
@@ -129,6 +134,49 @@ describe('#databases handler', () => {
           strategy: 'auth0',
           options: { passwordPolicy: 'testPolicy' },
           enabled_clients: [ 'client1' ]
+        }
+      ];
+
+      await stageFn.apply(handler, [ { databases: data } ]);
+    });
+
+    it('should update database without "enabled_clients" setting', async () => {
+      const auth0 = {
+        connections: {
+          get: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            return Promise.resolve({});
+          },
+          create: (data) => {
+            expect(data).to.be.an('undefined');
+            return Promise.resolve(data);
+          },
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            expect(data).to.deep.equal({
+              options: { passwordPolicy: 'testPolicy' }
+            });
+
+            return Promise.resolve({ ...params, ...data });
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [ { name: 'someDatabase', id: 'con1', strategy: 'auth0' } ]
+        },
+        clients: {
+          getAll: () => [ { name: 'client1', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' } ]
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someDatabase',
+          strategy: 'auth0',
+          options: { passwordPolicy: 'testPolicy' }
         }
       ];
 
@@ -170,6 +218,33 @@ describe('#databases handler', () => {
       await stageFn.apply(handler, [ { databases: data } ]);
     });
 
+    it('should delete all databases', async () => {
+      let removed = false;
+      const auth0 = {
+        connections: {
+          create: () => Promise.resolve([]),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            removed = true;
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'con1', name: 'existingConnection', strategy: 'auth0' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { databases: [] } ]);
+      expect(removed).to.equal(true);
+    });
+
     it('should not remove if it is not allowed by config', async () => {
       config.data.AUTH0_ALLOW_DELETE = false;
       const auth0 = {
@@ -198,6 +273,74 @@ describe('#databases handler', () => {
       ];
 
       await stageFn.apply(handler, [ { databases: data } ]);
+    });
+
+    it('should not remove databases if run by extension', async () => {
+      config.data = {
+        EXTENSION_SECRET: 'some-secret'
+      };
+      const auth0 = {
+        connections: {
+          create: () => Promise.resolve(),
+          update: () => Promise.resolve([]),
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          getAll: () => [ { id: 'con1', name: 'existingConnection', strategy: 'auth0' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [ { databases: [] } ]);
+    });
+
+    it('should not remove/create/update excluded connections', async () => {
+      config.data = {
+        EXTENSION_SECRET: false,
+        AUTH0_ALLOW_DELETE: true
+      };
+      const auth0 = {
+        connections: {
+          create: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          update: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+            return Promise.resolve([]);
+          },
+          getAll: () => [
+            { id: 'con1', name: 'existing1', strategy: 'auth0' },
+            { id: 'con2', name: 'existing2', strategy: 'auth0' }
+          ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new databases.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const assets = {
+        exclude: {
+          databases: [ 'existing1', 'existing2', 'existing3' ]
+        },
+        databases: [ { name: 'existing3', strategy: 'auth0' } ]
+      };
+
+      await stageFn.apply(handler, [ assets ]);
     });
   });
 });

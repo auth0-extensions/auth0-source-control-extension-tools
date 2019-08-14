@@ -1,5 +1,6 @@
 import DefaultHandler, { order } from './default';
 import constants from '../../constants';
+import { filterExcluded } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -15,13 +16,12 @@ export const schema = {
             type: 'object',
             properties: {
               ...constants.DATABASE_SCRIPTS.reduce((o, script) => ({ ...o, [script]: { type: 'string' } }), {})
-            },
-            require: [ 'login', 'get_user' ]
+            }
           }
         }
       }
     },
-    require: [ 'name', 'import_mode' ]
+    required: [ 'name' ]
   }
 };
 
@@ -41,6 +41,15 @@ export default class DatabaseHandler extends DefaultHandler {
 
   getClientFN(fn) {
     // Override this as a database is actually a connection but we are treating them as a different object
+    // If we going to update database, we need to get current options first
+    if (fn === this.functions.update) {
+      return (params, payload) => this.client.connections.get(params)
+        .then((connection) => {
+          payload.options = Object.assign({}, connection.options, payload.options);
+          return this.client.connections.update(params, payload);
+        });
+    }
+
     return Reflect.get(this.client.connections, fn, this.client.connections);
   }
 
@@ -55,20 +64,24 @@ export default class DatabaseHandler extends DefaultHandler {
     const { databases } = assets;
 
     // Do nothing if not set
-    if (!databases || !databases.length) return {};
+    if (!databases) return {};
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
-    const formatted = databases.map(db => ({
-      ...db,
-      enabled_clients: [
-        ...(db.enabled_clients || []).map((name) => {
-          const found = clients.find(c => c.name === name);
-          if (found) return found.client_id;
-          return name;
-        })
-      ]
-    }));
+    const formatted = databases.map((db) => {
+      if (db.enabled_clients) {
+        return {
+          ...db,
+          enabled_clients: db.enabled_clients.map((name) => {
+            const found = clients.find(c => c.name === name);
+            if (found) return found.client_id;
+            return name;
+          })
+        };
+      }
+
+      return db;
+    });
 
     return super.calcChanges({ ...assets, databases: formatted });
   }
@@ -79,8 +92,12 @@ export default class DatabaseHandler extends DefaultHandler {
     const { databases } = assets;
 
     // Do nothing if not set
-    if (!databases || !databases.length) return;
+    if (!databases) return;
 
-    await super.processChanges(assets);
+    const excludedConnections = (assets.exclude && assets.exclude.databases) || [];
+
+    const changes = await this.calcChanges(assets);
+
+    await super.processChanges(assets, filterExcluded(changes, excludedConnections));
   }
 }
