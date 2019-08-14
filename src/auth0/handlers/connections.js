@@ -1,4 +1,5 @@
 import DefaultHandler, { order } from './default';
+import { filterExcluded } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -70,6 +71,10 @@ export default class ConnectionsHandler extends DefaultHandler {
     // Do nothing if not set
     if (!connections) return;
 
-    await super.processChanges(assets);
+    const excludedConnections = (assets.exclude && assets.exclude.connections) || [];
+
+    const changes = await this.calcChanges(assets);
+
+    await super.processChanges(assets, filterExcluded(changes, excludedConnections));
   }
 }

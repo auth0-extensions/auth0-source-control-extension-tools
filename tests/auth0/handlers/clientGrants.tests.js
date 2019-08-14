@@ -311,5 +311,59 @@ describe('#clientGrants handler', () => {
 
       await stageFn.apply(handler, [ { clientGrants: [] } ]);
     });
+
+    it('should not touch client grants of excluded clients', async () => {
+      config.data = {
+        EXTENSION_SECRET: 'some-secret'
+      };
+
+      const auth0 = {
+        clientGrants: {
+          create: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          update: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          delete: (params) => {
+            expect(params).to.be.an('undefined');
+
+            return Promise.resolve([]);
+          },
+          getAll: () => [
+            { id: 'cg1', client_id: 'client1', audience: 'audience1' },
+            { id: 'cg2', client_id: 'client2', audience: 'audience2' }
+          ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'client_delete', client_id: 'client1', audience: 'audience1' },
+            { name: 'client_update', client_id: 'client2', audience: 'audience2' },
+            { name: 'client_create', client_id: 'client3', audience: 'audience3' }
+          ]
+        },
+        pool
+      };
+
+      const handler = new clientGrants.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      const assets = {
+        clientGrants: [
+          {
+            name: 'newClientGrant',
+            client_id: 'client_create',
+            audience: 'audience3'
+          }
+        ],
+        exclude: { clients: [ 'client_delete', 'client_update', 'client_create' ] }
+      };
+
+      await stageFn.apply(handler, [ assets ]);
+    });
   });
 });

@@ -81,18 +81,29 @@ export default class RoleHandler extends DefaultHandler {
       return this.existing;
     }
 
-    const roles = await this.client.roles.getAll();
-    for (let index = 0; index < roles.length; index++) {
-      const permissions = await this.client.roles.permissions.get({ id: roles[index].id });
-      const strippedPerms = await Promise.all(permissions.map(async (permission) => {
-        delete permission.resource_server_name;
-        delete permission.description;
-        return permission;
-      }));
-      roles[index].permissions = strippedPerms;
+    // in case client version does not support roles
+    if (!this.client.roles || typeof this.client.roles.getAll !== 'function') {
+      return {};
     }
-    this.existing = roles;
-    return this.existing;
+
+    try {
+      const roles = await this.client.roles.getAll();
+      for (let index = 0; index < roles.length; index++) {
+        const permissions = await this.client.roles.permissions.get({ id: roles[index].id });
+        const strippedPerms = await Promise.all(permissions.map(async (permission) => {
+          delete permission.resource_server_name;
+          delete permission.description;
+          return permission;
+        }));
+        roles[index].permissions = strippedPerms;
+      }
+      this.existing = roles;
+      return this.existing;
+    } catch (err) {
+      if (err.statusCode === 404) return {};
+      if (err.statusCode === 501) return {};
+      throw err;
+    }
   }
 
   @order('60')
