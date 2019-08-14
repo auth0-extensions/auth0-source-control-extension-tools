@@ -29,7 +29,7 @@ export default class BrandingHandler extends DefaultHandler {
     const { branding } = assets;
 
     // Do nothing if not set
-    if (!branding) return;
+    if (!branding || !Object.keys(branding).length) return;
 
     await this.client.branding.updateSettings(branding);
     this.updated += 1;
