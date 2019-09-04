@@ -1,5 +1,6 @@
 import * as rules from './rules';
 import * as rulesConfigs from './rulesConfigs';
+import * as hooks from './hooks';
 import * as pages from './pages';
 import * as resourceServers from './resourceServers';
 import * as databases from './databases';
@@ -19,6 +20,7 @@ import * as prompts from './prompts';
 export {
   rules,
   rulesConfigs,
+  hooks,
   pages,
   resourceServers,
   clients,
