@@ -1,6 +1,6 @@
 {
   "name": "auth0-source-control-extension-tools",
-  "version": "3.5.1",
+  "version": "3.5.2",
   "description": "Supporting tools for the Source Control extensions",
   "main": "lib/index.js",
   "scripts": {
@@ -52,5 +52,8 @@
     ],
     "sourceMap": true,
     "instrument": true
+  },
+  "publishConfig": {
+    "registry": "https://a0us.jfrog.io/a0us/api/npm/npm/"
   }
 }
