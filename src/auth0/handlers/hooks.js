@@ -17,6 +17,11 @@ export const schema = {
         description: 'A script that contains the hook\'s code',
         default: ''
       },
+      id: {
+        type: 'string',
+        description: 'The ulid of the hook.',
+        pattern: '^[^-\\s][a-zA-Z0-9-\\s]+[^-\\s]$'
+      },
       name: {
         type: 'string',
         description: 'The name of the hook. Can only contain alphanumeric characters, spaces and \'-\'. Can neither start nor end with \'-\' or spaces',
@@ -66,9 +71,12 @@ export default class HooksHandler extends DefaultHandler {
     const { hooks } = assets;
 
     // Figure out what needs to be updated vs created
+    // const {
+    //   del, update, create, conflicts
+    // } = calcChanges(hooks, [], [ 'triggerId', 'name' ]);
     const {
       del, update, create, conflicts
-    } = calcChanges(hooks, [], [ 'triggerId', 'name' ]);
+    } = calcChanges(hooks, [], [ 'id' ]);
 
     return {
       del,
