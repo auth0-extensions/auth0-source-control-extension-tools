@@ -39,9 +39,10 @@ export const schema = {
         enum: [ 'credentials-exchange', 'pre-user-registration', 'post-user-registration' ]
       },
       secrets: {
-        type: 'object',
-        default: {},
-        description: 'List of key-value pairs containing secrets available to the hook.'
+        type: 'array',
+        items: { type: 'object' },
+        description: 'List of key-value pairs containing secrets available to the hook.',
+        default: []
       },
       dependencies: {
         type: 'object',
