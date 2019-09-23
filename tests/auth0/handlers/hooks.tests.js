@@ -159,20 +159,23 @@ describe('#hooks handler', () => {
 
       const hooksData = [
         {
-          active: false, name: 'test-hook-1', code, triggerId: 'credentials-exchange'
+          id: 0, active: false, name: 'test-hook-1', triggerId: 'credentials-exchange'
         },
         {
-          active: true, name: 'test-hook-2', code, triggerId: 'credentials-exchange'
+          id: 1, active: true, name: 'test-hook-2', triggerId: 'credentials-exchange'
         }
       ];
 
       const auth0 = {
-        hooks: { getAll: () => hooksData }
+        hooks: {
+          getAll: () => hooksData,
+          get: ({ id }) => ({ ...hooksData[id], code })
+        }
       };
 
       const handler = new hooks.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal(hooksData);
+      expect(data).to.deep.equal(hooksData.map(hook => ({ ...hook, code })));
     });
 
     it('should update hook', async () => {
@@ -193,9 +196,14 @@ describe('#hooks handler', () => {
           getAll: () => [ {
             id: '1',
             name: 'someHook',
+            triggerId: 'credentials-exchange'
+          } ],
+          get: () => ({
+            id: '1',
+            name: 'someHook',
             code: 'code',
             triggerId: 'credentials-exchange'
-          } ]
+          })
         },
         pool
       };
@@ -219,9 +227,14 @@ describe('#hooks handler', () => {
           getAll: () => [ {
             id: '1',
             name: 'someHook',
+            triggerId: 'credentials-exchange'
+          } ],
+          get: () => ({
+            id: '1',
+            name: 'someHook',
             code: 'code',
             triggerId: 'credentials-exchange'
-          } ]
+          })
         },
         pool
       };
@@ -262,11 +275,17 @@ describe('#hooks handler', () => {
             {
               id: '1',
               name: 'Hook1',
-              code: 'hook-one-code',
               active: true,
               triggerId: 'credentials-exchange'
             }
-          ]
+          ],
+          get: () => ({
+            id: '1',
+            name: 'Hook1',
+            active: true,
+            code: 'hook-one-code',
+            triggerId: 'credentials-exchange'
+          })
         },
         pool
       };
@@ -313,11 +332,17 @@ describe('#hooks handler', () => {
             {
               id: '1',
               name: 'Hook1',
-              code: 'hook-one-code',
               active: true,
               triggerId: 'credentials-exchange'
             }
-          ]
+          ],
+          get: () => ({
+            id: '1',
+            name: 'Hook1',
+            active: true,
+            code: 'hook-one-code',
+            triggerId: 'credentials-exchange'
+          })
         },
         pool
       };
@@ -364,11 +389,17 @@ describe('#hooks handler', () => {
             {
               id: '1',
               name: 'Hook1',
-              code: 'hook-one-code',
               active: true,
               triggerId: 'credentials-exchange'
             }
-          ]
+          ],
+          get: () => ({
+            id: '1',
+            name: 'Hook1',
+            active: true,
+            code: 'hook-one-code',
+            triggerId: 'credentials-exchange'
+          })
         },
         pool
       };

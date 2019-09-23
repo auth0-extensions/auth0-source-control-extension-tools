@@ -22,7 +22,7 @@ describe('#prompts handler', () => {
     it('should update prompts settings', async () => {
       const auth0 = {
         prompts: {
-          updateSettings: (data) => {
+          updateSettings: (params, data) => {
             expect(data).to.be.an('object');
             expect(data.universal_login_experience).to.equal('new');
             return Promise.resolve(data);
