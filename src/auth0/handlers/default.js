@@ -39,7 +39,7 @@ export default class DefaultHandler {
 
   getClientFN(fn) {
     const client = Reflect.get(this.client, this.type);
-    return Reflect.get(client, fn, client);
+    return Reflect.get(client, fn).bind(client);
   }
 
   didDelete(item) {

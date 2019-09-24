@@ -32,7 +32,7 @@ export default class PromptsHandler extends DefaultHandler {
     // Do nothing if not set
     if (!prompts || !Object.keys(prompts).length) return;
 
-    await this.client.prompts.updateSettings(prompts);
+    await this.client.prompts.updateSettings({}, prompts);
     this.updated += 1;
     this.didUpdate(prompts);
   }

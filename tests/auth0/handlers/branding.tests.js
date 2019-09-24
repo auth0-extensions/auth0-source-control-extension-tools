@@ -22,7 +22,7 @@ describe('#branding handler', () => {
     it('should update branding settings', async () => {
       const auth0 = {
         branding: {
-          updateSettings: (data) => {
+          updateSettings: (params, data) => {
             expect(data).to.be.an('object');
             expect(data.logo_url).to.equal('https://example.com/logo.png');
             return Promise.resolve(data);
