@@ -48,6 +48,18 @@ export const schema = {
   }
 };
 
+const getCertainHook = (hooks, name, triggerId) => {
+  let result = null;
+
+  hooks.forEach((hook) => {
+    if (hook.name === name && hook.triggerId === triggerId) {
+      result = hook;
+    }
+  });
+
+  return result;
+};
+
 const getActive = (hooks) => {
   const result = {};
 
@@ -71,8 +83,58 @@ export default class HooksHandler extends DefaultHandler {
     return super.objString({ name: hook.name, triggerId: hook.triggerId });
   }
 
-  async getType() {
-    if (this.existing) {
+  async processSecrets(hooks) {
+    const allHooks = await this.getType(true);
+    const changes = {
+      create: [],
+      update: [],
+      del: []
+    };
+
+    hooks.forEach((hook) => {
+      const current = getCertainHook(allHooks, hook.name, hook.triggerId);
+      if (current) { // if the hook was deleted we don't care about its secrets
+        const oldSecrets = current.secrets || {};
+        const newSecrets = hook.secrets || {};
+        const create = {};
+        const update = {};
+        const del = [];
+
+        Object.keys(newSecrets).forEach((key) => {
+          if (!oldSecrets[key]) {
+            create[key] = newSecrets[key];
+          } else {
+            update[key] = newSecrets[key];
+          }
+        });
+
+        Object.keys(oldSecrets).forEach((key) => {
+          if (!newSecrets[key]) {
+            del.push(key);
+          }
+        });
+
+        if (Object.keys(create).length) changes.create.push({ hookId: current.id, secrets: create });
+        if (Object.keys(update).length) changes.update.push({ hookId: current.id, secrets: update });
+        if (del.length) changes.del.push({ hookId: current.id, secrets: del });
+      }
+    });
+
+    await Promise.all(changes.del.map(async (data) => {
+      await this.client.hooks.removeSecrets({ id: data.hookId }, data.secrets);
+    }));
+
+    await Promise.all(changes.update.map(async (data) => {
+      await this.client.hooks.updateSecrets({ id: data.hookId }, data.secrets);
+    }));
+
+    await Promise.all(changes.create.map(async (data) => {
+      await this.client.hooks.addSecrets({ id: data.hookId }, data.secrets);
+    }));
+  }
+
+  async getType(reload) {
+    if (this.existing && !reload) {
       return this.existing;
     }
 
@@ -84,7 +146,9 @@ export default class HooksHandler extends DefaultHandler {
     const hooks = await this.client.hooks.getAll();
 
     // hooks.getAll does not return code and secrets, we have to fetch hooks one-by-one
-    this.existing = await Promise.all(hooks.map(hook => this.client.hooks.get({ id: hook.id })));
+    this.existing = await Promise.all(hooks.map(hook => this.client.hooks.get({ id: hook.id })
+      .then(hookWithCode => this.client.hooks.getSecrets({ id: hook.id })
+        .then(secrets => ({ ...hookWithCode, secrets })))));
 
     return this.existing;
   }
@@ -161,5 +225,7 @@ export default class HooksHandler extends DefaultHandler {
       update: changes.update,
       conflicts: changes.conflicts
     });
+
+    await this.processSecrets(hooks);
   }
 }

@@ -10,7 +10,7 @@ const pool = {
   }
 };
 
-describe('#hooks handler', () => {
+describe.only('#hooks handler', () => {
   const config = function(key) {
     return config.data && config.data[key];
   };
@@ -132,26 +132,54 @@ describe('#hooks handler', () => {
 
   describe('#hooks process', () => {
     it('should create hook', async () => {
+      const hookId = 'new-hook-id';
+      const hook = {
+        name: 'Hook',
+        code: 'code',
+        triggerId: 'credentials-exchange',
+        secrets: {
+          SECRET: 'secret-secret'
+        }
+      };
+
       const auth0 = {
         hooks: {
+          get: (params) => {
+            expect(params.id).to.equal(hookId);
+            return Promise.resolve({ ...hook, id: hookId, secrets: undefined });
+          },
           create: (data) => {
             expect(data).to.be.an('object');
             expect(data.name).to.equal('Hook');
             expect(data.code).to.equal('code');
             expect(data.triggerId).to.equal('credentials-exchange');
-            return Promise.resolve(data);
+            return Promise.resolve({ ...data, id: hookId });
           },
           update: () => Promise.resolve([]),
           delete: () => Promise.resolve([]),
-          getAll: () => []
+          getAll: () => {
+            if (!auth0.getAllCalled) {
+              auth0.getAllCalled = true;
+              return Promise.resolve([]);
+            }
+
+            return Promise.resolve([ { name: hook.name, triggerId: hook.triggerId, id: hookId } ]);
+          },
+          getSecrets: () => Promise.resolve({}),
+          addSecrets: (params, data) => {
+            expect(params.id).to.equal(hookId);
+            expect(data.SECRET).to.equal('secret-secret');
+            return Promise.resolve(data);
+          }
         },
-        pool
+        pool,
+        getAllCalled: false
       };
 
       const handler = new hooks.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
-      await stageFn.apply(handler, [ { hooks: [ { name: 'Hook', code: 'code', triggerId: 'credentials-exchange' } ] } ]);
+      await stageFn.apply(handler, [ { hooks: [ hook ] } ]);
     });
 
     it('should get hooks', async () => {
@@ -169,13 +197,14 @@ describe('#hooks handler', () => {
       const auth0 = {
         hooks: {
           getAll: () => hooksData,
-          get: ({ id }) => ({ ...hooksData[id], code })
+          get: ({ id }) => Promise.resolve({ ...hooksData[id], code }),
+          getSecrets: ({ id }) => Promise.resolve({ SECRET: `hook-${id}-secret` })
         }
       };
 
       const handler = new hooks.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal(hooksData.map(hook => ({ ...hook, code })));
+      expect(data).to.deep.equal(hooksData.map(hook => ({ ...hook, code, secrets: { SECRET: `hook-${hook.id}-secret` } })));
     });
 
     it('should update hook', async () => {
@@ -198,12 +227,13 @@ describe('#hooks handler', () => {
             name: 'someHook',
             triggerId: 'credentials-exchange'
           } ],
-          get: () => ({
+          get: () => Promise.resolve({
             id: '1',
             name: 'someHook',
             code: 'code',
             triggerId: 'credentials-exchange'
-          })
+          }),
+          getSecrets: () => Promise.resolve({})
         },
         pool
       };
@@ -229,12 +259,13 @@ describe('#hooks handler', () => {
             name: 'someHook',
             triggerId: 'credentials-exchange'
           } ],
-          get: () => ({
+          get: () => Promise.resolve({
             id: '1',
             name: 'someHook',
             code: 'code',
             triggerId: 'credentials-exchange'
-          })
+          }),
+          getSecrets: () => Promise.resolve({})
         },
         pool
       };
@@ -279,13 +310,14 @@ describe('#hooks handler', () => {
               triggerId: 'credentials-exchange'
             }
           ],
-          get: () => ({
+          get: () => Promise.resolve({
             id: '1',
             name: 'Hook1',
             active: true,
             code: 'hook-one-code',
             triggerId: 'credentials-exchange'
-          })
+          }),
+          getSecrets: () => Promise.resolve({})
         },
         pool
       };
@@ -336,13 +368,14 @@ describe('#hooks handler', () => {
               triggerId: 'credentials-exchange'
             }
           ],
-          get: () => ({
+          get: () => Promise.resolve({
             id: '1',
             name: 'Hook1',
             active: true,
             code: 'hook-one-code',
             triggerId: 'credentials-exchange'
-          })
+          }),
+          getSecrets: () => Promise.resolve({})
         },
         pool
       };
@@ -393,13 +426,14 @@ describe('#hooks handler', () => {
               triggerId: 'credentials-exchange'
             }
           ],
-          get: () => ({
+          get: () => Promise.resolve({
             id: '1',
             name: 'Hook1',
             active: true,
             code: 'hook-one-code',
             triggerId: 'credentials-exchange'
-          })
+          }),
+          getSecrets: () => Promise.resolve({})
         },
         pool
       };
@@ -469,6 +503,89 @@ describe('#hooks handler', () => {
       };
 
       await stageFn.apply(handler, [ data ]);
+    });
+
+    it('should update (create, delete) secrets', async () => {
+      const hook = {
+        id: '1',
+        name: 'someHook',
+        triggerId: 'credentials-exchange'
+      };
+      const existingSecrets = {
+        TO_UPDATE_ONE: 'old secret - should be updated - 1',
+        TO_UPDATE_TWO: 'old secret - should be updated - 2',
+        TO_REMOVE_ONE: 'should be removed',
+        TO_REMOVE_TWO: 'should be removed'
+      };
+      const createSecrets = {
+        TO_CREATE_ONE: 'should be created - 1',
+        TO_CREATE_TWO: 'should be created - 2'
+      };
+      const updateSecrets = {
+        TO_UPDATE_ONE: 'updated - 1',
+        TO_UPDATE_TWO: 'updated - 2'
+      };
+      const removeSecrets = [ 'TO_REMOVE_ONE', 'TO_REMOVE_TWO' ];
+      const auth0 = {
+        hooks: {
+          create: () => Promise.resolve([]),
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(data).to.be.an('object');
+            expect(params.id).to.equal(hook.id);
+            expect(data.id).to.be.an('undefined');
+            expect(data.code).to.equal('new-code');
+            expect(data.name).to.equal('someHook');
+            expect(data.triggerId).to.equal('credentials-exchange');
+            return Promise.resolve(data);
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [ hook ],
+          get: (params) => {
+            expect(params.id).to.equal(hook.id);
+            return Promise.resolve({ ...hook, code: 'hook-code' });
+          },
+          getSecrets: (params) => {
+            expect(params.id).to.equal(hook.id);
+            return Promise.resolve(existingSecrets);
+          },
+          addSecrets: (params, data) => {
+            expect(params.id).to.equal(hook.id);
+            expect(data).to.be.an('object');
+            expect(data).to.deep.equal(createSecrets);
+            return Promise.resolve();
+          },
+          updateSecrets: (params, data) => {
+            expect(params.id).to.equal(hook.id);
+            expect(data).to.be.an('object');
+            expect(data).to.deep.equal(updateSecrets);
+            return Promise.resolve();
+          },
+          removeSecrets: (params, data) => {
+            expect(params.id).to.equal(hook.id);
+            expect(data).to.be.an('array');
+            expect(data).to.deep.equal(removeSecrets);
+            return Promise.resolve();
+          }
+        },
+        pool
+      };
+
+      const handler = new hooks.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const assets = {
+        hooks: [ {
+          name: 'someHook',
+          code: 'new-code',
+          triggerId: 'credentials-exchange',
+          secrets: {
+            ...updateSecrets,
+            ...createSecrets
+          }
+        } ]
+      };
+
+      await stageFn.apply(handler, [ assets ]);
     });
   });
 });
