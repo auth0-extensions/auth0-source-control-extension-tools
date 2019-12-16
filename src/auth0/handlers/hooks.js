@@ -1,4 +1,5 @@
 import DefaultHandler from './default';
+import constants from '../../constants';
 
 const ALLOWED_TRIGGER_IDS = [ 'credentials-exchange', 'pre-user-registration', 'post-user-registration' ];
 
@@ -103,7 +104,7 @@ export default class HooksHandler extends DefaultHandler {
         Object.keys(newSecrets).forEach((key) => {
           if (!oldSecrets[key]) {
             create[key] = newSecrets[key];
-          } else {
+          } else if (newSecrets[key] !== constants.HOOKS_HIDDEN_SECRET_VALUE) {
             update[key] = newSecrets[key];
           }
         });

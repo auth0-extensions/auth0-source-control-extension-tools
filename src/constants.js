@@ -6,6 +6,7 @@ constants.RULES_STAGES = [
 ];
 
 constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];  // eslint-disable-line
+constants.HOOKS_HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
 
 constants.HOOKS_DIRECTORY = 'hooks';
 

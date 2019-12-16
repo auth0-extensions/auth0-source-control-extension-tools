@@ -1,4 +1,5 @@
 const { expect } = require('chai');
+const constants = require('../../../src/constants').default;
 const hooks = require('../../../src/auth0/handlers/hooks');
 
 const pool = {
@@ -400,6 +401,63 @@ describe('#hooks handler', () => {
             ...updateSecrets,
             ...createSecrets
           }
+        } ]
+      };
+
+      await stageFn.apply(handler, [ assets ]);
+    });
+
+    it('should not update secret, if its value did not change', async () => {
+      const hook = {
+        id: '1',
+        name: 'someHook',
+        triggerId: 'credentials-exchange'
+      };
+      const existingSecrets = {
+        SOME_SECRET: 'should remain the same'
+      };
+      const updateSecrets = {
+        SOME_SECRET: constants.HOOKS_HIDDEN_SECRET_VALUE
+      };
+      const auth0 = {
+        hooks: {
+          create: () => Promise.resolve([]),
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(data).to.be.an('object');
+            expect(params.id).to.equal(hook.id);
+            expect(data.id).to.be.an('undefined');
+            expect(data.code).to.equal('new-code');
+            expect(data.name).to.equal('someHook');
+            expect(data.triggerId).to.equal('credentials-exchange');
+            return Promise.resolve(data);
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [ hook ],
+          get: (params) => {
+            expect(params.id).to.equal(hook.id);
+            return Promise.resolve({ ...hook, code: 'hook-code' });
+          },
+          getSecrets: (params) => {
+            expect(params.id).to.equal(hook.id);
+            return Promise.resolve(existingSecrets);
+          },
+          updateSecrets: (params) => {
+            expect(params).to.equal(undefined);
+            return Promise.reject(new Error('Should not be called'));
+          }
+        },
+        pool
+      };
+
+      const handler = new hooks.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const assets = {
+        hooks: [ {
+          name: 'someHook',
+          code: 'new-code',
+          triggerId: 'credentials-exchange',
+          secrets: updateSecrets
         } ]
       };
 
