@@ -10,7 +10,7 @@ const pool = {
   }
 };
 
-describe.only('#hooks handler', () => {
+describe('#hooks handler', () => {
   const config = function(key) {
     return config.data && config.data[key];
   };
