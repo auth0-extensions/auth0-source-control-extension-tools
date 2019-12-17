@@ -76,7 +76,7 @@ export default class HooksHandler extends DefaultHandler {
     super({
       ...options,
       type: 'hooks',
-      stripUpdateFields: [ 'id' ] // TODO: decide if we want to restrict changing triggerId
+      stripUpdateFields: [ 'id', 'triggerId' ]
     });
   }
 
