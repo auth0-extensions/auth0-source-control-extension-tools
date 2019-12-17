@@ -219,7 +219,7 @@ describe('#hooks handler', () => {
             expect(data.id).to.be.an('undefined');
             expect(data.code).to.equal('code');
             expect(data.name).to.equal('someHook');
-            expect(data.triggerId).to.equal('credentials-exchange');
+            expect(data.triggerId).to.be.an('undefined');
             return Promise.resolve(data);
           },
           delete: () => Promise.resolve([]),
@@ -355,7 +355,7 @@ describe('#hooks handler', () => {
             expect(data.id).to.be.an('undefined');
             expect(data.code).to.equal('new-code');
             expect(data.name).to.equal('someHook');
-            expect(data.triggerId).to.equal('credentials-exchange');
+            expect(data.triggerId).to.be.an('undefined');
             return Promise.resolve(data);
           },
           delete: () => Promise.resolve([]),
@@ -429,7 +429,7 @@ describe('#hooks handler', () => {
             expect(data.id).to.be.an('undefined');
             expect(data.code).to.equal('new-code');
             expect(data.name).to.equal('someHook');
-            expect(data.triggerId).to.equal('credentials-exchange');
+            expect(data.triggerId).to.be.an('undefined');
             return Promise.resolve(data);
           },
           delete: () => Promise.resolve([]),
