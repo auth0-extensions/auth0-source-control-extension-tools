@@ -80,7 +80,7 @@ export default class ClientHandler extends DefaultHandler {
 
     const filterGrants = (list) => {
       if (excludedClients.length) {
-        return list.filter(item => item.client_id !== currentClient && !excludedClients.includes(item.client_id));
+        return list.filter(item => item.client_id !== currentClient && ![ ...excludedClientsByNames, ...excludedClients ].includes(item.client_id));
       }
 
       return list.filter(item => item.client_id !== currentClient);
