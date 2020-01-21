@@ -144,6 +144,51 @@ describe('#connections handler', () => {
       await stageFn.apply(handler, [ { connections: data } ]);
     });
 
+    it('should omit excluded clients', async () => {
+      const auth0 = {
+        connections: {
+          create: (data) => {
+            expect(data).to.be.an('undefined');
+            return Promise.resolve(data);
+          },
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            expect(data).to.deep.equal({
+              enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
+              options: { passwordPolicy: 'testPolicy' }
+            });
+
+            return Promise.resolve({ ...params, ...data });
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [ { name: 'someConnection', id: 'con1', strategy: 'custom' } ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'client1', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' },
+            { name: 'excluded-one', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Teb' }
+          ]
+        },
+        pool
+      };
+
+      const handler = new connections.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someConnection',
+          strategy: 'custom',
+          enabled_clients: [ 'client1', 'excluded-one', 'excluded-two' ],
+          options: {
+            passwordPolicy: 'testPolicy'
+          }
+        }
+      ];
+
+      await stageFn.apply(handler, [ { connections: data, exclude: { clients: [ 'excluded-one', 'excluded-two' ] } } ]);
+    });
+
     it('should delete connection and create another one instead', async () => {
       const auth0 = {
         connections: {
