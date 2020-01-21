@@ -31,7 +31,7 @@ export default class BrandingHandler extends DefaultHandler {
     // Do nothing if not set
     if (!branding || !Object.keys(branding).length) return;
 
-    await this.client.branding.updateSettings(branding);
+    await this.client.branding.updateSettings({}, branding);
     this.updated += 1;
     this.didUpdate(branding);
   }
