@@ -6,5 +6,11 @@
 
 Shared logic for the Source Control Extensions and CLI:
 
- - https://github.com/auth0-extensions/auth0-deploy-extensions
- - https://github.com/auth0/auth0-deploy-cli
+- https://github.com/auth0-extensions/auth0-deploy-extensions
+- https://github.com/auth0/auth0-deploy-cli
+
+# Deployment
+
+Deployment is done via git tags being pushed on master.
+
+We let the [release-drafter](https://github.com/apps/release-drafter) bot handle this by updating the release to publish. This will create the tag and trigger the build/deployment.
