@@ -83,7 +83,7 @@ export default class RoleHandler extends DefaultHandler {
 
     // in case client version does not support roles
     if (!this.client.roles || typeof this.client.roles.getAll !== 'function') {
-      return {};
+      return [];
     }
 
     try {
@@ -100,8 +100,9 @@ export default class RoleHandler extends DefaultHandler {
       this.existing = roles;
       return this.existing;
     } catch (err) {
-      if (err.statusCode === 404) return {};
-      if (err.statusCode === 501) return {};
+      if (err.statusCode === 404 || err.statusCode === 501) {
+        return [];
+      }
       throw err;
     }
   }

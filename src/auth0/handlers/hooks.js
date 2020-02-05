@@ -141,17 +141,24 @@ export default class HooksHandler extends DefaultHandler {
 
     // in case client version does not support hooks
     if (!this.client.hooks || typeof this.client.hooks.getAll !== 'function') {
-      return null;
+      return [];
     }
 
-    const hooks = await this.client.hooks.getAll();
+    try {
+      const hooks = await this.client.hooks.getAll();
 
-    // hooks.getAll does not return code and secrets, we have to fetch hooks one-by-one
-    this.existing = await Promise.all(hooks.map(hook => this.client.hooks.get({ id: hook.id })
-      .then(hookWithCode => this.client.hooks.getSecrets({ id: hook.id })
-        .then(secrets => ({ ...hookWithCode, secrets })))));
+      // hooks.getAll does not return code and secrets, we have to fetch hooks one-by-one
+      this.existing = await Promise.all(hooks.map(hook => this.client.hooks.get({ id: hook.id })
+        .then(hookWithCode => this.client.hooks.getSecrets({ id: hook.id })
+          .then(secrets => ({ ...hookWithCode, secrets })))));
 
-    return this.existing;
+      return this.existing;
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 403 || err.statusCode === 501) {
+        return [];
+      }
+      throw err;
+    }
   }
 
   async calcChanges(assets) {
