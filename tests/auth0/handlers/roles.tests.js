@@ -131,6 +131,61 @@ describe('#roles handler', () => {
       ]);
     });
 
+    it('should return an empty array for 501 status code', async () => {
+      const auth0 = {
+        roles: {
+          getAll: () => {
+            const error = new Error('Feature is not yet implemented');
+            error.statusCode = 501;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new roles.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([]);
+    });
+
+    it('should return an empty array for 404 status code', async () => {
+      const auth0 = {
+        roles: {
+          getAll: () => {
+            const error = new Error('Not found');
+            error.statusCode = 404;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new roles.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([]);
+    });
+
+
+    it('should throw an error for all other failed requests', async () => {
+      const auth0 = {
+        roles: {
+          getAll: () => {
+            const error = new Error('Bad request');
+            error.statusCode = 500;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new roles.default({ client: auth0, config });
+      try {
+        await handler.getType();
+      } catch (error) {
+        expect(error).to.be.an.instanceOf(Error);
+      }
+    });
+
     it('should update role', async () => {
       const auth0 = {
         roles: {

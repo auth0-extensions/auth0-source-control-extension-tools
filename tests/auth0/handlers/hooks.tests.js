@@ -208,6 +208,78 @@ describe('#hooks handler', () => {
       expect(data).to.deep.equal(hooksData.map(hook => ({ ...hook, code, secrets: { SECRET: `hook-${hook.id}-secret` } })));
     });
 
+    it('should return an empty array for 501 status code', async () => {
+      const auth0 = {
+        hooks: {
+          getAll: () => {
+            const error = new Error('Feature is not yet implemented');
+            error.statusCode = 501;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new hooks.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([]);
+    });
+
+    it('should return an empty array for 404 status code', async () => {
+      const auth0 = {
+        hooks: {
+          getAll: () => {
+            const error = new Error('Not found');
+            error.statusCode = 404;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new hooks.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([]);
+    });
+
+    it('should return an empty array for 403 status code', async () => {
+      const auth0 = {
+        hooks: {
+          getAll: () => {
+            const error = new Error('This endpoint is disabled for your tenant.');
+            error.statusCode = 403;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new hooks.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([]);
+    });
+
+    it('should throw an error for all other failed requests', async () => {
+      const auth0 = {
+        hooks: {
+          getAll: () => {
+            const error = new Error('Bad request');
+            error.statusCode = 500;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new hooks.default({ client: auth0, config });
+      try {
+        await handler.getType();
+      } catch (error) {
+        expect(error).to.be.an.instanceOf(Error);
+      }
+    });
+
+
     it('should update hook', async () => {
       const auth0 = {
         hooks: {
