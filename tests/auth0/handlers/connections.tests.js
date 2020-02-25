@@ -144,6 +144,46 @@ describe('#connections handler', () => {
       await stageFn.apply(handler, [ { connections: data } ]);
     });
 
+    it("should not place empty array when enabled_clients isn't set", async () => {
+      const auth0 = {
+        connections: {
+          create: (data) => {
+            expect(data).to.be.an('undefined');
+            return Promise.resolve(data);
+          },
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            expect(data).to.deep.equal({
+              options: { passwordPolicy: 'testPolicy' }
+            });
+
+            return Promise.resolve({ ...params, ...data });
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [ { name: 'someConnection', id: 'con1', strategy: 'custom' } ]
+        },
+        clients: {
+          getAll: () => []
+        },
+        pool
+      };
+
+      const handler = new connections.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someConnection',
+          strategy: 'custom',
+          options: {
+            passwordPolicy: 'testPolicy'
+          }
+        }
+      ];
+
+      await stageFn.apply(handler, [ { connections: data } ]);
+    });
+
     it('should omit excluded clients', async () => {
       const auth0 = {
         connections: {

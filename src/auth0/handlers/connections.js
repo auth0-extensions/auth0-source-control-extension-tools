@@ -54,16 +54,22 @@ export default class ConnectionsHandler extends DefaultHandler {
       return (found && found.client_id) || clientName;
     });
 
-    const formatted = assets.connections.map(connection => ({
-      ...connection,
-      enabled_clients: [
-        ...(connection.enabled_clients || []).map((name) => {
-          const found = clients.find(c => c.name === name);
-          if (found) return found.client_id;
-          return name;
-        }).filter(item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item))
-      ]
-    }));
+    const formatted = assets.connections.map((connection) => {
+      // If the enabled_clients node isn't there, don't try and process it
+      if (!connection.enabled_clients) {
+        return connection;
+      }
+      return {
+        ...connection,
+        enabled_clients: [
+          ...(connection.enabled_clients || []).map((name) => {
+            const found = clients.find(c => c.name === name);
+            if (found) return found.client_id;
+            return name;
+          }).filter(item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item))
+        ]
+      };
+    });
 
     return super.calcChanges({ ...assets, connections: formatted });
   }
