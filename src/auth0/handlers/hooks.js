@@ -1,7 +1,7 @@
 import DefaultHandler from './default';
 import constants from '../../constants';
 
-const ALLOWED_TRIGGER_IDS = [ 'credentials-exchange', 'pre-user-registration', 'post-user-registration' ];
+const ALLOWED_TRIGGER_IDS = [ 'credentials-exchange', 'pre-user-registration', 'post-user-registration', 'post-change-password' ];
 
 export const excludeSchema = {
   type: 'array',
