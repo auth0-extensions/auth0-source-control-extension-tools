@@ -500,6 +500,56 @@ describe('#schema validation tests', () => {
     });
   });
 
+  describe('#hooks validate', () => {
+    it('should fail validation if no "name" provided', (done) => {
+      const data = [ {
+        anything: 'anything'
+      } ];
+
+      checkRequired('name', { hooks: data }, done);
+    });
+
+    it('should fail validation if bad "name" provided', (done) => {
+      const data = [ {
+        name: '-hook-'
+      } ];
+
+      const auth0 = new Auth0({}, { hooks: data }, {});
+
+      auth0
+        .validate()
+        .then(failedCb(done), passedCb(done, 'should match pattern'));
+    });
+
+    it('should fail validation if no "triggerId" provided', (done) => {
+      const data = [ {
+        name: 'name',
+        script: 'script content'
+      } ];
+
+      checkRequired('triggerId', { hooks: data }, done);
+    });
+
+    it('should fail validation if bad "triggerId" provided', (done) => {
+      const data = [ {
+        name: 'rule',
+        triggerId: 'invalid triggerId'
+      } ];
+
+      checkEnum({ hooks: data }, done);
+    });
+
+    it('should pass validation', (done) => {
+      const data = [ {
+        name: 'name',
+        script: 'script content',
+        triggerId: 'post-change-password'
+      } ];
+
+      checkPassed({ hooks: data }, done);
+    });
+  });
+
   describe('#tenant validate', () => {
     it('should fail validation if tenant is not an object', (done) => {
       const data = [ {
