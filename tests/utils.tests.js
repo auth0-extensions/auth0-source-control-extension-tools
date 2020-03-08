@@ -96,6 +96,20 @@ describe('#utils', function() {
 
     expect(utils.duplicateItems(items, 'id')).to.deep.equal(duplicates);
   });
+
+  it('should replace client names with IDs or fallback', () => {
+    const clients = [
+      { client_id: '1', name: 'aa' },
+      { client_id: '2', name: 'bb' },
+      { client_id: '3', name: 'cc' }
+    ];
+
+    const names = [ 'dd', 'cc', 'aa' ];
+
+    const expected = [ 'dd', '3', '1' ];
+
+    expect(utils.convertClientNamesToIds(names, clients)).to.deep.equal(expected);
+  });
 });
 
 describe('#utils calcChanges', () => {

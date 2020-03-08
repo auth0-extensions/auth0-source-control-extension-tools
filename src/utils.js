@@ -20,6 +20,15 @@ export function keywordReplace(input, mappings) {
   return input;
 }
 
+export function convertClientNameToId(name, clients) {
+  const found = clients.find(c => c.name === name);
+  return (found && found.client_id) || name;
+}
+
+export function convertClientNamesToIds(names, clients) {
+  return names.map(name => convertClientNameToId(name, clients));
+}
+
 export function loadFile(file, mappings) {
   // Load file and replace keyword mappings
   const f = path.resolve(file);

@@ -1,4 +1,5 @@
 import DefaultHandler, { order } from './default';
+import { convertClientNamesToIds } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -58,10 +59,7 @@ export default class ClientHandler extends DefaultHandler {
 
     const clients = await this.client.clients.getAll({ paginate: true });
     const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
-    const excludedClients = excludedClientsByNames.map((clientName) => {
-      const found = clients.find(c => c.name === clientName);
-      return (found && found.client_id) || clientName;
-    });
+    const excludedClients = convertClientNamesToIds(excludedClientsByNames, clients);
 
     // Convert clients by name to the id
     const formatted = assets.clientGrants.map((clientGrant) => {

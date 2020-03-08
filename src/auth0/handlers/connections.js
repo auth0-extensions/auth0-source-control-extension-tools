@@ -1,5 +1,5 @@
 import DefaultHandler, { order } from './default';
-import { filterExcluded } from '../../utils';
+import { filterExcluded, convertClientNameToId, convertClientNamesToIds } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -31,6 +31,13 @@ export default class ConnectionsHandler extends DefaultHandler {
     return super.objString({ name: connection.name, id: connection.id });
   }
 
+  getClientWithIds(clients, mappings) {
+    return clients.map((clientNameOrId) => {
+      const found = mappings.find(c => c.name === clientNameOrId);
+      return (found && found.client_id) || clientNameOrId;
+    });
+  }
+
   async getType() {
     if (this.existing) return this.existing;
     const connections = await this.client.connections.getAll({ paginate: true });
@@ -49,19 +56,17 @@ export default class ConnectionsHandler extends DefaultHandler {
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
     const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
-    const excludedClients = excludedClientsByNames.map((clientName) => {
-      const found = clients.find(c => c.name === clientName);
-      return (found && found.client_id) || clientName;
-    });
+    const excludedClients = convertClientNamesToIds(excludedClientsByNames, clients);
 
     const formatted = assets.connections.map(connection => ({
       ...connection,
       enabled_clients: [
-        ...(connection.enabled_clients || []).map((name) => {
-          const found = clients.find(c => c.name === name);
-          if (found) return found.client_id;
-          return name;
-        }).filter(item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item))
+        ...convertClientNamesToIds(
+          connection.enabled_clients || [],
+          clients
+        ).filter(
+          item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item)
+        )
       ]
     }));
 
