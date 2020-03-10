@@ -124,6 +124,12 @@ describe('#hooks handler', () => {
           code: 'code',
           active: false,
           triggerId: 'credentials-exchange'
+        },
+        {
+          name: 'Hook-6',
+          code: 'code',
+          active: false,
+          triggerId: 'post-change-password'
         }
       ];
 
