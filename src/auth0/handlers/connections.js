@@ -31,11 +31,23 @@ export default class ConnectionsHandler extends DefaultHandler {
     return super.objString({ name: connection.name, id: connection.id });
   }
 
-  getClientWithIds(clients, mappings) {
-    return clients.map((clientNameOrId) => {
-      const found = mappings.find(c => c.name === clientNameOrId);
-      return (found && found.client_id) || clientNameOrId;
-    });
+  getFormattedOptions(connection, clients) {
+    try {
+      return {
+        options: {
+          ...connection.options,
+          idpinitiated: {
+            ...connection.options.idpinitiated,
+            client_id: convertClientNameToId(
+              connection.options.idpinitiated.client_id,
+              clients
+            )
+          }
+        }
+      };
+    } catch (e) {
+      return {};
+    }
   }
 
   async getType() {
@@ -60,6 +72,7 @@ export default class ConnectionsHandler extends DefaultHandler {
 
     const formatted = assets.connections.map(connection => ({
       ...connection,
+      ...this.getFormattedOptions(connection, clients),
       enabled_clients: [
         ...convertClientNamesToIds(
           connection.enabled_clients || [],

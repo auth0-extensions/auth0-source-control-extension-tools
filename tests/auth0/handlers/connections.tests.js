@@ -144,6 +144,176 @@ describe('#connections handler', () => {
       await stageFn.apply(handler, [ { connections: data } ]);
     });
 
+    it('should convert client name with ID in idpinitiated.client_id', async () => {
+      const auth0 = {
+        connections: {
+          create: (data) => {
+            expect(data).to.deep.equal({
+              enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
+              name: 'someConnection-2',
+              strategy: 'custom',
+              options: {
+                passwordPolicy: 'testPolicy',
+                idpinitiated: {
+                  client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec',
+                  client_protocol: 'samlp',
+                  client_authorizequery: ''
+                }
+              }
+            });
+            return Promise.resolve(data);
+          },
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            expect(data).to.deep.equal({
+              enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
+              options: {
+                passwordPolicy: 'testPolicy',
+                idpinitiated: {
+                  client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Teb',
+                  client_protocol: 'samlp',
+                  client_authorizequery: ''
+                }
+              }
+            });
+
+            return Promise.resolve({ ...params, ...data });
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [
+            { name: 'someSamlConnection', id: 'con1', strategy: 'samlp' }
+          ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'client1', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' },
+            { name: 'idp-one', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Teb' }
+          ]
+        },
+        pool
+      };
+
+      const handler = new connections.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someSamlConnection',
+          strategy: 'samlp',
+          enabled_clients: [ 'client1' ],
+          options: {
+            passwordPolicy: 'testPolicy',
+            idpinitiated: {
+              client_id: 'idp-one',
+              client_protocol: 'samlp',
+              client_authorizequery: ''
+            }
+          }
+        },
+        {
+          name: 'someConnection-2',
+          strategy: 'custom',
+          enabled_clients: [ 'client1' ],
+          options: {
+            passwordPolicy: 'testPolicy',
+            idpinitiated: {
+              client_id: 'client1',
+              client_protocol: 'samlp',
+              client_authorizequery: ''
+            }
+          }
+        }
+      ];
+
+      await stageFn.apply(handler, [ { connections: data } ]);
+    });
+
+
+    it('should keep client ID in idpinitiated.client_id', async () => {
+      const auth0 = {
+        connections: {
+          create: (data) => {
+            expect(data).to.deep.equal({
+              enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
+              name: 'someConnection-2',
+              strategy: 'custom',
+              options: {
+                passwordPolicy: 'testPolicy',
+                idpinitiated: {
+                  client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Ted',
+                  client_protocol: 'samlp',
+                  client_authorizequery: ''
+                }
+              }
+            });
+            return Promise.resolve(data);
+          },
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('con1');
+            expect(data).to.deep.equal({
+              enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
+              options: {
+                passwordPolicy: 'testPolicy',
+                idpinitiated: {
+                  client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Teb',
+                  client_protocol: 'samlp',
+                  client_authorizequery: ''
+                }
+              }
+            });
+
+            return Promise.resolve({ ...params, ...data });
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => [
+            { name: 'someSamlConnection', id: 'con1', strategy: 'samlp' }
+          ]
+        },
+        clients: {
+          getAll: () => [
+            { name: 'client1', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' },
+            { name: 'idp-one', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Teb' }
+          ]
+        },
+        pool
+      };
+
+      const handler = new connections.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+      const data = [
+        {
+          name: 'someSamlConnection',
+          strategy: 'samlp',
+          enabled_clients: [ 'client1' ],
+          options: {
+            passwordPolicy: 'testPolicy',
+            idpinitiated: {
+              client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Teb',
+              client_protocol: 'samlp',
+              client_authorizequery: ''
+            }
+          }
+        },
+        {
+          name: 'someConnection-2',
+          strategy: 'custom',
+          enabled_clients: [ 'client1' ],
+          options: {
+            passwordPolicy: 'testPolicy',
+            idpinitiated: {
+              client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Ted',
+              client_protocol: 'samlp',
+              client_authorizequery: ''
+            }
+          }
+        }
+      ];
+
+      await stageFn.apply(handler, [ { connections: data } ]);
+    });
+
+
     it('should omit excluded clients', async () => {
       const auth0 = {
         connections: {
