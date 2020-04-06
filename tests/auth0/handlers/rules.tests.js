@@ -74,6 +74,44 @@ describe('#rules handler', () => {
       }
     });
 
+    it('should not collision order when rules are reordered', async () => {
+      const auth0 = {
+        rules: {
+          getAll: () => [
+            {
+              name: 'Rule1',
+              order: 1
+            },
+            {
+              name: 'Rule2',
+              order: 2
+            }
+          ]
+        }
+      };
+
+      const handler = new rules.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).calcChanges;
+      const data = [
+        {
+          name: 'Rule3',
+          order: 2
+        },
+        {
+          name: 'Rule4',
+          order: 4
+        }
+      ];
+
+      const output = await stageFn.apply(handler, [ { rules: data } ], true);
+      const newRulesOrder = [ ...output.create, ...output.update ].map(rule => rule.order);
+      const reorderedRulesOrder = output.reOrder.map(rule => rule.order);
+
+      //  check if there is no collisions between rules order
+      const checker = (arr, target) => target.every(v => arr.includes(v));
+      expect(checker(newRulesOrder, reorderedRulesOrder)).to.be.equal(false);
+    });
+
     it('should not allow change stage', async () => {
       const auth0 = {
         rules: {
