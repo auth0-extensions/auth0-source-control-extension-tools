@@ -87,7 +87,10 @@ export default class RulesHandler extends DefaultHandler {
 
     // Figure out the rules that need to be re-ordered
     const futureRules = [ ...create, ...update ];
-    let nextOrderNo = Math.max(Math.max(...futureRules.map(r => r.order)), Math.max(...existing.map(r => r.order)));
+
+    const futureMaxOrder = Math.max(...futureRules.map(r => r.order));
+    const existingMaxOrder = Math.max(...existing.map(r => r.order));
+    let nextOrderNo = Math.max(futureMaxOrder, existingMaxOrder);
 
     const reOrder = futureRules.reduce((accum, r) => {
       const conflict = existing.find(f => r.order === f.order && r.name !== f.name);
