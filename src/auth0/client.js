@@ -2,6 +2,9 @@ import { PromisePoolExecutor } from 'promise-pool-executor';
 import { flatten } from '../utils';
 
 const API_CONCURRENCY = 3;
+// To ensure a complete deployment, limit the API requests generated to be 80% of the capacity
+// https://auth0.com/docs/policies/rate-limits#management-api-v2
+const API_FREQUENCY_PER_SECOND = 8;
 
 function getEntity(rsp) {
   const found = Object.values(rsp).filter(a => Array.isArray(a));
@@ -14,7 +17,9 @@ function getEntity(rsp) {
 // Warp around the ManagementClient and detect when requesting specific pages to return all
 export default function pagedClient(client) {
   client.pool = new PromisePoolExecutor({
-    concurrencyLimit: API_CONCURRENCY
+    concurrencyLimit: API_CONCURRENCY,
+    frequencyLimit: API_FREQUENCY_PER_SECOND,
+    frequencyWindow: 1000 // 1 sec
   });
 
   return new Proxy(client, {
