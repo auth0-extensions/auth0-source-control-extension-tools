@@ -130,6 +130,12 @@ describe('#hooks handler', () => {
           code: 'code',
           active: false,
           triggerId: 'post-change-password'
+        },
+        {
+          name: 'Hook-7',
+          code: 'code',
+          active: false,
+          triggerId: 'send-phone-message'
         }
       ];
 
