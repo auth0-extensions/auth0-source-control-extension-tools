@@ -72,6 +72,8 @@ describe('#guardianFactorProviders handler', () => {
       const data = await handler.getType();
       expect(data).to.deep.equal([
         { name: 'sms', provider: 'twilio', test: 'data' },
+        { name: 'sms', provider: 'auth0', test: 'data' },
+        { name: 'sms', provider: 'phone-message-hook', test: 'data' },
         { name: 'push-notification', provider: 'sns', test: 'data' }
       ]);
     });

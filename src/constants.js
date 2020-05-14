@@ -116,7 +116,7 @@ constants.GUARDIAN_FACTOR_TEMPLATES = [
 ];
 
 constants.GUARDIAN_FACTOR_PROVIDERS = {
-  sms: [ 'twilio' ],
+  sms: [ 'twilio', 'auth0', 'phone-message-hook' ],
   'push-notification': [ 'sns' ]
 };
 
