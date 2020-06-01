@@ -11,6 +11,7 @@ export const pageNameMap = {
   error_page: 'error_page'
 };
 
+// With this schema, we can only validate property types but not valid properties on per type basis
 export const schema = {
   type: 'array',
   items: {
@@ -18,6 +19,8 @@ export const schema = {
     properties: {
       name: { type: 'string', enum: supportedPages },
       html: { type: 'string', default: '' },
+      url: { type: 'string', default: '' },
+      show_log_link: { type: 'boolean' },
       enabled: { type: 'boolean' }
     },
     required: [ 'name' ]

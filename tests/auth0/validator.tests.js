@@ -10,8 +10,9 @@ describe('#schema validation tests', () => {
 
   const failedCb = done => err => done(err || 'test failed');
 
-  const passedCb = (done, message) => (err) => {
+  const passedCb = (done, message, field) => (err) => {
     if (err || message) expect(err.message).to.contain(message);
+    if (field) expect(err.message).to.contain(`properties/${field}/type`);
     done();
   };
 
@@ -42,6 +43,18 @@ describe('#schema validation tests', () => {
         passedCb(done, 'should be equal to one of the allowed values')
       );
   };
+
+  const checkTypeError = (field, expectedType, data, done) => {
+    const auth0 = new Auth0({}, data, {});
+
+    auth0
+      .validate()
+      .then(
+        failedCb(done),
+        passedCb(done, `should be ${expectedType}`, field)
+      );
+  };
+
 
   describe('#branding validate', () => {
     it('should fail validation if branding is not an object', (done) => {
@@ -363,12 +376,41 @@ describe('#schema validation tests', () => {
       checkEnum({ pages: data }, done);
     });
 
-    it('should pass validation', (done) => {
-      const data = [ {
-        name: 'login'
-      } ];
-
+    it('should pass validation for error_page', (done) => {
+      const data = [
+        { name: 'login' },
+        {
+          name: 'error_page',
+          url: 'https://example.com/error',
+          html: '<html>hello world</html>',
+          show_log_link: true
+        }
+      ];
       checkPassed({ pages: data }, done);
+    });
+
+    it('should fail validation for wrong url type in error_page', (done) => {
+      const data = [
+        {
+          name: 'error_page',
+          url: true,
+          html: '<html>hello world</html>',
+          show_log_link: true
+        }
+      ];
+      checkTypeError('url', 'string', { pages: data }, done);
+    });
+
+    it('should fail validation for wrong show_log_link type in error_page', (done) => {
+      const data = [
+        {
+          name: 'error_page',
+          url: 'https://example.com/error',
+          html: '<html>hello world</html>',
+          show_log_link: 1234
+        }
+      ];
+      checkTypeError('show_log_link', 'boolean', { pages: data }, done);
     });
   });
 

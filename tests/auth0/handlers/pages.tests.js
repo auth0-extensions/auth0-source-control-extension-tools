@@ -26,6 +26,7 @@ describe('#pages handler', () => {
 
     it('should get pages', async () => {
       const html = '<html>custom login page</html>';
+      const errorPageUrl = 'https://mycompany.org/error';
 
       const auth0 = {
         clients: {
@@ -42,7 +43,7 @@ describe('#pages handler', () => {
           getSettings: () => ({
             guardian_mfa_page: { enabled: true, html: html },
             change_password: { enabled: true, html: html },
-            error_page: { enabled: true, html: html }
+            error_page: { show_log_link: true, html: html, url: errorPageUrl }
           })
         }
       };
@@ -53,7 +54,12 @@ describe('#pages handler', () => {
         { enabled: true, html: html, name: 'login' },
         { enabled: true, html: html, name: 'guardian_multifactor' },
         { enabled: true, html: html, name: 'password_reset' },
-        { enabled: true, html: html, name: 'error_page' }
+        {
+          show_log_link: true,
+          html: html,
+          url: errorPageUrl,
+          name: 'error_page'
+        }
       ]);
     });
 
@@ -74,6 +80,40 @@ describe('#pages handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { pages: [ { name: 'password_reset', html: 'password_reset_body', enabled: false } ] } ]);
+    });
+
+
+    it('should update error_page page', async () => {
+      const errorPageHtml = '<html>error_page_body</html>';
+      const errorPageUrl = 'https://mycompany.org/error';
+      const auth0 = {
+        tenant: {
+          updateSettings: (data) => {
+            expect(data).to.be.an('object');
+            expect(data.error_page).to.be.an('object');
+            expect(data.error_page.html).to.equal(errorPageHtml);
+            expect(data.error_page.url).to.equal(errorPageUrl);
+            expect(data.error_page.show_log_link).to.equal(true);
+            return Promise.resolve(data);
+          }
+        }
+      };
+
+      const handler = new pages.default({ client: auth0 });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [
+        {
+          pages: [
+            {
+              name: 'error_page',
+              html: errorPageHtml,
+              show_log_link: true,
+              url: errorPageUrl
+            }
+          ]
+        }
+      ]);
     });
   });
 });
