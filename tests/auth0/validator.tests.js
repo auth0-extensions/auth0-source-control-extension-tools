@@ -397,6 +397,20 @@ describe('#schema validation tests', () => {
     });
   });
 
+  describe('#guardianPhoneFactorMessageTypes validate', () => {
+    it('should fail validation if no "message_types" provided', (done) => {
+      const data = {};
+
+      checkRequired('message_types', { guardianPhoneFactorMessageTypes: data }, done);
+    });
+
+    it('should pass validation', (done) => {
+      const data = { message_types: [ 'sms', 'voice' ] };
+
+      checkPassed({ guardianPhoneFactorMessageTypes: data }, done);
+    });
+  });
+
   describe('#pages validate', () => {
     it('should fail validation if no "name" provided', (done) => {
       const data = [ {

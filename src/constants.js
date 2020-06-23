@@ -119,6 +119,10 @@ constants.GUARDIAN_PHONE_PROVIDERS = [
   'twilio',
   'phone-message-hook'
 ];
+constants.GUARDIAN_PHONE_MESSAGE_TYPES = [
+  'sms',
+  'voice'
+];
 
 constants.GUARDIAN_FACTOR_TEMPLATES = [
   'sms'
