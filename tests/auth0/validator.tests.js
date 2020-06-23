@@ -359,6 +359,30 @@ describe('#schema validation tests', () => {
     });
   });
 
+  describe('#guardianPolicies validate', () => {
+    it('should fail validation if guardianPolicies is not an array of strings', (done) => {
+      const data = [ {
+        anything: 'anything'
+      } ];
+
+      const auth0 = new Auth0({}, { guardianPolicies: data }, {});
+
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be string'));
+    });
+
+    it('should pass validation', (done) => {
+      const data = [ 'all-applications' ];
+
+      checkPassed({ guardianPolicies: data }, done);
+    });
+
+    it('should allow empty array', (done) => {
+      const data = [];
+
+      checkPassed({ guardianPolicies: data }, done);
+    });
+  });
+
   describe('#pages validate', () => {
     it('should fail validation if no "name" provided', (done) => {
       const data = [ {

@@ -13,6 +13,7 @@ import * as clientGrants from './clientGrants';
 import * as guardianFactors from './guardianFactors';
 import * as guardianFactorProviders from './guardianFactorProviders';
 import * as guardianFactorTemplates from './guardianFactorTemplates';
+import * as guardianPolicies from './guardianPolicies';
 import * as roles from './roles';
 import * as branding from './branding';
 import * as prompts from './prompts';
@@ -33,6 +34,7 @@ export {
   guardianFactors,
   guardianFactorProviders,
   guardianFactorTemplates,
+  guardianPolicies,
   roles,
   branding,
   prompts

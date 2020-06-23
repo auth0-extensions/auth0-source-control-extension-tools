@@ -110,6 +110,10 @@ constants.GUARDIAN_FACTORS = [
   'email',
   'duo'
 ];
+constants.GUARDIAN_POLICIES = [
+  'all-applications',
+  'confidence-score'
+];
 
 constants.GUARDIAN_FACTOR_TEMPLATES = [
   'sms'
