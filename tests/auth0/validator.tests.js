@@ -383,6 +383,20 @@ describe('#schema validation tests', () => {
     });
   });
 
+  describe('#guardianPhoneFactorSelectedProvider validate', () => {
+    it('should fail validation if no "provider" provided', (done) => {
+      const data = {};
+
+      checkRequired('provider', { guardianPhoneFactorSelectedProvider: data }, done);
+    });
+
+    it('should pass validation', (done) => {
+      const data = { provider: 'twilio' };
+
+      checkPassed({ guardianPhoneFactorSelectedProvider: data }, done);
+    });
+  });
+
   describe('#pages validate', () => {
     it('should fail validation if no "name" provided', (done) => {
       const data = [ {
