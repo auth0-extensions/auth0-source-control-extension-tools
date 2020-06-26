@@ -611,4 +611,32 @@ describe('#schema validation tests', () => {
       checkPassed({ tenant: data }, done);
     });
   });
+
+  describe('#migrations validate', () => {
+    it('should fail validation if migrations is not an object', (done) => {
+      const data = '';
+
+      const auth0 = new Auth0({}, { migrations: data }, {});
+
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be object'));
+    });
+
+    it('should fail validation if migrations properties are not boolean', (done) => {
+      const data = {
+        migration_flag: 'string'
+      };
+
+      const auth0 = new Auth0({}, { migrations: data }, {});
+
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be boolean'));
+    });
+
+    it('should pass validation', (done) => {
+      const data = {
+        migration_flag: true
+      };
+
+      checkPassed({ migrations: data }, done);
+    });
+  });
 });

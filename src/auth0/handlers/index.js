@@ -16,6 +16,7 @@ import * as guardianFactorTemplates from './guardianFactorTemplates';
 import * as roles from './roles';
 import * as branding from './branding';
 import * as prompts from './prompts';
+import * as migrations from './migrations';
 
 export {
   rules,
@@ -35,5 +36,6 @@ export {
   guardianFactorTemplates,
   roles,
   branding,
-  prompts
+  prompts,
+  migrations
 };
