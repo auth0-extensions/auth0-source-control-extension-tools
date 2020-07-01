@@ -24,25 +24,34 @@ export default class MigrationsHandler extends DefaultHandler {
   @order('150')
   async processChanges(assets) {
     const { migrations } = assets;
-    const ignoreUnavailableMigrations = this.config('AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS');
 
     if (migrations && Object.keys(migrations).length > 0) {
-      const existingMigrations = await this.client.migrations.getMigrations();
-      const supportedMigrations = Object.keys(existingMigrations.flags);
-      const unavailableMigrations = Object.keys(migrations).filter(flag => !supportedMigrations.includes(flag));
-      const unavailableDisabledMigrations = unavailableMigrations.filter(flag => migrations[flag] === false);
+      const flags = await this.removeUnavailableMigrations(migrations);
 
-      if (ignoreUnavailableMigrations && unavailableMigrations.length > 0) {
-        log.info(`The following migrations are not available '${unavailableDisabledMigrations.join(',')}'. The migrations will be ignored because you have AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS=true in your configuration.`);
-        unavailableMigrations.forEach(flag => delete migrations[flag]);
-      } else if (unavailableDisabledMigrations.length > 0) {
-        log.warn(`The following disabled migrations are not available '${unavailableDisabledMigrations.join(',')}'. The migrations will be ignored, remove the migrations to avoid future warnings.`);
-        unavailableDisabledMigrations.forEach(flag => delete migrations[flag]);
-      }
-
-      await this.client.migrations.updateMigrations({ flags: migrations });
+      await this.client.migrations.updateMigrations({ flags });
       this.updated += 1;
       this.didUpdate(migrations);
     }
+  }
+
+  logUnavailableMigrations(ignoreUnavailableMigrations, unavailableMigrations) {
+    if (ignoreUnavailableMigrations) {
+      log.info(`The following migrations are not available '${unavailableMigrations.join(',')}'. The migrations will be ignored because you have AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS=true in your configuration.`);
+    } else {
+      log.warn(`The following disabled migrations are not available '${unavailableMigrations.join(',')}'. The migrations will be ignored, remove the migrations to avoid future warnings.`);
+    }
+  }
+
+  async removeUnavailableMigrations(migrations) {
+    const flags = Object.assign({}, migrations);
+    const ignoreUnavailableMigrations = !!this.config('AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS');
+    const existingMigrations = await this.getType();
+    const unavailableMigrations = Object.keys(flags).filter(flag => !(flag in existingMigrations) && (ignoreUnavailableMigrations || flags[flag] === false));
+
+    if (unavailableMigrations.length > 0) {
+      this.logUnavailableMigrations(ignoreUnavailableMigrations, unavailableMigrations);
+      unavailableMigrations.forEach(flag => delete flags[flag]);
+    }
+    return flags;
   }
 }
