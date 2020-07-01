@@ -60,6 +60,21 @@ describe('#migrations handler', () => {
         } ]);
       });
 
+      it('should not try to update if all flags are ignored', async () => {
+        const client = mockClient();
+        const config = () => false;
+        client.migrations.updateMigrations = () => { throw new Error('tried to update migrations'); };
+
+        const handler = new migrations.default({ client, config });
+        const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+        await stageFn.apply(handler, [ {
+          migrations: {
+            disabled_flag: false
+          }
+        } ]);
+      });
+
       it('should not ignore unavailable enabled migration flags', async () => {
         const client = mockClient({ disabled_flag: true });
         const config = () => false;

@@ -28,9 +28,11 @@ export default class MigrationsHandler extends DefaultHandler {
     if (migrations && Object.keys(migrations).length > 0) {
       const flags = await this.removeUnavailableMigrations(migrations);
 
-      await this.client.migrations.updateMigrations({ flags });
-      this.updated += 1;
-      this.didUpdate(migrations);
+      if (Object.keys(flags).length > 0) {
+        await this.client.migrations.updateMigrations({ flags });
+        this.updated += 1;
+        this.didUpdate(flags);
+      }
     }
   }
 
