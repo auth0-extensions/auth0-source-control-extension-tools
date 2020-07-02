@@ -36,11 +36,11 @@ export default class MigrationsHandler extends DefaultHandler {
     }
   }
 
-  logUnavailableMigrations(ignoreUnavailableMigrations, unavailableMigrations) {
+  logUnavailableMigrations(ignoreUnavailableMigrations, ignoredMigrations) {
     if (ignoreUnavailableMigrations) {
-      log.info(`The following migrations are not available '${unavailableMigrations.join(',')}'. The migrations will be ignored because you have AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS=true in your configuration.`);
+      log.info(`The following migrations are not available '${ignoredMigrations.join(',')}'. The migrations will be ignored because you have AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS=true in your configuration.`);
     } else {
-      log.warn(`The following disabled migrations are not available '${unavailableMigrations.join(',')}'. The migrations will be ignored, remove the migrations to avoid future warnings.`);
+      log.warn(`The following disabled migrations are not available '${ignoredMigrations.join(',')}'. The migrations will be ignored, remove the migrations to avoid future warnings.`);
     }
   }
 
@@ -48,11 +48,12 @@ export default class MigrationsHandler extends DefaultHandler {
     const flags = Object.assign({}, migrations);
     const ignoreUnavailableMigrations = !!this.config('AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS');
     const existingMigrations = await this.getType();
-    const unavailableMigrations = Object.keys(flags).filter(flag => !(flag in existingMigrations) && (ignoreUnavailableMigrations || flags[flag] === false));
+    const unavailableMigrations = Object.keys(flags).filter(flag => !(flag in existingMigrations));
+    const ignoredMigrations = unavailableMigrations.filter(flag => ignoreUnavailableMigrations || flags[flag] === false);
 
-    if (unavailableMigrations.length > 0) {
-      this.logUnavailableMigrations(ignoreUnavailableMigrations, unavailableMigrations);
-      unavailableMigrations.forEach(flag => delete flags[flag]);
+    if (ignoredMigrations.length > 0) {
+      this.logUnavailableMigrations(ignoreUnavailableMigrations, ignoredMigrations);
+      ignoredMigrations.forEach(flag => delete flags[flag]);
     }
     return flags;
   }

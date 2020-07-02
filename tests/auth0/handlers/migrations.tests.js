@@ -1,5 +1,6 @@
+import migrations from '../../../src/auth0/handlers/migrations';
+
 const { expect } = require('chai');
-const migrations = require('../../../src/auth0/handlers/migrations');
 
 describe('#migrations handler', () => {
   const mockClient = flags => ({
@@ -21,7 +22,7 @@ describe('#migrations handler', () => {
     it('should get migration flags', async () => {
       const client = mockClient();
 
-      const handler = new migrations.default({ client });
+      const handler = new migrations({ client });
       const data = await handler.getType();
       expect(data).to.deep.equal({
         migration_flag: true
@@ -34,7 +35,7 @@ describe('#migrations handler', () => {
       const client = mockClient();
       const config = () => false;
 
-      const handler = new migrations.default({ client, config });
+      const handler = new migrations({ client, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ {
@@ -49,7 +50,7 @@ describe('#migrations handler', () => {
         const client = mockClient();
         const config = () => false;
 
-        const handler = new migrations.default({ client, config });
+        const handler = new migrations({ client, config });
         const stageFn = Object.getPrototypeOf(handler).processChanges;
 
         await stageFn.apply(handler, [ {
@@ -65,7 +66,7 @@ describe('#migrations handler', () => {
         const config = () => false;
         client.migrations.updateMigrations = () => { throw new Error('tried to update migrations'); };
 
-        const handler = new migrations.default({ client, config });
+        const handler = new migrations({ client, config });
         const stageFn = Object.getPrototypeOf(handler).processChanges;
 
         await stageFn.apply(handler, [ {
@@ -79,7 +80,7 @@ describe('#migrations handler', () => {
         const client = mockClient({ disabled_flag: true });
         const config = () => false;
 
-        const handler = new migrations.default({ client, config });
+        const handler = new migrations({ client, config });
         const stageFn = Object.getPrototypeOf(handler).processChanges;
 
         await stageFn.apply(handler, [ {
@@ -96,7 +97,7 @@ describe('#migrations handler', () => {
         const client = mockClient();
         const config = name => name === 'AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS';
 
-        const handler = new migrations.default({ client, config });
+        const handler = new migrations({ client, config });
         const stageFn = Object.getPrototypeOf(handler).processChanges;
 
         await stageFn.apply(handler, [ {
