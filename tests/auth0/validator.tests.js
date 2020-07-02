@@ -359,6 +359,58 @@ describe('#schema validation tests', () => {
     });
   });
 
+  describe('#guardianPolicies validate', () => {
+    it('should fail validation if guardianPolicies is not an array of strings', (done) => {
+      const data = [ {
+        anything: 'anything'
+      } ];
+
+      const auth0 = new Auth0({}, { guardianPolicies: data }, {});
+
+      auth0.validate().then(failedCb(done), passedCb(done, 'should be string'));
+    });
+
+    it('should pass validation', (done) => {
+      const data = [ 'all-applications' ];
+
+      checkPassed({ guardianPolicies: data }, done);
+    });
+
+    it('should allow empty array', (done) => {
+      const data = [];
+
+      checkPassed({ guardianPolicies: data }, done);
+    });
+  });
+
+  describe('#guardianPhoneFactorSelectedProvider validate', () => {
+    it('should fail validation if no "provider" provided', (done) => {
+      const data = {};
+
+      checkRequired('provider', { guardianPhoneFactorSelectedProvider: data }, done);
+    });
+
+    it('should pass validation', (done) => {
+      const data = { provider: 'twilio' };
+
+      checkPassed({ guardianPhoneFactorSelectedProvider: data }, done);
+    });
+  });
+
+  describe('#guardianPhoneFactorMessageTypes validate', () => {
+    it('should fail validation if no "message_types" provided', (done) => {
+      const data = {};
+
+      checkRequired('message_types', { guardianPhoneFactorMessageTypes: data }, done);
+    });
+
+    it('should pass validation', (done) => {
+      const data = { message_types: [ 'sms', 'voice' ] };
+
+      checkPassed({ guardianPhoneFactorMessageTypes: data }, done);
+    });
+  });
+
   describe('#pages validate', () => {
     it('should fail validation if no "name" provided', (done) => {
       const data = [ {

@@ -110,6 +110,19 @@ constants.GUARDIAN_FACTORS = [
   'email',
   'duo'
 ];
+constants.GUARDIAN_POLICIES = [
+  'all-applications',
+  'confidence-score'
+];
+constants.GUARDIAN_PHONE_PROVIDERS = [
+  'auth0',
+  'twilio',
+  'phone-message-hook'
+];
+constants.GUARDIAN_PHONE_MESSAGE_TYPES = [
+  'sms',
+  'voice'
+];
 
 constants.GUARDIAN_FACTOR_TEMPLATES = [
   'sms'
