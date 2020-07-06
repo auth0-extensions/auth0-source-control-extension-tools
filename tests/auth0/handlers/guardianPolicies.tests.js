@@ -12,7 +12,7 @@ describe('#guardianPolicies handler', () => {
 
       const handler = new guardianPolicies.default({ client: auth0 });
       const data = await handler.getType();
-      expect(data).to.deep.equal(null);
+      expect(data).to.deep.equal({});
     });
 
     it('should get guardian policies', async () => {
@@ -24,7 +24,9 @@ describe('#guardianPolicies handler', () => {
 
       const handler = new guardianPolicies.default({ client: auth0 });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ 'all-applications' ]);
+      expect(data).to.deep.equal({
+        policies: [ 'all-applications' ]
+      });
     });
   });
 
@@ -44,7 +46,11 @@ describe('#guardianPolicies handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [
-        { guardianPolicies: [ 'all-applications' ] }
+        {
+          guardianPolicies: {
+            policies: [ 'all-applications' ]
+          }
+        }
       ]);
     });
 
@@ -62,7 +68,7 @@ describe('#guardianPolicies handler', () => {
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [
-        { guardianPolicies: null }
+        { guardianPolicies: {} }
       ]);
     });
   });
