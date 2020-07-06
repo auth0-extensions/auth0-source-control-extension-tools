@@ -19,7 +19,7 @@ export const schema = {
     properties: {
       name: { type: 'string', enum: supportedPages },
       html: { type: 'string', default: '' },
-      url: { type: 'string', default: '' },
+      url: { type: 'string' },
       show_log_link: { type: 'boolean' },
       enabled: { type: 'boolean' }
     },
