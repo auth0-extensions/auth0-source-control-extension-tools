@@ -361,33 +361,35 @@ describe('#schema validation tests', () => {
 
   describe('#guardianPolicies validate', () => {
     it('should fail validation if guardianPolicies is not an array of strings', (done) => {
-      const data = [ {
-        anything: 'anything'
-      } ];
+      const data = {
+        policies: 'all-applications'
+      };
 
-      const auth0 = new Auth0({}, { guardianPolicies: data }, {});
-
-      auth0.validate().then(failedCb(done), passedCb(done, 'should be string'));
+      checkTypeError('policies', 'array', { guardianPolicies: data }, done);
     });
 
     it('should pass validation', (done) => {
-      const data = [ 'all-applications' ];
+      const data = {
+        policies: [ 'all-applications' ]
+      };
 
       checkPassed({ guardianPolicies: data }, done);
     });
 
     it('should allow empty array', (done) => {
-      const data = [];
+      const data = {
+        policies: []
+      };
 
       checkPassed({ guardianPolicies: data }, done);
     });
   });
 
   describe('#guardianPhoneFactorSelectedProvider validate', () => {
-    it('should fail validation if no "provider" provided', (done) => {
+    it('should pass validation if no "provider" provided', (done) => {
       const data = {};
 
-      checkRequired('provider', { guardianPhoneFactorSelectedProvider: data }, done);
+      checkPassed({ guardianPhoneFactorSelectedProvider: data }, done);
     });
 
     it('should pass validation', (done) => {
@@ -398,10 +400,10 @@ describe('#schema validation tests', () => {
   });
 
   describe('#guardianPhoneFactorMessageTypes validate', () => {
-    it('should fail validation if no "message_types" provided', (done) => {
+    it('should pass validation if no "message_types" provided', (done) => {
       const data = {};
 
-      checkRequired('message_types', { guardianPhoneFactorMessageTypes: data }, done);
+      checkPassed({ guardianPhoneFactorMessageTypes: data }, done);
     });
 
     it('should pass validation', (done) => {

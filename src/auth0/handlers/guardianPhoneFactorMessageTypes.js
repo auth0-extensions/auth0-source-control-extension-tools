@@ -12,10 +12,24 @@ export const schema = {
       }
     }
   },
-  required: [ 'message_types' ],
   additionalProperties: false
 };
 
+const isFeatureUnavailableError = (err) => {
+  if (err.statusCode === 404) {
+    // Older Management API version where the endpoint is not available.
+    return true;
+  }
+  if (err.statusCode === 403
+    && err.originalError
+    && err.originalError.response
+    && err.originalError.response.body
+    && err.originalError.response.body.errorCode === 'voice_mfa_not_allowed') {
+    // Recent Management API version, but with feature explicitly disabled.
+    return true;
+  }
+  return false;
+};
 
 export default class GuardianPhoneMessageTypesHandler extends DefaultHandler {
   constructor(options) {
@@ -28,11 +42,21 @@ export default class GuardianPhoneMessageTypesHandler extends DefaultHandler {
   async getType() {
     // in case client version does not support the operation
     if (!this.client.guardian || typeof this.client.guardian.getPhoneFactorMessageTypes !== 'function') {
-      return null;
+      return {};
     }
 
     if (this.existing) return this.existing;
-    this.existing = await this.client.guardian.getPhoneFactorMessageTypes();
+
+    try {
+      this.existing = await this.client.guardian.getPhoneFactorMessageTypes();
+    } catch (e) {
+      if (isFeatureUnavailableError(e)) {
+        // Gracefully skip processing this configuration value.
+        return {};
+      }
+      throw e;
+    }
+
     return this.existing;
   }
 
@@ -41,7 +65,7 @@ export default class GuardianPhoneMessageTypesHandler extends DefaultHandler {
     const { guardianPhoneFactorMessageTypes } = assets;
 
     // Do nothing if not set
-    if (!guardianPhoneFactorMessageTypes) return;
+    if (!guardianPhoneFactorMessageTypes || !guardianPhoneFactorMessageTypes.message_types) return;
 
     const params = {};
     const data = guardianPhoneFactorMessageTypes;
