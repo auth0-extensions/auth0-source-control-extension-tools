@@ -19,6 +19,7 @@ import * as guardianPhoneFactorMessageTypes from './guardianPhoneFactorMessageTy
 import * as roles from './roles';
 import * as branding from './branding';
 import * as prompts from './prompts';
+import * as migrations from './migrations';
 
 export {
   rules,
@@ -41,5 +42,6 @@ export {
   guardianPhoneFactorMessageTypes,
   roles,
   branding,
-  prompts
+  prompts,
+  migrations
 };
