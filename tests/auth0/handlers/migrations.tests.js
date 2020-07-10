@@ -28,6 +28,36 @@ describe('#migrations handler', () => {
         migration_flag: true
       });
     });
+
+    it('should support when endpoint does not exist (older installations)', async () => {
+      const client = {
+        migrations: {
+          getMigrations: () => {
+            const err = new Error('Not Found');
+            err.name = 'Not Found';
+            err.statusCode = 404;
+            err.requestInfo = {
+              method: 'get',
+              url: 'https://example.auth0.com/api/v2/migrations'
+            };
+            err.originalError = new Error('Not Found');
+            err.originalError.status = 404;
+            err.originalError.response = {
+              body: {
+                statusCode: 404,
+                error: 'Not Found',
+                message: 'Not Found'
+              }
+            };
+            return Promise.reject(err);
+          }
+        }
+      };
+
+      const handler = new migrations({ client });
+      const data = await handler.getType();
+      expect(data).to.deep.equal({});
+    });
   });
 
   describe('#migrations process', () => {

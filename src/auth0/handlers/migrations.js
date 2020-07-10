@@ -16,8 +16,13 @@ export default class MigrationsHandler extends DefaultHandler {
   }
 
   async getType() {
-    const migrations = await this.client.migrations.getMigrations();
-    return migrations.flags;
+    try {
+      const migrations = await this.client.migrations.getMigrations();
+      return migrations.flags;
+    } catch (err) {
+      if (err.statusCode === 404) return {};
+      throw err;
+    }
   }
 
   // Run at the end since switching a flag will depend on other applying other changes
