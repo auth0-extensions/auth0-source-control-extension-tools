@@ -66,7 +66,7 @@ describe('#roles handler', () => {
           },
           update: () => Promise.resolve([]),
           delete: () => Promise.resolve([]),
-          getAll: () => [],
+          getAll: () => Promise.resolve({ roles: [], total: 0, limit: 50 }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
@@ -103,9 +103,17 @@ describe('#roles handler', () => {
     it('should get roles', async () => {
       const auth0 = {
         roles: {
-          getAll: () => [
-            { name: 'myRole', id: 'myRoleId', description: 'myDescription' }
-          ],
+          getAll: () => Promise.resolve({
+            roles: [
+              {
+                name: 'myRole',
+                id: 'myRoleId',
+                description: 'myDescription'
+              }
+            ],
+            total: 1,
+            limit: 50
+          }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
@@ -204,13 +212,17 @@ describe('#roles handler', () => {
             return Promise.resolve(data);
           },
           delete: () => Promise.resolve([]),
-          getAll: () => [
-            {
-              name: 'myRole',
-              id: 'myRoleId',
-              description: 'myDescription'
-            }
-          ],
+          getAll: () => Promise.resolve({
+            roles: [
+              {
+                name: 'myRole',
+                id: 'myRoleId',
+                description: 'myDescription'
+              }
+            ],
+            total: 1,
+            limit: 50
+          }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
@@ -269,18 +281,17 @@ describe('#roles handler', () => {
             expect(data.id).to.equal('myRoleId');
             return Promise.resolve(data);
           },
-          getAll: () => [
-            {
-              name: 'myRole',
-              id: 'myRoleId',
-              description: 'myDescription',
-              permissions: [
-                {
-                  permission_name: 'Create:cal_entry', resource_server_identifier: 'organise'
-                }
-              ]
-            }
-          ],
+          getAll: () => Promise.resolve({
+            roles: [
+              {
+                name: 'myRole',
+                id: 'myRoleId',
+                description: 'myDescription'
+              }
+            ],
+            total: 1,
+            limit: 50
+          }),
           permissions: {
             get: () => []
           }

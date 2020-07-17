@@ -108,15 +108,18 @@ export default class RoleHandler extends DefaultHandler {
   }
 
   async getAllRoles() {
+    let result = [];
     let initialPage = 0;
-    let data = await this.client.roles.getAll({ include_totals: true });
-    let pagesLeft = Math.ceil(data.total / data.limit) - 1;
-    let result = data.roles; // eslint-disable-line
-    while (pagesLeft > 0) {
-      initialPage += 1;
-      data = await this.client.roles.getAll({ page: initialPage, include_totals: true });
-      result.push(...data.roles);
-      pagesLeft -= 1;
+    let data = await this.client.roles.getAll({ include_totals: true }); // getAll() returns 50 roles as default
+    if (data && data.total !== 0) {
+      let pagesLeft = Math.ceil(data.total / data.limit) - 1;
+      result = data.roles;
+      while (pagesLeft > 0) {
+        initialPage += 1;
+        data = await this.client.roles.getAll({ page: initialPage, include_totals: true });
+        result.push(...data.roles);
+        pagesLeft -= 1;
+      }
     }
     return result;
   }
