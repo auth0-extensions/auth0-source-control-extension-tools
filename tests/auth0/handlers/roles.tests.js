@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const roles = require('../../../src/auth0/handlers/roles');
+const pagedRoles = require('../../paged_roles_data');
 
 const pool = {
   addEachTask: (data) => {
@@ -137,6 +138,28 @@ describe('#roles handler', () => {
           ]
         }
       ]);
+    });
+
+    it('should get all roles', async () => {
+      const auth0 = {
+        roles: {
+          getAll: data => Promise.resolve({
+            roles: data.page ? pagedRoles.roles_page_2 : pagedRoles.roles_page_1,
+            total: 80,
+            limit: 50
+          }),
+          permissions: {
+            get: () => [
+              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+            ]
+          }
+        },
+        pool
+      };
+
+      const handler = new roles.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.have.length(80);
     });
 
     it('should return an empty array for 501 status code', async () => {
