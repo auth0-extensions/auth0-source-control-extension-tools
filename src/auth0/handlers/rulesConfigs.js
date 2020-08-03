@@ -26,7 +26,7 @@ export default class RulesConfigsHandler extends DefaultHandler {
   }
 
   async getType() {
-    return this.client.rulesConfigs.getAll({ paginate: true });
+    return this.client.rulesConfigs.getAll();
   }
 
   objString(item) {
