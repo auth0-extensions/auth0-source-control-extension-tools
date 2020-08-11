@@ -67,22 +67,36 @@ export default class ConnectionsHandler extends DefaultHandler {
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
+    const existingConexions = await this.client.connections.getAll();
     const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
     const excludedClients = convertClientNamesToIds(excludedClientsByNames, clients);
-
-    const formatted = assets.connections.map(connection => ({
-      ...connection,
-      ...this.getFormattedOptions(connection, clients),
-      enabled_clients: [
+    const formatted = assets.connections.map((connection) => {
+      const enabledClients = [
         ...convertClientNamesToIds(
           connection.enabled_clients || [],
           clients
         ).filter(
           item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item)
         )
-      ]
-    }));
+      ];
+      // If client is excluded and in the existing connection this client is enabled, it should keep enabled
+      // If client is excluded and in the existing connection this client is disabled, it should keep disabled
+      existingConexions.forEach((conn) => {
+        if (conn.name === connection.name) {
+          excludedClients.forEach((excludedClient) => {
+            if (conn.enabled_clients.includes(excludedClient)) {
+              enabledClients.push(excludedClient);
+            }
+          });
+        }
+      });
 
+      return ({
+        ...connection,
+        ...this.getFormattedOptions(connection, clients),
+        enabled_clients: enabledClients
+      });
+    });
     return super.calcChanges({ ...assets, connections: formatted });
   }
 

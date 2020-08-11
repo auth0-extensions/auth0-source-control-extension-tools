@@ -140,7 +140,9 @@ describe('#databases handler', () => {
       await stageFn.apply(handler, [ { databases: data } ]);
     });
 
-    it('should omit excluded clients', async () => {
+    // If client is excluded and in the existing connection this client is enabled, it should keep enabled
+    // If client is excluded and in the existing connection this client is disabled, it should keep disabled
+    it('should handle excluded clients properly', async () => {
       const auth0 = {
         connections: {
           get: (params) => {
@@ -156,19 +158,22 @@ describe('#databases handler', () => {
             expect(params).to.be.an('object');
             expect(params.id).to.equal('con1');
             expect(data).to.deep.equal({
-              enabled_clients: [ 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' ],
+              enabled_clients: [ 'client1-id', 'excluded-one-id' ],
               options: { passwordPolicy: 'testPolicy', someOldOption: true }
             });
 
             return Promise.resolve({ ...params, ...data });
           },
           delete: () => Promise.resolve([]),
-          getAll: () => [ { name: 'someDatabase', id: 'con1', strategy: 'auth0' } ]
+          getAll: () => [ {
+            name: 'someDatabase', id: 'con1', strategy: 'auth0', enabled_clients: [ 'excluded-one-id' ]
+          } ]
         },
         clients: {
           getAll: () => [
-            { name: 'client1', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Tec' },
-            { name: 'excluded-one', client_id: 'YwqVtt8W3pw5AuEz3B2Kse9l2Ruy7Teb' }
+            { name: 'client1', client_id: 'client1-id' },
+            { name: 'excluded-one', client_id: 'excluded-one-id' },
+            { name: 'excluded-two', client_id: 'excluded-two-id' }
           ]
         },
         pool
