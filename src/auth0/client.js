@@ -6,6 +6,8 @@ const API_CONCURRENCY = 3;
 // https://auth0.com/docs/policies/rate-limits#management-api-v2
 const API_FREQUENCY_PER_SECOND = 8;
 
+const MAX_PAGE_SIZE = 100;
+
 function getEntity(rsp) {
   const found = Object.values(rsp).filter(a => Array.isArray(a));
   if (found.length === 1) {
@@ -14,17 +16,11 @@ function getEntity(rsp) {
   throw new Error('There was an error trying to find the entity within paginate');
 }
 
-// Warp around the ManagementClient and detect when requesting specific pages to return all
-export default function pagedClient(client) {
-  client.pool = new PromisePoolExecutor({
-    concurrencyLimit: API_CONCURRENCY,
-    frequencyLimit: API_FREQUENCY_PER_SECOND,
-    frequencyWindow: 1000 // 1 sec
-  });
-
-  return new Proxy(client, {
+// Warp around a <resource>Manager and detect when requesting specific pages to return all
+function pagedManager(client, manager) {
+  return new Proxy(manager, {
     get: function(target, name, receiver) {
-      if (name in Object.getPrototypeOf(target)) { // assume methods live on the prototype
+      if (name === 'getAll') {
         return async function(...args) {
           // If the function was called with object params and paginate (entity) then handle pagination
           if (args[0] && typeof args[0] === 'object' && args[0].paginate) {
@@ -38,9 +34,9 @@ export default function pagedClient(client) {
             newArgs[0] = { ...newArgs[0], include_totals: true, page: 0 };
 
             // Grab data we need from the request then delete the keys as they are only needed for this automation function to work
-            const perPage = newArgs[0].per_page || 50;
+            const perPage = newArgs[0].per_page || MAX_PAGE_SIZE;
             newArgs[0].per_page = perPage;
-            delete args[0].paginate;
+            delete newArgs[0].paginate;
 
             // Run the first request to get the total number of entity items
             const rsp = await target[fnName](...newArgs);
@@ -65,7 +61,26 @@ export default function pagedClient(client) {
           }
           return target[name](...args);
         };
-      } // assume instance vars like on the target
+      }
+
+      return Reflect.get(target, name, receiver);
+    }
+  });
+}
+
+// Warp around the ManagementClient and detect when requesting specific pages to return all
+export default function pagedClient(client) {
+  client.pool = new PromisePoolExecutor({
+    concurrencyLimit: API_CONCURRENCY,
+    frequencyLimit: API_FREQUENCY_PER_SECOND,
+    frequencyWindow: 1000 // 1 sec
+  });
+
+  return new Proxy(client, {
+    get: function(target, name, receiver) {
+      if (name in target && target[name].getAll) {
+        return pagedManager(client, target[name]);
+      }
       return Reflect.get(target, name, receiver);
     }
   });

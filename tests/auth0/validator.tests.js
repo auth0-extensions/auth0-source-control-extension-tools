@@ -4,7 +4,22 @@ import Auth0 from '../../src/auth0';
 describe('#schema validation tests', () => {
   const client = {
     rules: {
-      getAll: () => []
+      getAll: async () => ({ rules: [] })
+    },
+    clients: {
+      getAll: async () => ({ clients: [] })
+    },
+    connections: {
+      getAll: async () => ({ connections: [] })
+    },
+    resourceServers: {
+      getAll: async () => ({ resource_servers: [] })
+    },
+    clientGrants: {
+      getAll: async () => ({ client_grants: [] })
+    },
+    roles: {
+      getAll: async () => ({ client_grants: [] })
     }
   };
 
