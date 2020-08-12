@@ -1,6 +1,6 @@
 import DefaultHandler, { order } from './default';
 import constants from '../../constants';
-import { filterExcluded, convertClientNamesToIds } from '../../utils';
+import { filterExcluded, getEnabledClients } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -69,32 +69,11 @@ export default class DatabaseHandler extends DefaultHandler {
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
     const existingDatabasesConecctions = await this.client.connections.getAll({ strategy: 'auth0', paginate: true });
-    const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
-    const excludedClients = convertClientNamesToIds(excludedClientsByNames, clients);
     const formatted = databases.map((db) => {
       if (db.enabled_clients) {
-        const enabledClients = db.enabled_clients.map((name) => {
-          const found = clients.find(c => c.name === name);
-          if (found) return found.client_id;
-          return name;
-        }).filter(item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item));
-
-
-        // If client is excluded and in the existing connection this client is enabled, it should keep enabled
-        // If client is excluded and in the existing connection this client is disabled, it should keep disabled
-        existingDatabasesConecctions.forEach((existingDb) => {
-          if (existingDb.name === db.name) {
-            excludedClients.forEach((excludedClient) => {
-              if (existingDb.enabled_clients.includes(excludedClient)) {
-                enabledClients.push(excludedClient);
-              }
-            });
-          }
-        });
-
         return {
           ...db,
-          enabled_clients: enabledClients
+          enabled_clients: getEnabledClients(assets, db, existingDatabasesConecctions, clients)
         };
       }
 
