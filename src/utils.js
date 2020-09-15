@@ -163,6 +163,31 @@ export function stripFields(obj, fields) {
   return newObj;
 }
 
+export function getEnabledClients(assets, connection, existing, clients) {
+  // Convert enabled_clients by name to the id
+  const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
+  const excludedClients = convertClientNamesToIds(excludedClientsByNames, clients);
+  const enabledClients = [
+    ...convertClientNamesToIds(
+      connection.enabled_clients || [],
+      clients
+    ).filter(
+      item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item)
+    )
+  ];
+  // If client is excluded and in the existing connection this client is enabled, it should keep enabled
+  // If client is excluded and in the existing connection this client is disabled, it should keep disabled
+  existing.forEach((conn) => {
+    if (conn.name === connection.name) {
+      excludedClients.forEach((excludedClient) => {
+        if (conn.enabled_clients.includes(excludedClient)) {
+          enabledClients.push(excludedClient);
+        }
+      });
+    }
+  });
+  return enabledClients;
+}
 
 export function duplicateItems(arr, key) {
   // Find duplicates objects within array that have the same key value
