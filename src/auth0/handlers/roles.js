@@ -35,45 +35,84 @@ export default class RoleHandler extends DefaultHandler {
     });
   }
 
+  async createRole(data) {
+    const role = { ...data };
+    delete role.permissions;
+
+    const created = await this.client.roles.create(role);
+
+    if (typeof data.permissions !== 'undefined' && data.permissions.length > 0) {
+      await this.client.roles.permissions.create({ id: created.id }, { permissions: data.permissions });
+    }
+
+    return created;
+  }
+
   async createRoles(creates) {
-    await Promise.all(creates.map(async (roleData) => {
-      const data = { ...roleData };
-      delete data.permissions;
-      const created = await this.client.roles.create(data);
-      if (typeof roleData.permissions !== 'undefined' && roleData.permissions.length > 0) await this.client.roles.permissions.create({ id: created.id }, { permissions: roleData.permissions });
-      this.didCreate(created);
-      this.created += 1;
-    }));
+    await this.client.pool.addEachTask({
+      data: creates || [],
+      generator: item => this.createRole(item).then((data) => {
+        this.didCreate(data);
+        this.created += 1;
+      }).catch((err) => {
+        throw new Error(`Problem creating ${this.type} ${this.objString(item)}\n${err}`);
+      })
+    }).promise();
+  }
+
+  async deleteRole(data) {
+    await this.client.roles.delete({ id: data.id });
   }
 
   async deleteRoles(dels) {
     if (this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true) {
-      await Promise.all(dels.map(async (roleToDelete) => {
-        await this.client.roles.delete({ id: roleToDelete.id });
-        this.didDelete(roleToDelete);
-        this.deleted += 1;
-      }));
+      await this.client.pool.addEachTask({
+        data: dels || [],
+        generator: item => this.deleteRole(item).then(() => {
+          this.didDelete(item);
+          this.deleted += 1;
+        }).catch((err) => {
+          throw new Error(`Problem deleting ${this.type} ${this.objString(item)}\n${err}`);
+        })
+      }).promise();
     } else {
       log.warn(`Detected the following roles should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
       \n${dels.map(i => this.objString(i)).join('\n')}`);
     }
   }
 
+  async updateRole(data, roles) {
+    const existingRole = await roles.find(roleDataForUpdate => roleDataForUpdate.name === data.name);
+
+    const params = { id: data.id };
+    const newPermissions = data.permissions;
+
+    delete data.permissions;
+    delete data.id;
+
+    await this.client.roles.update(params, data);
+
+    if (typeof existingRole.permissions !== 'undefined' && existingRole.permissions.length > 0) {
+      await this.client.roles.permissions.delete(params, { permissions: existingRole.permissions });
+    }
+
+    if (typeof newPermissions !== 'undefined' && newPermissions.length > 0) {
+      await this.client.roles.permissions.create(params, { permissions: newPermissions });
+    }
+
+    return params;
+  }
+
   async updateRoles(updates, roles) {
-    await Promise.all(updates.map(async (updateRole) => {
-      const existingRole = await roles.find(roleDataForUpdate => roleDataForUpdate.name === updateRole.name);
-      const params = { id: updateRole.id };
-      const newPermissions = updateRole.permissions;
-      delete updateRole.permissions;
-      delete updateRole.id;
-      await this.client.roles.update(params, updateRole);
-      if (typeof existingRole.permissions !== 'undefined' && existingRole.permissions.length > 0) {
-        await this.client.roles.permissions.delete(params, { permissions: existingRole.permissions });
-      }
-      if (typeof newPermissions !== 'undefined' && newPermissions.length > 0) await this.client.roles.permissions.create(params, { permissions: newPermissions });
-      this.didUpdate(params);
-      this.updated += 1;
-    }));
+    await this.client.pool.addEachTask({
+      data: updates || [],
+      generator: item => this.updateRole(item, roles).then((data) => {
+        this.didUpdate(data);
+        this.updated += 1;
+      }).catch((err) => {
+        throw new Error(`Problem updating ${this.type} ${this.objString(item)}\n${err}`);
+      })
+    }).promise();
   }
 
   async getType() {
