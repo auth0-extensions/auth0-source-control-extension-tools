@@ -1,5 +1,5 @@
 import DefaultHandler, { order } from './default';
-import { filterExcluded, convertClientNameToId, convertClientNamesToIds } from '../../utils';
+import { filterExcluded, convertClientNameToId, getEnabledClients } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -67,22 +67,14 @@ export default class ConnectionsHandler extends DefaultHandler {
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
-    const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
-    const excludedClients = convertClientNamesToIds(excludedClientsByNames, clients);
-
-    const formatted = assets.connections.map(connection => ({
-      ...connection,
-      ...this.getFormattedOptions(connection, clients),
-      enabled_clients: [
-        ...convertClientNamesToIds(
-          connection.enabled_clients || [],
-          clients
-        ).filter(
-          item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item)
-        )
-      ]
-    }));
-
+    const existingConexions = await this.client.connections.getAll();
+    const formatted = assets.connections.map(connection => (
+      {
+        ...connection,
+        ...this.getFormattedOptions(connection, clients),
+        enabled_clients: getEnabledClients(assets, connection, existingConexions, clients)
+      }
+    ));
     return super.calcChanges({ ...assets, connections: formatted });
   }
 

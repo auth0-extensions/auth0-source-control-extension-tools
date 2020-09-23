@@ -57,6 +57,8 @@ We will rollback if …
   
 > Explain how the rollback for this change will look like, how we can recover fast.
  
-## 🖥 Appliance
+## 🖥 PSaaS
   
-**Note to reviewers:** ensure that this change is compatible with the Appliance.
+**Note to reviewers:** ensure that this change is compatible with the PSaaS.
+
+> Check that any newly introduced handler will gracefully handle the case when Deploy CLI is run against an older PSaaS installation, where the endpoint is not yet deployed. This usually means handling the HTTP 404 status code.

@@ -1,6 +1,6 @@
 import DefaultHandler, { order } from './default';
 import constants from '../../constants';
-import { filterExcluded, convertClientNamesToIds } from '../../utils';
+import { filterExcluded, getEnabledClients } from '../../utils';
 
 export const schema = {
   type: 'array',
@@ -68,17 +68,12 @@ export default class DatabaseHandler extends DefaultHandler {
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
-    const excludedClientsByNames = (assets.exclude && assets.exclude.clients) || [];
-    const excludedClients = convertClientNamesToIds(excludedClientsByNames, clients);
+    const existingDatabasesConecctions = await this.client.connections.getAll({ strategy: 'auth0', paginate: true });
     const formatted = databases.map((db) => {
       if (db.enabled_clients) {
         return {
           ...db,
-          enabled_clients: db.enabled_clients.map((name) => {
-            const found = clients.find(c => c.name === name);
-            if (found) return found.client_id;
-            return name;
-          }).filter(item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item))
+          enabled_clients: getEnabledClients(assets, db, existingDatabasesConecctions, clients)
         };
       }
 

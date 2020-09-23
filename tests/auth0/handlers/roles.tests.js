@@ -1,5 +1,6 @@
 const { expect } = require('chai');
 const roles = require('../../../src/auth0/handlers/roles');
+const pagedRoles = require('../../paged_roles_data');
 
 const pool = {
   addEachTask: (data) => {
@@ -66,7 +67,7 @@ describe('#roles handler', () => {
           },
           update: () => Promise.resolve([]),
           delete: () => Promise.resolve([]),
-          getAll: () => [],
+          getAll: () => Promise.resolve({ roles: [], total: 0, limit: 50 }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
@@ -103,9 +104,17 @@ describe('#roles handler', () => {
     it('should get roles', async () => {
       const auth0 = {
         roles: {
-          getAll: () => [
-            { name: 'myRole', id: 'myRoleId', description: 'myDescription' }
-          ],
+          getAll: () => Promise.resolve({
+            roles: [
+              {
+                name: 'myRole',
+                id: 'myRoleId',
+                description: 'myDescription'
+              }
+            ],
+            total: 1,
+            limit: 50
+          }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
@@ -129,6 +138,28 @@ describe('#roles handler', () => {
           ]
         }
       ]);
+    });
+
+    it('should get all roles', async () => {
+      const auth0 = {
+        roles: {
+          getAll: data => Promise.resolve({
+            roles: data.page ? pagedRoles.roles_page_2 : pagedRoles.roles_page_1,
+            total: 80,
+            limit: 50
+          }),
+          permissions: {
+            get: () => [
+              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+            ]
+          }
+        },
+        pool
+      };
+
+      const handler = new roles.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.have.length(80);
     });
 
     it('should return an empty array for 501 status code', async () => {
@@ -204,13 +235,17 @@ describe('#roles handler', () => {
             return Promise.resolve(data);
           },
           delete: () => Promise.resolve([]),
-          getAll: () => [
-            {
-              name: 'myRole',
-              id: 'myRoleId',
-              description: 'myDescription'
-            }
-          ],
+          getAll: () => Promise.resolve({
+            roles: [
+              {
+                name: 'myRole',
+                id: 'myRoleId',
+                description: 'myDescription'
+              }
+            ],
+            total: 1,
+            limit: 50
+          }),
           permissions: {
             get: () => [
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
@@ -269,18 +304,17 @@ describe('#roles handler', () => {
             expect(data.id).to.equal('myRoleId');
             return Promise.resolve(data);
           },
-          getAll: () => [
-            {
-              name: 'myRole',
-              id: 'myRoleId',
-              description: 'myDescription',
-              permissions: [
-                {
-                  permission_name: 'Create:cal_entry', resource_server_identifier: 'organise'
-                }
-              ]
-            }
-          ],
+          getAll: () => Promise.resolve({
+            roles: [
+              {
+                name: 'myRole',
+                id: 'myRoleId',
+                description: 'myDescription'
+              }
+            ],
+            total: 1,
+            limit: 50
+          }),
           permissions: {
             get: () => []
           }
