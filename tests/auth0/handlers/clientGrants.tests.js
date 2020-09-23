@@ -366,7 +366,7 @@ describe('#clientGrants handler', () => {
       await stageFn.apply(handler, [ assets ]);
     });
   });
-  it.only('should not delete client grants of excluded clients with multiple instances', async () => {
+  it('should not delete client grants of excluded clients with multiple instances', async () => {
     config.data = {
       AUTH0_CLIENT_ID: 'client_id',
       AUTH0_ALLOW_DELETE: true
