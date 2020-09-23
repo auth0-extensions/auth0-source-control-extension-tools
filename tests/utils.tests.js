@@ -106,9 +106,9 @@ describe('#utils', function() {
 
     const names = [ 'dd', 'cc', 'aa' ];
 
-    const expected = [ 'dd', '3', '1' ];
+    const expected = [ '1', '3', 'dd' ];
 
-    expect(utils.convertClientNamesToIds(names, clients)).to.deep.equal(expected);
+    expect(utils.convertClientNamesToIds(names, clients).sort()).to.deep.equal(expected);
   });
 });
 

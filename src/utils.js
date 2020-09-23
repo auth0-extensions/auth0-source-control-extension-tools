@@ -26,7 +26,17 @@ export function convertClientNameToId(name, clients) {
 }
 
 export function convertClientNamesToIds(names, clients) {
-  return names.map(name => convertClientNameToId(name, clients));
+  const resolvedNames = names.map(name => ({ name, resolved: false }));
+  const result = clients.reduce((acc, client) => {
+    if (names.includes(client.name)) {
+      const index = resolvedNames.findIndex(item => item.name === client.name);
+      resolvedNames[index].resolved = true;
+      acc.push(client.client_id);
+    }
+    return acc;
+  }, []);
+  const unresolved = resolvedNames.filter(item => !item.resolved).map(item => item.name);
+  return [ ...unresolved, ...result ];
 }
 
 export function loadFile(file, mappings) {

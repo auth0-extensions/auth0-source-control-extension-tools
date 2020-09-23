@@ -366,4 +366,113 @@ describe('#clientGrants handler', () => {
       await stageFn.apply(handler, [ assets ]);
     });
   });
+  it('should not delete client grants of excluded clients with multiple instances', async () => {
+    config.data = {
+      AUTH0_CLIENT_ID: 'client_id',
+      AUTH0_ALLOW_DELETE: true
+    };
+
+    const auth0 = {
+      clientGrants: {
+        create: (params) => {
+          expect(params).to.be.an('undefined');
+
+          return Promise.resolve([]);
+        },
+        update: (params) => {
+          expect(params).to.be.an('undefined');
+
+          return Promise.resolve([]);
+        },
+        delete: (params) => {
+          expect(params).to.be.an('undefined');
+
+          return Promise.resolve([]);
+        },
+        getAll: () => [
+          {
+            client_id: '123',
+            audience: 'a',
+            id: '1'
+          },
+          {
+            client_id: '123',
+            audience: 'a',
+            id: '2'
+          },
+          {
+            client_id: '123',
+            audience: 'a',
+            id: '3'
+          },
+          {
+            client_id: '456',
+            audience: 'a',
+            id: '4'
+          },
+          {
+            client_id: '456',
+            audience: 'a',
+            id: '5'
+          }
+        ]
+      },
+      clients: {
+        getAll: () => [
+          {
+            name: 'abc',
+            client_id: 'abc'
+          },
+          {
+            name: 'foo_client',
+            client_id: '123'
+          },
+          {
+            name: 'foo_client',
+            client_id: '456'
+          }
+        ]
+      },
+      pool
+    };
+
+    const handler = new clientGrants.default({ client: auth0, config });
+    const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+    const assets = {
+      clients: [
+        {
+          name: 'foo_client'
+        },
+        {
+          name: 'foo_client'
+        }
+      ],
+      clientGrants: [
+        {
+          client_id: 'foo_client',
+          audience: 'https://example.com'
+        },
+        {
+          client_id: 'foo_client',
+          audience: 'https://example.com'
+        },
+        {
+          client_id: 'foo_client',
+          audience: 'https://example.com'
+        },
+        {
+          client_id: 'foo_client',
+          audience: 'https://example.com'
+        },
+        {
+          client_id: 'foo_client',
+          audience: 'https://example.com'
+        }
+      ],
+      exclude: { clients: [ 'foo_client' ] }
+    };
+
+    await stageFn.apply(handler, [ assets ]);
+  });
 });
