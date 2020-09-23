@@ -26,7 +26,12 @@ export function convertClientNameToId(name, clients) {
 }
 
 export function convertClientNamesToIds(names, clients) {
-  return names.map(name => convertClientNameToId(name, clients));
+  return clients.reduce((acc, client) => {
+    if (names.includes(client.name)) {
+      acc.push(client.client_id);
+    }
+    return acc;
+  }, []);
 }
 
 export function loadFile(file, mappings) {
