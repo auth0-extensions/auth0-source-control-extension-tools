@@ -61,7 +61,8 @@ describe('#guardianFactors handler', () => {
         { name: 'push-notification', enabled: true },
         { name: 'otp', enabled: true },
         { name: 'email', enabled: true },
-        { name: 'duo', enabled: false }
+        { name: 'duo', enabled: false },
+        { name: 'webauth-roaming', enabled: false }
       ];
 
       const auth0 = {
@@ -82,7 +83,8 @@ describe('#guardianFactors handler', () => {
         { name: 'push-notification', enabled: true },
         { name: 'otp', enabled: true },
         { name: 'email', enabled: true },
-        { name: 'duo', enabled: false }
+        { name: 'duo', enabled: false },
+        { name: 'webauth-roaming', enabled: false }
       ];
 
       const auth0 = {

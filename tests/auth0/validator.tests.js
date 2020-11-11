@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Auth0 from '../../src/auth0';
+import constants from '../../src/constants';
 
 describe('#schema validation tests', () => {
   const client = {
@@ -339,12 +340,13 @@ describe('#schema validation tests', () => {
       checkEnum({ guardianFactors: data }, done);
     });
 
-    it('should pass validation', (done) => {
-      const data = [ {
-        name: 'sms'
-      } ];
-
-      checkPassed({ guardianFactors: data }, done);
+    constants.GUARDIAN_FACTORS.forEach((factorName) => {
+      it(`should pass validation for ${factorName}`, (done) => {
+        const data = [ {
+          name: factorName
+        } ];
+        checkPassed({ guardianFactors: data }, done);
+      });
     });
   });
 
