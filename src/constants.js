@@ -109,7 +109,7 @@ constants.GUARDIAN_FACTORS = [
   'otp',
   'email',
   'duo',
-  'webauth-roaming'
+  'webauthn-roaming'
 ];
 constants.GUARDIAN_POLICIES = [
   'all-applications',
