@@ -9,6 +9,7 @@ constants.DEFAULT_RULE_STAGE = constants.RULES_STAGES[0];  // eslint-disable-lin
 constants.HOOKS_HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
 
 constants.HOOKS_DIRECTORY = 'hooks';
+constants.ACTIONS_DIRECTORY = 'actions';
 
 constants.RULES_CONFIGS_DIRECTORY = 'rules-configs';
 
