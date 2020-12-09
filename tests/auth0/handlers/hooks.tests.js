@@ -254,23 +254,6 @@ describe('#hooks handler', () => {
       expect(data).to.deep.equal([]);
     });
 
-    it('should return an empty array for 403 status code', async () => {
-      const auth0 = {
-        hooks: {
-          getAll: () => {
-            const error = new Error('This endpoint is disabled for your tenant.');
-            error.statusCode = 403;
-            throw error;
-          }
-        },
-        pool
-      };
-
-      const handler = new hooks.default({ client: auth0, config });
-      const data = await handler.getType();
-      expect(data).to.deep.equal([]);
-    });
-
     it('should throw an error for all other failed requests', async () => {
       const auth0 = {
         hooks: {

@@ -67,7 +67,7 @@ export default class ConnectionsHandler extends DefaultHandler {
 
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
-    const existingConexions = await this.client.connections.getAll();
+    const existingConexions = await this.client.connections.getAll({ paginate: true });
     const formatted = assets.connections.map(connection => (
       {
         ...connection,

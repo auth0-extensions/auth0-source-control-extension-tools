@@ -154,7 +154,7 @@ export default class HooksHandler extends DefaultHandler {
 
       return this.existing;
     } catch (err) {
-      if (err.statusCode === 404 || err.statusCode === 403 || err.statusCode === 501) {
+      if (err.statusCode === 404 || err.statusCode === 501) {
         return [];
       }
       throw err;
