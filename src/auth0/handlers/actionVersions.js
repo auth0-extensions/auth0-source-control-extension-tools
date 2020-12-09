@@ -1,4 +1,4 @@
-import DefaultHandler, { order } from './default';
+import DefaultHandler from './default';
 import log from '../../logger';
 import { isArrayEqual } from '../../utils';
 
@@ -11,7 +11,6 @@ export default class ActionVersionHandler extends DefaultHandler {
   }
 
   async getType(actionId) {
-
     if (!actionId) {
       return [];
     }
@@ -39,7 +38,6 @@ export default class ActionVersionHandler extends DefaultHandler {
   async getVersionById(actionId, currentVersion) {
     // in case client version does not support actionVersions
     if (!this.client.actionVersions || typeof this.client.actionVersions.get !== 'function') {
-      
       return null;
     }
     // in case action doesn't have a current version yet
@@ -86,7 +84,7 @@ export default class ActionVersionHandler extends DefaultHandler {
   }
 
   async deleteActionVersion(version) {
-    await this.client.actionVersions.delete({ action_id: version.action.id, version_id: version.id});
+    await this.client.actionVersions.delete({ action_id: version.action.id, version_id: version.id });
   }
 
   async deleteActionVersions(dels) {
@@ -155,5 +153,4 @@ export default class ActionVersionHandler extends DefaultHandler {
       }
     }));
   }
-
 }

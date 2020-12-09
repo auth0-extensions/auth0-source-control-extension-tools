@@ -35,7 +35,7 @@ describe('#actions handler', () => {
           supported_triggers: [ {
             id: 'post-login',
             version: 'v1'
-          } ],
+          } ]
         },
         {
           name: 'actions-one',
@@ -100,14 +100,13 @@ describe('#actions handler', () => {
 
   describe('#action process', () => {
     it('should create action', async () => {
-
       const version = {
         code: 'action-code',
         dependencies: [],
         id: 'version-id',
         runtime: 'node12',
         secrets: []
-      }
+      };
 
       const actionId = 'new-action-id';
       const action = {
@@ -150,18 +149,17 @@ describe('#actions handler', () => {
         },
         actionVersions: {
           create: () => Promise.resolve(version),
-          upsertDraft: () => Promise.resolve(version),
-        }, 
+          upsertDraft: () => Promise.resolve(version)
+        },
         actionBindings: {
           getAll: () => Promise.resolve({ bindings: [] }),
-          create: () =>
-            Promise.resolve({
-              id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
-              trigger_id: 'post-login',
-              created_at: '2020-12-08T21:26:21.982298158Z',
-              updated_at: '2020-12-08T21:26:21.982298158Z',
-              display_name: 'action-test',
-            }),
+          create: () => Promise.resolve({
+            id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
+            trigger_id: 'post-login',
+            created_at: '2020-12-08T21:26:21.982298158Z',
+            updated_at: '2020-12-08T21:26:21.982298158Z',
+            display_name: 'action-test'
+          })
         },
         pool,
         getAllCalled: false
@@ -182,7 +180,7 @@ describe('#actions handler', () => {
         id: 'version-id',
         runtime: 'node12',
         secrets: []
-      }
+      };
 
       const actionsData = [
         {
@@ -301,28 +299,28 @@ describe('#actions handler', () => {
                 supported_triggers: [
                   {
                     id: 'post-login',
-                    version: 'v1',
-                    },
-                  ],
+                    version: 'v1'
+                  }
+                ],
                 current_version: {
                   code: '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
                   dependencies: [],
                   secrets: [],
                   runtime: 'node12'
-                },
-                },
-              ],
-            }),
+                }
+              }
+            ]
+          })
         },
         actionBindings: {
           getAll: () => Promise.resolve({ bindings: [] }),
-          updateList: () => Promise.resolve(),
+          updateList: () => Promise.resolve()
         },
         actionVersions: {
-          get: () => Promise.resolve({ 
+          get: () => Promise.resolve({
             action: {},
             code:
-             '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
+              '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
             dependencies: [],
             runtime: 'node12',
             id: '0906fe5b-f4d6-44ec-a8f1-3c05fc186483',
@@ -331,24 +329,23 @@ describe('#actions handler', () => {
             built_at: '2020-12-03T15:20:54.413725492Z',
             status: 'built',
             created_at: '2020-12-03T15:20:52.094497448Z',
-            updated_at: '2020-12-03T15:20:54.415669983Z' })
+            updated_at: '2020-12-03T15:20:54.415669983Z'
+          })
         },
-        createActionBinding: () =>
-            Promise.resolve({
-              id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
-              trigger_id: 'post-login',
-              created_at: '2020-12-08T21:26:21.982298158Z',
-              updated_at: '2020-12-08T21:26:21.982298158Z',
-              display_name: 'action-test',
-            }),
-        pool,
+        createActionBinding: () => Promise.resolve({
+          id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
+          trigger_id: 'post-login',
+          created_at: '2020-12-08T21:26:21.982298158Z',
+          updated_at: '2020-12-08T21:26:21.982298158Z',
+          display_name: 'action-test'
+        }),
+        pool
       };
 
       const handler = new actions.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 
       await stageFn.apply(handler, [ { actions: [ action ] } ]);
-
     });
 
     it('should remove action', async () => {
@@ -369,19 +366,19 @@ describe('#actions handler', () => {
                 supported_triggers: [
                   {
                     id: 'post-login',
-                    version: 'v1',
-                    },
-                  ]
-                },
-              ],
-            }),
+                    version: 'v1'
+                  }
+                ]
+              }
+            ]
+          })
         },
         actionBindings: {
           getAll: () => Promise.resolve({
             bindings: [ {
               id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
               trigger_id: 'post-login',
-              display_name: 'action-test',
+              display_name: 'action-test'
             } ]
           }),
           delete: (data) => {
@@ -389,13 +386,13 @@ describe('#actions handler', () => {
             expect(data.id).to.equal('35409a5b-0326-4e81-ad9b-ac19502cee58');
             expect(data.trigger_id).to.equal('post-login');
             return Promise.resolve(data);
-          },
+          }
         },
         actionVersions: {
-          get: () => Promise.resolve({ 
+          get: () => Promise.resolve({
             action: {},
             code:
-             '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
+              '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
             dependencies: [],
             runtime: 'node12',
             id: '0906fe5b-f4d6-44ec-a8f1-3c05fc186483',
@@ -404,7 +401,8 @@ describe('#actions handler', () => {
             built_at: '2020-12-03T15:20:54.413725492Z',
             status: 'built',
             created_at: '2020-12-03T15:20:52.094497448Z',
-            updated_at: '2020-12-03T15:20:54.415669983Z' })
+            updated_at: '2020-12-03T15:20:54.415669983Z'
+          })
         },
         pool
       };
@@ -414,192 +412,5 @@ describe('#actions handler', () => {
 
       await stageFn.apply(handler, [ { action: [] } ]);
     });
-
-    // // excluded hooks are not yet implemented
-    // it.skip('should not touch excluded hooks', async () => {
-    //   const auth0 = {
-    //     hooks: {
-    //       create: (data) => {
-    //         expect(data).to.be.an('undefined');
-    //         return Promise.resolve(data);
-    //       },
-    //       update: (data) => {
-    //         expect(data).to.be.an('undefined');
-    //         return Promise.resolve(data);
-    //       },
-    //       delete: (data) => {
-    //         expect(data).to.be.an('undefined');
-    //         return Promise.resolve(data);
-    //       },
-    //       getAll: () => [
-    //         {
-    //           id: '1', code: 'hook-one-code', name: 'Hook1', triggerId: 'credentials-exchange'
-    //         },
-    //         {
-    //           id: '2', code: 'hook-two-code', name: 'Hook2', triggerId: 'credentials-exchange'
-    //         }
-    //       ]
-    //     },
-    //     pool
-    //   };
-
-    //   const handler = new hooks.default({ client: auth0, config });
-    //   const stageFn = Object.getPrototypeOf(handler).processChanges;
-    //   const data = {
-    //     hooks: [
-    //       { name: 'Hook1', code: 'new-hook-one-code', triggerId: 'credentials-exchange' },
-    //       { name: 'Hook3', script: 'new-hook-three-code', triggerId: 'credentials-exchange' }
-    //     ],
-    //     exclude: {
-    //       hooks: [
-    //         'Hook1',
-    //         'Hook2',
-    //         'Hook3'
-    //       ]
-    //     }
-    //   };
-
-    //   await stageFn.apply(handler, [ data ]);
-    // });
-
-    // it('should update (create, delete) secrets', async () => {
-    //   const hook = {
-    //     id: '1',
-    //     name: 'someHook',
-    //     triggerId: 'credentials-exchange'
-    //   };
-    //   const existingSecrets = {
-    //     TO_UPDATE_ONE: 'old secret - should be updated - 1',
-    //     TO_UPDATE_TWO: 'old secret - should be updated - 2',
-    //     TO_REMOVE_ONE: 'should be removed',
-    //     TO_REMOVE_TWO: 'should be removed'
-    //   };
-    //   const createSecrets = {
-    //     TO_CREATE_ONE: 'should be created - 1',
-    //     TO_CREATE_TWO: 'should be created - 2'
-    //   };
-    //   const updateSecrets = {
-    //     TO_UPDATE_ONE: 'updated - 1',
-    //     TO_UPDATE_TWO: 'updated - 2'
-    //   };
-    //   const removeSecrets = [ 'TO_REMOVE_ONE', 'TO_REMOVE_TWO' ];
-    //   const auth0 = {
-    //     hooks: {
-    //       create: () => Promise.resolve([]),
-    //       update: (params, data) => {
-    //         expect(params).to.be.an('object');
-    //         expect(data).to.be.an('object');
-    //         expect(params.id).to.equal(hook.id);
-    //         expect(data.id).to.be.an('undefined');
-    //         expect(data.code).to.equal('new-code');
-    //         expect(data.name).to.equal('someHook');
-    //         expect(data.triggerId).to.be.an('undefined');
-    //         return Promise.resolve(data);
-    //       },
-    //       delete: () => Promise.resolve([]),
-    //       getAll: () => [ hook ],
-    //       get: (params) => {
-    //         expect(params.id).to.equal(hook.id);
-    //         return Promise.resolve({ ...hook, code: 'hook-code' });
-    //       },
-    //       getSecrets: (params) => {
-    //         expect(params.id).to.equal(hook.id);
-    //         return Promise.resolve(existingSecrets);
-    //       },
-    //       addSecrets: (params, data) => {
-    //         expect(params.id).to.equal(hook.id);
-    //         expect(data).to.be.an('object');
-    //         expect(data).to.deep.equal(createSecrets);
-    //         return Promise.resolve();
-    //       },
-    //       updateSecrets: (params, data) => {
-    //         expect(params.id).to.equal(hook.id);
-    //         expect(data).to.be.an('object');
-    //         expect(data).to.deep.equal(updateSecrets);
-    //         return Promise.resolve();
-    //       },
-    //       removeSecrets: (params, data) => {
-    //         expect(params.id).to.equal(hook.id);
-    //         expect(data).to.be.an('array');
-    //         expect(data).to.deep.equal(removeSecrets);
-    //         return Promise.resolve();
-    //       }
-    //     },
-    //     pool
-    //   };
-
-    //   const handler = new hooks.default({ client: auth0, config });
-    //   const stageFn = Object.getPrototypeOf(handler).processChanges;
-    //   const assets = {
-    //     hooks: [ {
-    //       name: 'someHook',
-    //       code: 'new-code',
-    //       triggerId: 'credentials-exchange',
-    //       secrets: {
-    //         ...updateSecrets,
-    //         ...createSecrets
-    //       }
-    //     } ]
-    //   };
-
-    //   await stageFn.apply(handler, [ assets ]);
-    // });
-
-    // it('should not update secret, if its value did not change', async () => {
-    //   const hook = {
-    //     id: '1',
-    //     name: 'someHook',
-    //     triggerId: 'credentials-exchange'
-    //   };
-    //   const existingSecrets = {
-    //     SOME_SECRET: 'should remain the same'
-    //   };
-    //   const updateSecrets = {
-    //     SOME_SECRET: constants.HOOKS_HIDDEN_SECRET_VALUE
-    //   };
-    //   const auth0 = {
-    //     hooks: {
-    //       create: () => Promise.resolve([]),
-    //       update: (params, data) => {
-    //         expect(params).to.be.an('object');
-    //         expect(data).to.be.an('object');
-    //         expect(params.id).to.equal(hook.id);
-    //         expect(data.id).to.be.an('undefined');
-    //         expect(data.code).to.equal('new-code');
-    //         expect(data.name).to.equal('someHook');
-    //         expect(data.triggerId).to.be.an('undefined');
-    //         return Promise.resolve(data);
-    //       },
-    //       delete: () => Promise.resolve([]),
-    //       getAll: () => [ hook ],
-    //       get: (params) => {
-    //         expect(params.id).to.equal(hook.id);
-    //         return Promise.resolve({ ...hook, code: 'hook-code' });
-    //       },
-    //       getSecrets: (params) => {
-    //         expect(params.id).to.equal(hook.id);
-    //         return Promise.resolve(existingSecrets);
-    //       },
-    //       updateSecrets: (params) => {
-    //         expect(params).to.equal(undefined);
-    //         return Promise.reject(new Error('Should not be called'));
-    //       }
-    //     },
-    //     pool
-    //   };
-
-    //   const handler = new hooks.default({ client: auth0, config });
-    //   const stageFn = Object.getPrototypeOf(handler).processChanges;
-    //   const assets = {
-    //     hooks: [ {
-    //       name: 'someHook',
-    //       code: 'new-code',
-    //       triggerId: 'credentials-exchange',
-    //       secrets: updateSecrets
-    //     } ]
-    //   };
-
-    //   await stageFn.apply(handler, [ assets ]);
-    // });
   });
 });
