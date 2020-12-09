@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 import DefaultHandler, { order } from './default';
 import log from '../../logger';
 import ActionVersionHandler from './actionVersions';
@@ -77,7 +78,7 @@ export const schema = {
               properties: {
                 name: { type: 'string' },
                 value: { type: 'string' },
-                updated_at: { type: 'string', format: 'date-time'}
+                updated_at: { type: 'string', format: 'date-time' }
               }
             }
           }
@@ -139,13 +140,12 @@ export default class ActionHandler extends DefaultHandler {
   async createAction(data) {
     const action = { ...data };
     const currentVersion = action.current_version;
+    // eslint-disable-next-line prefer-destructuring
     const bindings = action.bindings;
     delete action.current_version;
     delete action.updated_at;
     delete action.created_at;
     delete action.bindings;
-
-    console.log('Action to create', action)
 
     const created = await this.client.actions.create(action);
     if (currentVersion) {
@@ -215,7 +215,7 @@ export default class ActionHandler extends DefaultHandler {
     await this.client.pool.addEachTask({
       data: updates || [],
       generator: item => this.updateAction(item, actions).then((data) => {
-        this.didUpdate({action_id: data.id });
+        this.didUpdate({ action_id: data.id });
         this.updated += 1;
       }).catch((err) => {
         throw new Error(`Problem updating ${this.type} ${this.objString(item)}\n${err}`);
@@ -264,7 +264,7 @@ export default class ActionHandler extends DefaultHandler {
 
   @order('60')
   async processChanges(assets) {
-
+    // eslint-disable-next-line prefer-destructuring
     const actions = assets.actions;
 
     // Do nothing if not set

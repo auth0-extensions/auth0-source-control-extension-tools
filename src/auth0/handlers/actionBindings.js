@@ -9,15 +9,16 @@ const triggers = [
 function wait(n) { return new Promise(resolve => setTimeout(resolve, n)); }
 
 async function createBindingWithRetryAndTimeout(client, params, data, retry) {
+  let binding = {};
   try {
     if (retry > 0) {
-      const binding = await client.createActionBinding(params, data);
-      return binding;
+      binding = await client.createActionBinding(params, data);
     }
   } catch (err) {
     await wait(1000);
-    return await createBindingWithRetryAndTimeout(client, params, data, retry - 1)
+    binding = await createBindingWithRetryAndTimeout(client, params, data, retry - 1);
   }
+  return binding;
 }
 
 export default class ActionBindingHandler extends DefaultHandler {
@@ -35,36 +36,23 @@ export default class ActionBindingHandler extends DefaultHandler {
 
     // in case client version does not support actions
     if (
-      !this.client.actionBindings ||
-      typeof this.client.actionBindings.getAll !== 'function'
+      !this.client.actionBindings
+      || typeof this.client.actionBindings.getAll !== 'function'
     ) {
       return [];
     }
     const bindingsResult = [];
     try {
-
       await Promise.all(
-        triggers.map((trigger) =>
-          this.client.actionBindings
-            .getAll({ trigger_id: trigger, detached: true })
-            .then((b) =>
-              b.bindings.forEach((binding) =>
-                bindingsResult.push({ detached: true, ...binding })
-              )
-            )
-        )
+        triggers.map(trigger => this.client.actionBindings
+          .getAll({ trigger_id: trigger, detached: true })
+          .then(b => b.bindings.forEach(binding => bindingsResult.push({ detached: true, ...binding }))))
       );
       // get all attached bindings
       await Promise.all(
-        triggers.map((trigger) =>
-          this.client.actionBindings
-            .getAll({ trigger_id: trigger, detached: false })
-            .then((b) =>
-              b.bindings.forEach((binding) =>
-                bindingsResult.push({ detached: false, ...binding })
-              )
-            )
-        )
+        triggers.map(trigger => this.client.actionBindings
+          .getAll({ trigger_id: trigger, detached: false })
+          .then(b => b.bindings.forEach(binding => bindingsResult.push({ detached: false, ...binding }))))
       );
       this.existing = bindingsResult;
       return this.existing;
@@ -88,7 +76,7 @@ export default class ActionBindingHandler extends DefaultHandler {
     if (!detached) {
       atacchedList.push({ id: binding.id });
     } else {
-      atacchedList = atacchedList.filter((id) => id === binding.id);
+      atacchedList = atacchedList.filter(id => id === binding.id);
     }
     delete params.binding_id;
     await this.client.actionBindings.updateList(params, {
@@ -125,20 +113,19 @@ export default class ActionBindingHandler extends DefaultHandler {
     await this.client.pool
       .addEachTask({
         data: creates || [],
-        generator: (item) =>
-          this.createActionBinding(item)
-            .then((data) => {
-              this.didCreate({binding_id: data.id});
-              this.created += 1;
-            })
-            .catch((err) => {
-              throw new Error(
-                `Problem creating ${this.type} ${this.objString(item)}\n${err}`
-              );
-            }),
+        generator: item => this.createActionBinding(item)
+          .then((data) => {
+            this.didCreate({ binding_id: data.id });
+            this.created += 1;
+          })
+          .catch((err) => {
+            throw new Error(
+              `Problem creating ${this.type} ${this.objString(item)}\n${err}`
+            );
+          })
       })
       .promise();
-  };
+  }
 
   async deleteActionBinding(binding) {
     // detach binding
@@ -151,24 +138,23 @@ export default class ActionBindingHandler extends DefaultHandler {
   }
 
   async deleteActionBindings(dels) {
-    if ( this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true ) {
+    if (this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true) {
       await this.client.pool
         .addEachTask({
           data: dels || [],
-          generator: (item) =>
-            this.deleteActionBinding(item)
-              .then(() => {
-                this.didDelete({binding_id: item.id});
-                this.deleted += 1;
-              })
-              .catch((err) => {
-                throw new Error(`Problem deleting ${this.type} ${this.objString(item)}\n${err}`);
-              }),
+          generator: item => this.deleteActionBinding(item)
+            .then(() => {
+              this.didDelete({ binding_id: item.id });
+              this.deleted += 1;
+            })
+            .catch((err) => {
+              throw new Error(`Problem deleting ${this.type} ${this.objString(item)}\n${err}`);
+            })
         })
         .promise();
     } else {
       log.warn(`Detected the following actions bindings should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
-      \n${dels.map((i) => this.objString(i)).join("\n")}`);
+      \n${dels.map(i => this.objString(i)).join('\n')}`);
     }
   }
 
@@ -199,7 +185,7 @@ export default class ActionBindingHandler extends DefaultHandler {
     log.info(
       `Start processChanges for actions bindings [delete:${changes.del.length}], [create:${changes.create.length}]`
     );
-    const myChanges = [{ del: changes.del }, { create: changes.create }];
+    const myChanges = [ { del: changes.del }, { create: changes.create } ];
     await Promise.all(
       myChanges.map(async (change) => {
         switch (true) {
