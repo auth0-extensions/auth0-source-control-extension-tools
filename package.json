@@ -1,6 +1,6 @@
 {
   "name": "auth0-source-control-extension-tools",
-  "version": "4.1.11",
+  "version": "4.2.0",
   "description": "Supporting tools for the Source Control extensions",
   "main": "lib/index.js",
   "scripts": {
@@ -20,6 +20,7 @@
     "auth0-extension-tools": "^1.5.0",
     "babel-preset-env": "^1.7.0",
     "dot-prop": "^4.2.0",
+    "lodash": "^4.17.20",
     "promise-pool-executor": "^1.1.1",
     "rimraf": "^2.5.4",
     "winston": "^2.2.0"

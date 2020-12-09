@@ -1,15 +1,15 @@
 import DefaultHandler, { order } from './default';
-import { calcChanges } from '../../utils';
 import log from '../../logger';
-
-const SUPPORTED_TRIGGER_IDS = ['post-login'];
+import ActionVersionHandler from './actionVersions';
+import ActionBindingsHandler from './actionBindings';
 
 // With this schema, we can only validate property types but not valid properties on per type basis
 export const schema = {
   type: 'array',
   items: {
     type: 'object',
-    required: ['name', 'supported_triggers'],
+    required: [ 'name', 'supported_triggers' ],
+    additionalProperties: false,
     properties: {
       name: { type: 'string', default: '' },
       supported_triggers: {
@@ -17,18 +17,9 @@ export const schema = {
         items: {
           type: 'object',
           properties: {
-            id: {
-              type: 'string',
-              default: ''
-            },
-            version: {
-              type: 'string',
-              description: 'version points to the trigger version.',
-            },
-            url: {
-              type: 'string',
-              description: 'url refers to some documentation or reference for this trigger.',
-            }
+            id: { type: 'string', default: '' },
+            version: { type: 'string' },
+            url: { type: 'string' }
           }
         }
       },
@@ -36,33 +27,14 @@ export const schema = {
         type: 'array',
         items: {
           type: 'object',
-          required: ['name', 'label', 'type'],
+          required: [ 'name', 'label', 'type' ],
           properties: {
-            name: {
-              type: 'string',
-              description: 'name is analogous to the name attribute in an input form element.',
-            },
-            label: {
-              type: 'string',
-              description: 'label is analogous to what you put in the label form element.',
-            },
-            type: {
-              type: 'string',
-              description: 'type will dictate how the form element is displayed.',
-              enum: ['string'],
-            },
-            placeholder: {
-              type: 'string',
-              description: 'placeholder is analogous to the placeholder attribute in an input form element.',
-            },
-            description: {
-              type: 'string',
-              description: 'description provides more context for certain fields which requires more explanation.',
-            },
-            default_value: {
-              type: 'string',
-              description: 'default_value becomes the pre-filled value for a given input. Useful to provide smart defaults.',
-            },
+            name: { type: 'string' },
+            label: { type: 'string' },
+            type: { type: 'string' },
+            placeholder: { type: 'string' },
+            description: { type: 'string' },
+            default_value: { type: 'string' }
           }
         }
       },
@@ -70,73 +42,61 @@ export const schema = {
         type: 'array',
         items: {
           type: 'object',
-          required: ['name', 'label', 'type'],
+          required: [ 'name', 'label', 'type' ],
           properties: {
-            name: {
-              type: 'string',
-              description: 'name is analogous to the name attribute in an input form element.',
-            },
-            label: {
-              type: 'string',
-              description: 'label is analogous to what you put in the label form element.',
-            },
-            type: {
-              type: 'string',
-              description: 'type will dictate how the form element is displayed.',
-              enum: ['string'],
-            },
-            placeholder: {
-              type: 'string',
-              description: 'placeholder is analogous to the placeholder attribute in an input form element.',
-            },
-            description: {
-              type: 'string',
-              description: 'description provides more context for certain fields which requires more explanation.',
-            },
-            default_value: {
-              type: 'string',
-              description: 'default_value becomes the pre-filled value for a given input. Useful to provide smart defaults.',
-            },
+            name: { type: 'string' },
+            label: { type: 'string' },
+            type: { type: 'string' },
+            placeholder: { type: 'string' },
+            description: { type: 'string' },
+            default_value: { type: 'string' }
           }
         }
       },
-      versions: {
+      current_version: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', default: '' },
+          dependencies: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                name: { type: 'string' },
+                version: { type: 'string' },
+                registry_url: { type: 'string' }
+              }
+            }
+          },
+          runtime: { type: 'string', default: '' },
+          secrets: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: 'string' },
+                value: { type: 'string' },
+                updated_at: { type: 'string', format: 'date-time'}
+              }
+            }
+          }
+        },
+        required: [ 'code', 'dependencies', 'runtime' ]
+      },
+      bindings: {
         type: 'array',
         items: {
           type: 'object',
+          required: [ 'trigger_id' ],
           properties: {
-            code: { type: 'string', default: '' },
-            dependencies: {  
-              type: 'array',
-              items: {
-                type: 'object',
-                additionalProperties: false,
-                properties: {
-                  name: {
-                    type: 'string',
-                    description: 'name is the name of the npm module, e.g. lodash',
-                  },
-                  version: {
-                    type: 'string',
-                    description: 'description is the version of the npm module, e.g. 4.17.1',
-                  },
-                  registry_url: {
-                    type: 'string',
-                    description: 'registry_url is an optional value used primarily for private npm registries.',
-                  },
-                }
-              },
-              description: 'dependencies lists all the third party npm module this particular version depends on. ',
-          },
-            runtime: { type: 'string', default: '' },
-          },
-          required: ['code', 'dependencies', 'runtime']
+            trigger_id: { type: 'string' }
+          }
         }
       }
     }
   }
 };
-
 
 export default class ActionHandler extends DefaultHandler {
   constructor(options) {
@@ -144,10 +104,12 @@ export default class ActionHandler extends DefaultHandler {
       ...options,
       type: 'actions'
     });
+    this.actionVersionHandler = new ActionVersionHandler(options);
+    this.actionBindingsHandler = new ActionBindingsHandler(options);
   }
 
   async getType() {
-    if (this.existing && !reload) {
+    if (this.existing) {
       return this.existing;
     }
 
@@ -157,38 +119,44 @@ export default class ActionHandler extends DefaultHandler {
     }
 
     try {
-      const actions = await this.client.actions.getAll({ triggerId: 'post-login' });
-
-      // need to get all versions for each action
-      this.existing = await Promise.all(actions.actions.map(action => this.client.actionVersions.getAll({ action_id: action.id })
-        .then(actionVersions => ({ ...action, versions: actionVersions.versions }))));
-
+      const actions = await this.client.actions.getAll();
+      // need to get complete current version and all bindings for each action
+      // the current_version inside the action doesn't have all the necessary information
+      this.existing = await Promise.all(actions.actions.map(action => this.actionVersionHandler.getVersionById(action.id, action.current_version)
+        .then(async (currentVersion) => {
+          const bindings = await this.getActionBinding(action.id);
+          return ({ ...action, current_version: currentVersion, bindings: bindings });
+        })));
       return this.existing;
     } catch (err) {
-      if (err.statusCode === 404 || err.statusCode === 403 || err.statusCode === 501) {
+      if (err.statusCode === 404 || err.statusCode === 501) {
         return [];
       }
       throw err;
     }
   }
 
-  async createActionVersion(actionId, version) {
-    return await this.client.actionVersions.create({action_id : actionId}, version);
-  }
-
-
   async createAction(data) {
     const action = { ...data };
-    const versions = data.versions;
+    const currentVersion = action.current_version;
+    const bindings = action.bindings;
+    delete action.current_version;
+    delete action.updated_at;
+    delete action.created_at;
+    delete action.bindings;
 
-    delete action.versions;
+    console.log('Action to create', action)
 
     const created = await this.client.actions.create(action);
-
-    if (typeof versions !== 'undefined' && versions.length > 0) {
-      version.forEach(version =>  createActionVersion(action.id, version))
+    if (currentVersion) {
+      await this.actionVersionHandler.createActionVersions([ { ...currentVersion, action_id: created.id } ]);
     }
 
+    if (bindings) {
+      const bindingsToCreate = [];
+      bindings.forEach(f => bindingsToCreate.push({ trigger_id: f.trigger_id, display_name: action.name, action_id: created.id }));
+      await this.actionBindingsHandler.createActionBindings(bindingsToCreate);
+    }
     return created;
   }
 
@@ -196,7 +164,7 @@ export default class ActionHandler extends DefaultHandler {
     await this.client.pool.addEachTask({
       data: creates || [],
       generator: item => this.createAction(item).then((data) => {
-        this.didCreate(data);
+        this.didCreate({ action_id: data.id });
         this.created += 1;
       }).catch((err) => {
         throw new Error(`Problem creating ${this.type} ${this.objString(item)}\n${err}`);
@@ -204,24 +172,20 @@ export default class ActionHandler extends DefaultHandler {
     }).promise();
   }
 
-  async deleteActionVersion(actionId, versionId) {
-    await this.client.actionVersions.delete({ action_id: actionId, version_id: versionId });
-  }
-
   async deleteAction(action) {
-    action.versions.forEach(version => this.deleteActionVersion(action.id, version));
-    await this.client.actions.delete({ action_id: action.id});
+    await this.actionBindingsHandler.deleteActionBindings(action.bindings);
+    await this.client.actions.delete({ action_id: action.id });
   }
 
   async deleteActions(dels) {
     if (this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true) {
       await this.client.pool.addEachTask({
         data: dels || [],
-        generator: item => this.deleteAction(item).then(() => {
-          this.didDelete(item);
+        generator: action => this.deleteAction(action).then(() => {
+          this.didDelete({ action_id: action.id });
           this.deleted += 1;
         }).catch((err) => {
-          throw new Error(`Problem deleting ${this.type} ${this.objString(item)}\n${err}`);
+          throw new Error(`Problem deleting ${this.type} ${this.objString({ action_id: action.id })}\n${err}`);
         })
       }).promise();
     } else {
@@ -230,23 +194,28 @@ export default class ActionHandler extends DefaultHandler {
     }
   }
 
-  async updateAction(data, actions) {
-    // TODO: review update logic
-    
-    // const existingAction = await actions.find(actionDataForUpdate => actionDataForUpdate.name === data.name);
+  async updateAction(action, existing) {
+    const found = existing.find(existingAction => existingAction.name === action.name);
 
-    const params = { action_id: data.id };
+    // update current version
+    const currentVersionChanges = this.actionVersionHandler.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
+    if (currentVersionChanges.del.length > 0 || currentVersionChanges.create.length > 0) {
+      await this.actionVersionHandler.processChanges(currentVersionChanges);
+    }
 
-    await this.client.actions.update(params, data);
+    const bindingChanges = await this.actionBindingsHandler.calcChanges(found, action.bindings, found.bindings);
+    if (bindingChanges.del.length > 0 || bindingChanges.create.length > 0) {
+      await this.actionBindingsHandler.processChanges(bindingChanges);
+    }
 
-    return params;
+    return found;
   }
 
   async updateActions(updates, actions) {
     await this.client.pool.addEachTask({
       data: updates || [],
       generator: item => this.updateAction(item, actions).then((data) => {
-        this.didUpdate(data);
+        this.didUpdate({action_id: data.id });
         this.updated += 1;
       }).catch((err) => {
         throw new Error(`Problem updating ${this.type} ${this.objString(item)}\n${err}`);
@@ -254,18 +223,57 @@ export default class ActionHandler extends DefaultHandler {
     }).promise();
   }
 
+  async getActionBinding(actionId) {
+    const bindings = await this.actionBindingsHandler.getType();
+    return bindings.filter(b => b.action.id === actionId);
+  }
+
+  async calcChanges(actionsAssets, existing) {
+    // Calculate the changes required between two sets of assets.
+    const update = [];
+    let del = [ ...existing ];
+    const create = [];
+
+    actionsAssets.forEach(async (action) => {
+      const found = existing.find(existingAction => existingAction.name === action.name);
+      if (found) {
+        del = del.filter(e => e.id !== found.id);
+        // current version changes
+        const currentVersionChanges = this.actionVersionHandler.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
+        const hasCurrentVersionChanges = currentVersionChanges.del.length > 0 || currentVersionChanges.create.length > 0;
+        // bindings changes
+        const bindingChanges = await this.actionBindingsHandler.calcChanges(found, action.bindings, found.bindings);
+        const hasBindingChanges = bindingChanges.del.length > 0 || bindingChanges.create.length > 0;
+        if (action.name !== found.name
+          || hasCurrentVersionChanges
+          || hasBindingChanges) {
+          update.push(action);
+        }
+      } else {
+        create.push(action);
+      }
+    });
+
+    // Figure out what needs to be updated vs created
+    return {
+      del,
+      update,
+      create
+    };
+  }
+
   @order('60')
   async processChanges(assets) {
 
-    console.log('INITIATIN PROCESS CHANGES', assets)
+    const actions = assets.actions;
 
-    const { actions } = assets;
     // Do nothing if not set
-    if (!actions) return;
-    // Gets actions from destination tenant
+    if (!actions) return {};
+
     const existing = await this.getType();
 
-    const changes = calcChanges(actions, existing);
+    const changes = await this.calcChanges(actions, existing);
+
     log.info(`Start processChanges for actions [delete:${changes.del.length}] [update:${changes.update.length}], [create:${changes.create.length}]`);
     const myChanges = [ { del: changes.del }, { create: changes.create }, { update: changes.update } ];
     await Promise.all(myChanges.map(async (change) => {
@@ -284,5 +292,4 @@ export default class ActionHandler extends DefaultHandler {
       }
     }));
   }
-
 }
