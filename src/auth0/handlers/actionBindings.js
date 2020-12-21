@@ -67,20 +67,20 @@ export default class ActionBindingHandler extends DefaultHandler {
   async detachBinding(binding, detached) {
     const params = { trigger_id: binding.trigger_id };
     const existing = await this.getType();
-    let attachedList = [];
+    let atacchedList = [];
     existing.forEach((existingBinding) => {
       if (!existingBinding.detached) {
-        attachedList.push({ id: existingBinding.id });
+        atacchedList.push({ id: existingBinding.id });
       }
     });
     if (!detached) {
-      attachedList.push({ id: binding.id });
+      atacchedList.push({ id: binding.id });
     } else {
-      attachedList = attachedList.filter(id => id === binding.id);
+      atacchedList = atacchedList.filter(id => id === binding.id);
     }
     delete params.binding_id;
     await this.client.actionBindings.updateList(params, {
-      bindings: attachedList
+      bindings: atacchedList
     });
   }
 
@@ -88,7 +88,7 @@ export default class ActionBindingHandler extends DefaultHandler {
   async createActionBinding(data) {
     const retries = 10;
     const params = { trigger_id: data.trigger_id };
-    const actionBinding = { ...data };
+    const actionBinding = { action_id: data.action_id, display_name: data.display_name };
     const created = await createBindingWithRetryAndTimeout(this.client, params, actionBinding, retries);
 
     if (!created) {
