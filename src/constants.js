@@ -109,7 +109,8 @@ constants.GUARDIAN_FACTORS = [
   'push-notification',
   'otp',
   'email',
-  'duo'
+  'duo',
+  'webauthn-roaming'
 ];
 constants.GUARDIAN_POLICIES = [
   'all-applications',
