@@ -142,12 +142,12 @@ export default class ActionHandler extends DefaultHandler {
     const currentVersion = action.current_version;
     // eslint-disable-next-line prefer-destructuring
     const bindings = action.bindings;
-    delete action.current_version;
-    delete action.updated_at;
-    delete action.created_at;
-    delete action.bindings;
+    const actionToCreate = {
+      name: action.name,
+      supported_triggers: action.supported_triggers
+    };
 
-    const created = await this.client.actions.create(action);
+    const created = await this.client.actions.create(actionToCreate);
     if (currentVersion) {
       await this.actionVersionHandler.createActionVersions([ { ...currentVersion, action_id: created.id } ]);
     }

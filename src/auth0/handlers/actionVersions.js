@@ -57,17 +57,15 @@ export default class ActionVersionHandler extends DefaultHandler {
 
   async createActionVersion(version) {
     const actionId = version.action_id;
-    delete version.action_id;
-    delete version.action_name;
-    delete version.status;
-    delete version.number;
-    delete version.deployed;
-    delete version.id;
-    delete version.updated_at;
-    delete version.created_at;
-    const newVersion = await this.client.actionVersions.create({ action_id: actionId }, version);
+    const versionToCreate = {
+      code: version.code,
+      dependencies: version.dependencies,
+      secrets: version.secrets,
+      runtime: version.runtime
+    };
+    const newVersion = await this.client.actionVersions.create({ action_id: actionId }, versionToCreate);
     // create draft version
-    await this.client.actionVersions.upsertDraft({ action_id: actionId, version_id: 'draft' }, version);
+    await this.client.actionVersions.upsertDraft({ action_id: actionId, version_id: 'draft' }, versionToCreate);
     return newVersion;
   }
 
