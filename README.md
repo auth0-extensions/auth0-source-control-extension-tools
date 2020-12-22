@@ -1,9 +1,14 @@
 [![CircleCI](https://circleci.com/gh/auth0-extensions/auth0-source-control-extension-tools.svg?style=svg)](https://circleci.com/gh/auth0-extensions/auth0-source-control-extension-tools)
 [![npm version](https://badge.fury.io/js/auth0-source-control-extension-tools.svg)](https://badge.fury.io/js/auth0-source-control-extension-tools)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/275aadc77dccd6ed6a24/test_coverage)](https://codeclimate.com/github/auth0-extensions/auth0-source-control-extension-tools/test_coverage)
 
 # Auth0 - Source Control Extension Tools
 
+## v5.x supports only `auth0-deploy-cli`
+
+**NOTE**: Starting from v5.0.0, only `auth0-deploy-cli` will be supported.
+
+
+## v4.x and earlier
 Shared logic for the Source Control Extensions and CLI:
 
 - https://github.com/auth0-extensions/auth0-deploy-extensions
