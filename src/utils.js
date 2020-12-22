@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import dotProp from 'dot-prop';
+import _ from 'lodash';
 import log from './logger';
-
 
 export function keywordReplace(input, mappings) {
   // Replace keywords with mappings within input.
@@ -230,4 +230,8 @@ export function filterExcluded(changes, exclude) {
     create: filter(create),
     conflicts: filter(conflicts)
   };
+}
+
+export function isArrayEqual(x, y) {
+  return _(x).differenceWith(y, _.isEqual).isEmpty();
 }
