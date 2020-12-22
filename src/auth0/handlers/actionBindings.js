@@ -67,20 +67,20 @@ export default class ActionBindingHandler extends DefaultHandler {
   async detachBinding(binding, detached) {
     const params = { trigger_id: binding.trigger_id };
     const existing = await this.getType();
-    let atacchedList = [];
+    let attachedList = [];
     existing.forEach((existingBinding) => {
       if (!existingBinding.detached) {
-        atacchedList.push({ id: existingBinding.id });
+        attachedList.push({ id: existingBinding.id });
       }
     });
     if (!detached) {
-      atacchedList.push({ id: binding.id });
+      attachedList.push({ id: binding.id });
     } else {
-      atacchedList = atacchedList.filter(id => id === binding.id);
+      attachedList = attachedList.filter(id => id === binding.id);
     }
     delete params.binding_id;
     await this.client.actionBindings.updateList(params, {
-      bindings: atacchedList
+      bindings: attachedList
     });
   }
 
