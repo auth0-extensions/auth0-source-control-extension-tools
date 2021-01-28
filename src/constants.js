@@ -58,6 +58,7 @@ constants.DATABASE_SCRIPTS_IMPORT = [
 constants.EMAIL_TEMPLATES_DIRECTORY = 'emails';
 
 constants.EMAIL_VERIFY = 'verify_email';
+constants.EMAIL_VERIFY_BY_CODE = 'verify_email_by_code';
 constants.EMAIL_RESET = 'reset_email';
 constants.EMAIL_WELCOME = 'welcome_email';
 constants.EMAIL_BLOCKED = 'blocked_account';
@@ -70,6 +71,8 @@ constants.EMAIL_MFA_OOB_CODE = 'mfa_oob_code';
 constants.EMAIL_TEMPLATES_NAMES = [
   constants.EMAIL_VERIFY + '.json',
   constants.EMAIL_VERIFY + '.html',
+  constants.EMAIL_VERIFY_BY_CODE + '.json',
+  constants.EMAIL_VERIFY_BY_CODE + '.html',
   constants.EMAIL_RESET + '.json',
   constants.EMAIL_RESET + '.html',
   constants.EMAIL_WELCOME + '.json',
@@ -90,6 +93,7 @@ constants.EMAIL_TEMPLATES_NAMES = [
 
 constants.EMAIL_TEMPLATES_TYPES = [
   'verify_email',
+  'verify_email_by_code',
   'reset_email',
   'welcome_email',
   'blocked_account',
