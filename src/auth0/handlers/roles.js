@@ -126,7 +126,7 @@ export default class RoleHandler extends DefaultHandler {
     }
 
     try {
-      const roles = await this.getAllRoles();
+      const roles = await this.client.roles.getAll({ paginate: true });
       for (let index = 0; index < roles.length; index++) {
         const permissions = await this.client.roles.permissions.get({ id: roles[index].id });
         const strippedPerms = await Promise.all(permissions.map(async (permission) => {
@@ -146,22 +146,6 @@ export default class RoleHandler extends DefaultHandler {
     }
   }
 
-  async getAllRoles() {
-    let result = [];
-    let initialPage = 0;
-    let data = await this.client.roles.getAll({ include_totals: true }); // getAll() returns 50 roles as default
-    if (data && data.total !== 0) {
-      let pagesLeft = Math.ceil(data.total / data.limit) - 1;
-      result = data.roles;
-      while (pagesLeft > 0) {
-        initialPage += 1;
-        data = await this.client.roles.getAll({ page: initialPage, include_totals: true });
-        result.push(...data.roles);
-        pagesLeft -= 1;
-      }
-    }
-    return result;
-  }
 
   @order('60')
   async processChanges(assets) {
