@@ -1,5 +1,6 @@
 import { PromisePoolExecutor } from 'promise-pool-executor';
 import { flatten } from '../utils';
+import _ from "lodash";
 
 const API_CONCURRENCY = 3;
 // To ensure a complete deployment, limit the API requests generated to be 80% of the capacity
@@ -43,19 +44,23 @@ function pagedManager(client, manager) {
             data.push(...getEntity(rsp));
             const total = rsp.total || 0;
             const pagesLeft = Math.ceil(total / perPage) - 1;
-
             // Setup pool to get the rest of the pages
             if (pagesLeft > 0) {
-              await client.pool.addEachTask({
+              const pages = await client.pool.addEachTask({
                 data: Array.from(Array(pagesLeft).keys()),
                 generator: (page) => {
-                  const pageArgs = [ ...newArgs ];
-                  pageArgs[0].page = page + 1;
-                  return target[fnName](...pageArgs).then((r) => {
-                    data.push(...getEntity(r));
-                  });
+                    const pageArgs = _.cloneDeep(newArgs);
+                    pageArgs[0].page = page + 1;
+
+                    return target[fnName](...pageArgs).then(r => getEntity(r));
                 }
-              }).promise().then(results => data.push(...flatten(results)));
+              }).promise().then(results => flatten(results));
+
+              data.push(...pages);
+
+              if (data.length !== total) {
+                throw new Error("Fail to load data from tenant");
+              }
             }
             return data;
           }
