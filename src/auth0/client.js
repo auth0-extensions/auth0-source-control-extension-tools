@@ -55,9 +55,9 @@ function pagedManager(client, manager) {
 
                   return target[fnName](...pageArgs).then(r => getEntity(r));
                 }
-              }).promise().then(results => flatten(results));
+              }).promise();
 
-              data.push(...pages);
+              data.push(...flatten(pages));
 
               if (data.length !== total) {
                 throw new Error('Fail to load data from tenant');
