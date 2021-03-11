@@ -1,6 +1,7 @@
 import DefaultHandler, { order } from './default';
 import { calcChanges } from '../../utils';
 import log from '../../logger';
+import { pagedManager } from '../client';
 
 export const schema = {
   type: 'array',
@@ -128,7 +129,12 @@ export default class RoleHandler extends DefaultHandler {
     try {
       const roles = await this.client.roles.getAll({ paginate: true });
       for (let index = 0; index < roles.length; index++) {
-        const permissions = await this.client.roles.permissions.get({ id: roles[index].id });
+        // Enable pagination for this sub manager
+        const manager = {
+          permissions: pagedManager(this.client, this.client.roles.permissions)
+        };
+
+        const permissions = await manager.permissions.getAll({ paginate: true, id: roles[index].id });
         const strippedPerms = await Promise.all(permissions.map(async (permission) => {
           delete permission.resource_server_name;
           delete permission.description;
