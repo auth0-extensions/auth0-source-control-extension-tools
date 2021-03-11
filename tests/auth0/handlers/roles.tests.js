@@ -68,9 +68,11 @@ describe('#roles handler', () => {
           delete: () => Promise.resolve([]),
           getAll: () => Promise.resolve([]),
           permissions: {
-            get: () => [
-              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-            ],
+            getAll: () => ({
+              permissions: [
+                { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+              ]
+            }),
             create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
@@ -111,9 +113,11 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            get: () => [
-              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-            ]
+            getAll: () => ({
+              permissions: new Array(150).fill(
+                { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+              )
+            })
           }
         },
         pool
@@ -126,11 +130,9 @@ describe('#roles handler', () => {
           name: 'myRole',
           id: 'myRoleId',
           description: 'myDescription',
-          permissions: [
-            {
-              permission_name: 'Create:cal_entry', resource_server_identifier: 'organise'
-            }
-          ]
+          permissions: new Array(150).fill(
+            { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+          )
         }
       ]);
     });
@@ -216,12 +218,11 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            get: () => [
-              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-            ],
-            getAll: () => [
-              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-            ],
+            getAll: () => ({
+              permissions: [
+                { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+              ]
+            }),
             create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
@@ -281,7 +282,7 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            get: () => []
+            getAll: () => ({ permissions: [] })
           }
         },
         pool
