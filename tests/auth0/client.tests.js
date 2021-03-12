@@ -33,4 +33,32 @@ describe('#schema validation tests', async () => {
 
     expect(allClients.length).to.eq(expectedNbClients);
   });
+
+  it('should paginate a nested object with getAll', async () => {
+    const permissions = [];
+    const expectedNbItems = 150;
+
+    for (let i = 0; i < expectedNbItems; i++) {
+      permissions.push({
+        name: 'test-' + i + '-' + Math.round(Math.random() * 10000000000)
+      });
+    }
+
+    const mock = {
+      roles: {
+        permissions: {
+          getAll: async localArgs => Promise.resolve({
+            start: localArgs.page * localArgs.per_page,
+            total: expectedNbItems,
+            permissions: permissions.slice(localArgs.page * localArgs.per_page, (localArgs.page + 1) * localArgs.per_page)
+          })
+        }
+      }
+    };
+
+    const pagedManager = client(mock);
+
+    const rolesPermissions = await pagedManager.roles.permissions.getAll({ paginate: true });
+    expect(rolesPermissions.length).to.eq(expectedNbItems);
+  });
 });

@@ -68,11 +68,9 @@ describe('#roles handler', () => {
           delete: () => Promise.resolve([]),
           getAll: () => Promise.resolve([]),
           permissions: {
-            getAll: () => ({
-              permissions: [
-                { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-              ]
-            }),
+            getAll: () => [
+              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+            ],
             create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
@@ -103,6 +101,10 @@ describe('#roles handler', () => {
     });
 
     it('should get roles', async () => {
+      const permissions = new Array(150).fill(
+        { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+      );
+
       const auth0 = {
         roles: {
           getAll: () => Promise.resolve([
@@ -113,11 +115,7 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            getAll: () => ({
-              permissions: new Array(150).fill(
-                { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-              )
-            })
+            getAll: async args => permissions
           }
         },
         pool
@@ -218,11 +216,9 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            getAll: () => ({
-              permissions: [
-                { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-              ]
-            }),
+            getAll: () => [
+              { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
+            ],
             create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
@@ -282,7 +278,7 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            getAll: () => ({ permissions: [] })
+            getAll: () => []
           }
         },
         pool

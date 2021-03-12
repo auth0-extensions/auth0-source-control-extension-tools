@@ -41,7 +41,11 @@ export function pagedManager(client, manager) {
             delete newArgs[0].paginate;
 
             // Run the first request to get the total number of entity items
-            const rsp = await target[fnName](...newArgs);
+            const rsp = await client.pool.addSingleTask({
+              data: _.cloneDeep(newArgs),
+              generator: (data) => target[fnName](...data)
+            }).promise();
+
             data.push(...getEntity(rsp));
             const total = rsp.total || 0;
             const pagesLeft = Math.ceil(total / perPage) - 1;
@@ -65,11 +69,18 @@ export function pagedManager(client, manager) {
             }
             return data;
           }
+
           return target[name](...args);
         };
       }
 
-      return Reflect.get(target, name, receiver);
+      const nestedManager = Reflect.get(target, name, receiver);
+
+      if (typeof nestedManager === 'object' && nestedManager !== null) {
+        return pagedManager(client, nestedManager);
+      }
+
+      return nestedManager;
     }
   });
 }
@@ -82,12 +93,5 @@ export default function pagedClient(client) {
     frequencyWindow: 1000 // 1 sec
   });
 
-  return new Proxy(client, {
-    get: function(target, name, receiver) {
-      if (name in target && target[name].getAll) {
-        return pagedManager(client, target[name]);
-      }
-      return Reflect.get(target, name, receiver);
-    }
-  });
+  return pagedManager(client, client);
 }
