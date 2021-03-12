@@ -128,7 +128,7 @@ export default class RoleHandler extends DefaultHandler {
     try {
       const roles = await this.client.roles.getAll({ paginate: true });
       for (let index = 0; index < roles.length; index++) {
-        const permissions = await this.client.roles.permissions.get({ id: roles[index].id });
+        const permissions = await this.client.roles.permissions.getAll({ paginate: true, id: roles[index].id });
         const strippedPerms = await Promise.all(permissions.map(async (permission) => {
           delete permission.resource_server_name;
           delete permission.description;
