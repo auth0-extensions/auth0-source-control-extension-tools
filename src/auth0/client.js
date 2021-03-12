@@ -43,7 +43,7 @@ function pagedManager(client, manager) {
             // Run the first request to get the total number of entity items
             const rsp = await client.pool.addSingleTask({
               data: _.cloneDeep(newArgs),
-              generator: (data) => target[fnName](...data)
+              generator: pageArgs => target[fnName](...pageArgs)
             }).promise();
 
             data.push(...getEntity(rsp));
