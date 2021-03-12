@@ -19,7 +19,7 @@ function getEntity(rsp) {
 }
 
 // Warp around a <resource>Manager and detect when requesting specific pages to return all
-export function pagedManager(client, manager) {
+function pagedManager(client, manager) {
   return new Proxy(manager, {
     get: function(target, name, receiver) {
       if (name === 'getAll') {

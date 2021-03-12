@@ -1,7 +1,6 @@
 import DefaultHandler, { order } from './default';
 import { calcChanges } from '../../utils';
 import log from '../../logger';
-import { pagedManager } from '../client';
 
 export const schema = {
   type: 'array',
