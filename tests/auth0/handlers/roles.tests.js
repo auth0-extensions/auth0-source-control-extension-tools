@@ -68,9 +68,9 @@ describe('#roles handler', () => {
           delete: () => Promise.resolve([]),
           getAll: () => Promise.resolve([]),
           permissions: {
-            getAll: () => [
+            getAll: () => Promise.resolve([
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-            ],
+            ]),
             create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
@@ -115,7 +115,7 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            getAll: async args => permissions
+            getAll: () => Promise.resolve(permissions)
           }
         },
         pool
@@ -216,9 +216,9 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            getAll: () => [
+            getAll: () => Promise.resolve([
               { permission_name: 'Create:cal_entry', resource_server_identifier: 'organise' }
-            ],
+            ]),
             create: (params, data) => {
               expect(params).to.be.an('object');
               expect(params.id).to.equal('myRoleId');
@@ -278,7 +278,7 @@ describe('#roles handler', () => {
             }
           ]),
           permissions: {
-            getAll: () => []
+            getAll: () => Promise.resolve([])
           }
         },
         pool
