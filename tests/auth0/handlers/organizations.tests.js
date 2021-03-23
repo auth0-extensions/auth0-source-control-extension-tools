@@ -116,7 +116,7 @@ describe('#organizations handler', () => {
           },
           update: () => Promise.resolve([]),
           delete: () => Promise.resolve([]),
-          getAll: () => Promise.resolve({ organizations: [], total: 0, limit: 50 }),
+          getAll: () => Promise.resolve([]),
           addEnabledConnection: (org, connection) => {
             expect(org.id).to.equal('fake');
             expect(connection).to.be.an('object');
@@ -151,13 +151,7 @@ describe('#organizations handler', () => {
     it('should get organizations', async () => {
       const auth0 = {
         organizations: {
-          getAll: () => Promise.resolve({
-            organizations: [
-              sampleOrg
-            ],
-            total: 1,
-            limit: 50
-          }),
+          getAll: () => Promise.resolve([ sampleOrg ]),
           connections: {
             get: () => [
               sampleConnection
@@ -178,11 +172,7 @@ describe('#organizations handler', () => {
 
       const auth0 = {
         organizations: {
-          getAll: data => Promise.resolve({
-            organizations: data.page ? organizationsPage2 : organizationsPage1,
-            total: 90,
-            limit: 50
-          }),
+          getAll: () => Promise.resolve([ ...organizationsPage2, ...organizationsPage1 ]),
           connections: {
             get: () => Promise.resolve({})
           }
@@ -265,11 +255,7 @@ describe('#organizations handler', () => {
         organizations: {
           getAll: () => {
             if (!shouldThrow) {
-              return {
-                organizations: [ sampleOrg ],
-                total: 1,
-                limit: 50
-              };
+              return [ sampleOrg ];
             }
 
             throw new Error('Unexpected');
@@ -301,13 +287,7 @@ describe('#organizations handler', () => {
             return Promise.resolve(data);
           },
           delete: () => Promise.resolve([]),
-          getAll: () => Promise.resolve({
-            organizations: [
-              sampleOrg
-            ],
-            total: 1,
-            limit: 50
-          }),
+          getAll: () => Promise.resolve([ sampleOrg ]),
           connections: {
             get: () => [
               sampleConnection,
@@ -370,13 +350,7 @@ describe('#organizations handler', () => {
             expect(data.id).to.equal(sampleOrg.id);
             return Promise.resolve(data);
           },
-          getAll: () => Promise.resolve({
-            organizations: [
-              sampleOrg
-            ],
-            total: 1,
-            limit: 50
-          }),
+          getAll: () => Promise.resolve([ sampleOrg ]),
           connections: {
             get: () => []
           }

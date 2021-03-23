@@ -143,7 +143,7 @@ export default class OrganizationsHandler extends DefaultHandler {
     }
 
     try {
-      const organizations = await this.getAllOrganizations();
+      const organizations = await this.client.organizations.getAll({ pagination: true });
       for (let index = 0; index < organizations.length; index++) {
         const connections = await this.client.organizations.connections.get({ id: organizations[index].id });
         organizations[index].connections = connections;
@@ -156,23 +156,6 @@ export default class OrganizationsHandler extends DefaultHandler {
       }
       throw err;
     }
-  }
-
-  async getAllOrganizations() {
-    let result = [];
-    let initialPage = 0;
-    let data = await this.client.organizations.getAll({ include_totals: true });
-    if (data && data.total !== 0) {
-      let pagesLeft = Math.ceil(data.total / data.limit) - 1;
-      result = data.organizations;
-      while (pagesLeft > 0) {
-        initialPage += 1;
-        data = await this.client.organizations.getAll({ page: initialPage, include_totals: true });
-        result.push(...data.organizations);
-        pagesLeft -= 1;
-      }
-    }
-    return result;
   }
 
   // Run after connections
