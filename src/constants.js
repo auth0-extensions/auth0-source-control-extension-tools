@@ -66,6 +66,7 @@ constants.EMAIL_ENROLLMENT = 'enrollment_email';
 constants.EMAIL_CHANGE_PASSWORD = 'change_password';
 constants.EMAIL_PASSWORD_RESET = 'password_reset';
 constants.EMAIL_MFA_OOB_CODE = 'mfa_oob_code';
+constants.EMAIL_USER_INVITATION = 'user_invitation';
 
 constants.EMAIL_TEMPLATES_NAMES = [
   constants.EMAIL_VERIFY + '.json',
@@ -87,7 +88,9 @@ constants.EMAIL_TEMPLATES_NAMES = [
   constants.EMAIL_PASSWORD_RESET + '.json',
   constants.EMAIL_PASSWORD_RESET + '.html',
   constants.EMAIL_MFA_OOB_CODE + '.json',
-  constants.EMAIL_MFA_OOB_CODE + '.html'
+  constants.EMAIL_MFA_OOB_CODE + '.html',
+  constants.EMAIL_USER_INVITATION + '.json',
+  constants.EMAIL_USER_INVITATION + '.html'
 ];
 
 constants.EMAIL_TEMPLATES_TYPES = [
@@ -100,7 +103,8 @@ constants.EMAIL_TEMPLATES_TYPES = [
   'enrollment_email',
   'mfa_oob_code',
   'change_password',
-  'password_reset'
+  'password_reset',
+  'user_invitation'
 ];
 
 constants.GUARDIAN_DIRECTORY = 'guardian';
