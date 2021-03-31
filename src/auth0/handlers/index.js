@@ -20,7 +20,6 @@ import * as roles from './roles';
 import * as branding from './branding';
 import * as prompts from './prompts';
 import * as migrations from './migrations';
-import * as organizations from './organizations';
 
 export {
   rules,
@@ -44,6 +43,5 @@ export {
   roles,
   branding,
   prompts,
-  migrations,
-  organizations
+  migrations
 };
