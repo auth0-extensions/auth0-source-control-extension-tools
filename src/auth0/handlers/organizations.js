@@ -166,6 +166,23 @@ export default class OrganizationsHandler extends DefaultHandler {
     if (!organizations) return;
     // Gets organizations from destination tenant
     const existing = await this.getType();
+    const existingConnections = await this.client.connections.getAll({ paginate: true });
+
+    // We need to get the connection ids for the names configured so we can link them together
+    organizations.forEach((org) => {
+      org.connections = (org.connections || []).map((connection) => {
+        const { name } = connection;
+        delete connection.name;
+
+        const matches = existingConnections.filter(c => c.name === name);
+        if (matches.length > 0) {
+          connection.connection_id = matches[0].id;
+        }
+
+        return connection;
+      }).filter(connection => !!connection.connection_id);
+    });
+
     const changes = calcChanges(organizations, existing, [ 'id', 'name' ]);
 
     log.debug(`Start processChanges for organizations [delete:${changes.del.length}] [update:${changes.update.length}], [create:${changes.create.length}]`);
