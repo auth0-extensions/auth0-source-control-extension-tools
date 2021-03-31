@@ -176,7 +176,7 @@ export default class OrganizationsHandler extends DefaultHandler {
 
         return {
           ...connection,
-          connection_id: existingConnections.find(c => c.name === name)
+          connection_id: (existingConnections.find(c => c.name === name) || {}).id
         };
       }).filter(connection => !!connection.connection_id);
     });

@@ -465,6 +465,51 @@ describe('#organizations handler', () => {
       ]);
     });
 
+    it('should ignore an enabled connection if it does not exist', async () => {
+      const auth0 = {
+        organizations: {
+          create: () => Promise.resolve([]),
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('123');
+            expect(data.display_name).to.equal('Acme 2');
+            return Promise.resolve(data);
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => Promise.resolve([ sampleOrg ]),
+          connections: {
+            get: () => [ ]
+          }
+        },
+        connections: {
+          getAll: () => [
+            { id: sampleEnabledConnection.connection_id, name: sampleEnabledConnection.connection.name, options: {} },
+            { id: sampleEnabledConnection2.connection_id, name: sampleEnabledConnection2.connection.name, options: {} },
+            { id: 'con_999', name: 'Username', options: {} }
+          ]
+        },
+        pool
+      };
+
+      const handler = new organizations.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [
+        {
+          organizations: [
+            {
+              id: '123',
+              name: 'acme',
+              display_name: 'Acme 2',
+              connections: [
+                { name: 'Does not exist', assign_membership_on_login: false }
+              ]
+            }
+          ]
+        }
+      ]);
+    });
+
     it('should delete organizations', async () => {
       const auth0 = {
         organizations: {
