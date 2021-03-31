@@ -174,12 +174,10 @@ export default class OrganizationsHandler extends DefaultHandler {
         const { name } = connection;
         delete connection.name;
 
-        const matches = existingConnections.filter(c => c.name === name);
-        if (matches.length > 0) {
-          connection.connection_id = matches[0].id;
-        }
-
-        return connection;
+        return {
+          ...connection,
+          connection_id: existingConnections.find(c => c.name === name)
+        };
       }).filter(connection => !!connection.connection_id);
     });
 
