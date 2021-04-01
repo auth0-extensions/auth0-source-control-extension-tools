@@ -16,11 +16,21 @@ const sampleOrg = {
   display_name: 'Acme Inc'
 };
 
-const sampleConnection = {
-  connection_id: 'con_123', assign_membership_on_login: true
+const sampleEnabledConnection = {
+  connection_id: 'con_123',
+  assign_membership_on_login: true,
+  connection: {
+    name: 'Username-Password-Login',
+    strategy: 'auth0'
+  }
 };
-const sampleConnection2 = {
-  connection_id: 'con_456', assign_membership_on_login: false
+const sampleEnabledConnection2 = {
+  connection_id: 'con_456',
+  assign_membership_on_login: false,
+  connection: {
+    name: 'facebook',
+    strategy: 'facebook'
+  }
 };
 
 
@@ -125,6 +135,13 @@ describe('#organizations handler', () => {
             return Promise.resolve(connection);
           }
         },
+        connections: {
+          getAll: () => [
+            { id: sampleEnabledConnection.connection_id, name: sampleEnabledConnection.connection.name, options: {} },
+            { id: sampleEnabledConnection2.connection_id, name: sampleEnabledConnection2.connection.name, options: {} },
+            { id: 'con_999', name: 'Username', options: {} }
+          ]
+        },
         pool
       };
 
@@ -138,7 +155,7 @@ describe('#organizations handler', () => {
               display_name: 'Acme',
               connections: [
                 {
-                  connection_id: '123',
+                  name: 'Username-Password-Login',
                   assign_membership_on_login: true
                 }
               ]
@@ -154,7 +171,7 @@ describe('#organizations handler', () => {
           getAll: () => Promise.resolve([ sampleOrg ]),
           connections: {
             get: () => [
-              sampleConnection
+              sampleEnabledConnection
             ]
           }
         },
@@ -163,7 +180,7 @@ describe('#organizations handler', () => {
 
       const handler = new organizations.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ Object.assign({}, sampleOrg, { connections: [ sampleConnection ] }) ]);
+      expect(data).to.deep.equal([ Object.assign({}, sampleOrg, { connections: [ sampleEnabledConnection ] }) ]);
     });
 
     it('should get all organizations', async () => {
@@ -290,8 +307,8 @@ describe('#organizations handler', () => {
           getAll: () => Promise.resolve([ sampleOrg ]),
           connections: {
             get: () => [
-              sampleConnection,
-              sampleConnection2
+              sampleEnabledConnection,
+              sampleEnabledConnection2
             ]
           },
           addEnabledConnection: (params, data) => {
@@ -305,17 +322,24 @@ describe('#organizations handler', () => {
           removeEnabledConnection: (params) => {
             expect(params).to.be.an('object');
             expect(params.id).to.equal('123');
-            expect(params.connection_id).to.equal(sampleConnection2.connection_id);
+            expect(params.connection_id).to.equal(sampleEnabledConnection2.connection_id);
             return Promise.resolve();
           },
           updateEnabledConnection: (params, data) => {
             expect(params).to.be.an('object');
             expect(params.id).to.equal('123');
-            expect(params.connection_id).to.equal(sampleConnection.connection_id);
+            expect(params.connection_id).to.equal(sampleEnabledConnection.connection_id);
             expect(data).to.be.an('object');
             expect(data.assign_membership_on_login).to.equal(false);
             return Promise.resolve(data);
           }
+        },
+        connections: {
+          getAll: () => [
+            { id: sampleEnabledConnection.connection_id, name: sampleEnabledConnection.connection.name, options: {} },
+            { id: sampleEnabledConnection2.connection_id, name: sampleEnabledConnection2.connection.name, options: {} },
+            { id: 'con_999', name: 'Username', options: {} }
+          ]
         },
         pool
       };
@@ -331,8 +355,154 @@ describe('#organizations handler', () => {
               name: 'acme',
               display_name: 'Acme 2',
               connections: [
-                { connection_id: 'con_123', assign_membership_on_login: false },
-                { connection_id: 'con_789', assign_membership_on_login: false }
+                { name: 'Username-Password-Login', assign_membership_on_login: false },
+                { name: 'facebook', assign_membership_on_login: false }
+              ]
+            }
+          ]
+        }
+      ]);
+    });
+
+    it('should add an enabled connection to the organizations', async () => {
+      const auth0 = {
+        organizations: {
+          create: () => Promise.resolve([]),
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('123');
+            expect(data.display_name).to.equal('Acme 2');
+            return Promise.resolve(data);
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => Promise.resolve([ sampleOrg ]),
+          connections: {
+            get: () => []
+          },
+          addEnabledConnection: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('123');
+            expect(data).to.be.an('object');
+            expect(data.connection_id).to.equal('con_789');
+            expect(data.assign_membership_on_login).to.equal(false);
+            return Promise.resolve(data);
+          }
+        },
+        connections: {
+          getAll: () => [
+            { id: sampleEnabledConnection.connection_id, name: sampleEnabledConnection.connection.name, options: {} },
+            { id: sampleEnabledConnection2.connection_id, name: sampleEnabledConnection2.connection.name, options: {} },
+            { id: 'con_999', name: 'Username', options: {} }
+          ]
+        },
+        pool
+      };
+
+      const handler = new organizations.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [
+        {
+          organizations: [
+            {
+              id: '123',
+              name: 'acme',
+              display_name: 'Acme 2',
+              connections: [
+                { name: 'Username-Password-Login', assign_membership_on_login: false }
+              ]
+            }
+          ]
+        }
+      ]);
+    });
+
+    it('should remove an enabled connection to the organizations', async () => {
+      const auth0 = {
+        organizations: {
+          create: () => Promise.resolve([]),
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('123');
+            expect(data.display_name).to.equal('Acme 2');
+            return Promise.resolve(data);
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => Promise.resolve([ sampleOrg ]),
+          connections: {
+            get: () => [ sampleEnabledConnection2 ]
+          },
+          removeEnabledConnection: (params) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('123');
+            expect(params.connection_id).to.equal(sampleEnabledConnection2.connection_id);
+            return Promise.resolve();
+          }
+        },
+        connections: {
+          getAll: () => [
+            { id: sampleEnabledConnection.connection_id, name: sampleEnabledConnection.connection.name, options: {} },
+            { id: sampleEnabledConnection2.connection_id, name: sampleEnabledConnection2.connection.name, options: {} },
+            { id: 'con_999', name: 'Username', options: {} }
+          ]
+        },
+        pool
+      };
+
+      const handler = new organizations.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [
+        {
+          organizations: [
+            {
+              id: '123',
+              name: 'acme',
+              display_name: 'Acme 2'
+            }
+          ]
+        }
+      ]);
+    });
+
+    it('should ignore an enabled connection if it does not exist', async () => {
+      const auth0 = {
+        organizations: {
+          create: () => Promise.resolve([]),
+          update: (params, data) => {
+            expect(params).to.be.an('object');
+            expect(params.id).to.equal('123');
+            expect(data.display_name).to.equal('Acme 2');
+            return Promise.resolve(data);
+          },
+          delete: () => Promise.resolve([]),
+          getAll: () => Promise.resolve([ sampleOrg ]),
+          connections: {
+            get: () => [ ]
+          }
+        },
+        connections: {
+          getAll: () => [
+            { id: sampleEnabledConnection.connection_id, name: sampleEnabledConnection.connection.name, options: {} },
+            { id: sampleEnabledConnection2.connection_id, name: sampleEnabledConnection2.connection.name, options: {} },
+            { id: 'con_999', name: 'Username', options: {} }
+          ]
+        },
+        pool
+      };
+
+      const handler = new organizations.default({ client: auth0, config });
+      const stageFn = Object.getPrototypeOf(handler).processChanges;
+
+      await stageFn.apply(handler, [
+        {
+          organizations: [
+            {
+              id: '123',
+              name: 'acme',
+              display_name: 'Acme 2',
+              connections: [
+                { name: 'Does not exist', assign_membership_on_login: false }
               ]
             }
           ]
@@ -354,6 +524,9 @@ describe('#organizations handler', () => {
           connections: {
             get: () => []
           }
+        },
+        connections: {
+          getAll: () => []
         },
         pool
       };
