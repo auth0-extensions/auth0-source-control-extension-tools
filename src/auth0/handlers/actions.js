@@ -1,8 +1,9 @@
 /* eslint-disable consistent-return */
 import DefaultHandler, { order } from './default';
 import log from '../../logger';
-import ActionVersionHandler from './actionVersions';
-import ActionBindingsHandler from './actionBindings';
+import { areArraysEquals } from '../../utils';
+
+const WAIT_FOR_DEPLOY = 30; // seconds to wait for the version to deploy
 
 // With this schema, we can only validate property types but not valid properties on per type basis
 export const schema = {
@@ -12,6 +13,32 @@ export const schema = {
     required: [ 'name', 'supported_triggers' ],
     additionalProperties: false,
     properties: {
+      code: { type: 'string', default: '' },
+      dependencies: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            name: { type: 'string' },
+            version: { type: 'string' },
+            registry_url: { type: 'string' }
+          }
+        }
+      },
+      status: { type: 'string', default: '' },
+      runtime: { type: 'string', default: '' },
+      secrets: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            value: { type: 'string' },
+            updated_at: { type: 'string', format: 'date-time' }
+          }
+        }
+      },
       name: { type: 'string', default: '' },
       supported_triggers: {
         type: 'array',
@@ -82,8 +109,7 @@ export const schema = {
               }
             }
           }
-        },
-        required: [ 'code', 'dependencies', 'runtime' ]
+        }
       },
       bindings: {
         type: 'array',
@@ -99,14 +125,47 @@ export const schema = {
   }
 };
 
+function wait(n) { return new Promise(resolve => setTimeout(resolve, n)); }
+
+async function waitUntilVersionIsDeployed(client, actionId, versionId, retries) {
+  const version = await client.actions.getVersion({ action_id: actionId, version_id: versionId });
+  if (retries > 0 && !version.deployed) {
+    await wait(1000);
+    await waitUntilVersionIsDeployed(client, actionId, versionId, retries - 1);
+  }
+
+  if (retries <= 0) {
+    throw new Error(`Couldn't deploy version after ${WAIT_FOR_DEPLOY} retries`);
+  }
+}
+
+
 export default class ActionHandler extends DefaultHandler {
   constructor(options) {
     super({
       ...options,
       type: 'actions'
     });
-    this.actionVersionHandler = new ActionVersionHandler(options);
-    this.actionBindingsHandler = new ActionBindingsHandler(options);
+  }
+
+  async getVersionById(actionId, currentVersion) {
+    // in case client version does not support actionVersions
+    if (typeof this.client.actions.getVersions !== 'function') {
+      return null;
+    }
+    // in case action doesn't have a current version yet
+    if (!currentVersion) {
+      return null;
+    }
+
+    try {
+      return await this.client.actions.getVersions({ action_id: actionId, version_id: currentVersion.id });
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 501) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   async getType() {
@@ -123,11 +182,8 @@ export default class ActionHandler extends DefaultHandler {
       const actions = await this.client.actions.getAll();
       // need to get complete current version and all bindings for each action
       // the current_version inside the action doesn't have all the necessary information
-      this.existing = await Promise.all(actions.actions.map(action => this.actionVersionHandler.getVersionById(action.id, action.current_version)
-        .then(async (currentVersion) => {
-          const bindings = await this.getActionBinding(action.id);
-          return ({ ...action, current_version: currentVersion, bindings: bindings });
-        })));
+      this.existing = await Promise.all(actions.actions.map(action => this.getVersionById(action.id, action.current_version)
+        .then(async currentVersion => ({ ...action, current_version: currentVersion }))));
       return this.existing;
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {
@@ -137,25 +193,94 @@ export default class ActionHandler extends DefaultHandler {
     }
   }
 
+
+  async createVersion(version) {
+    const actionId = version.action_id;
+    const versionToCreate = {
+      code: version.code,
+      dependencies: version.dependencies,
+      secrets: version.secrets,
+      runtime: version.runtime
+    };
+    const newVersion = await this.client.actions.createVersion({ action_id: actionId }, versionToCreate);
+
+    // wait WAIT_FOR_DEPLOY seconds for version deploy, if can't deploy an error will arise
+    await waitUntilVersionIsDeployed(this.client, actionId, newVersion.id, WAIT_FOR_DEPLOY);
+
+    // create draft version with the same values of current version
+    await this.client.actions.update({ action_id: actionId }, versionToCreate);
+
+    return newVersion;
+  }
+
+  calcCurrentVersionChanges(actionId, currentVersionAssets, existing) {
+    const create = [];
+
+    // Figure out what needs to be deleted or created
+    if (!currentVersionAssets && !existing) {
+      return { create };
+    }
+
+    if (currentVersionAssets && !existing) {
+      create.push({ ...currentVersionAssets, action_id: actionId });
+      return { create };
+    }
+
+    if (currentVersionAssets.code !== existing.code
+          || currentVersionAssets.runtime !== existing.runtime
+          || !areArraysEquals(currentVersionAssets.dependencies, existing.dependencies)
+          || !areArraysEquals((currentVersionAssets.secrets || []).map(s => s.name), (existing.secrets || []).map(s => s.name))) {
+      create.push({ ...currentVersionAssets, action_id: actionId });
+    }
+
+    return {
+      create: create
+    };
+  }
+
+  async createVersions(creates) {
+    await this.client.pool.addEachTask({
+      data: creates || [],
+      generator: item => this.createVersion(item).then((data) => {
+        this.didCreate({ version_id: data.id });
+        this.created += 1;
+      }).catch((err) => {
+        throw new Error(`Problem creating ${this.type} ${this.objString(item)}\n${err}`);
+      })
+    }).promise();
+  }
+
+  async processVersionsChanges(changes) {
+    log.info(`Start processChanges for action versions [create:${changes.create.length}]`);
+
+    const myChanges = [ { create: changes.create } ];
+    await Promise.all(myChanges.map(async (change) => {
+      switch (true) {
+        case change.create && change.create.length > 0:
+          await this.createVersions(changes.create);
+          break;
+        default:
+          break;
+      }
+    }));
+  }
+
   async createAction(data) {
     const action = { ...data };
     const currentVersion = action.current_version;
     // eslint-disable-next-line prefer-destructuring
-    const bindings = action.bindings;
     const actionToCreate = {
       name: action.name,
-      supported_triggers: action.supported_triggers
+      supported_triggers: action.supported_triggers,
+      code: action.code,
+      dependencies: action.dependencies,
+      secrets: action.secrets,
+      runtime: action.runtime
     };
 
     const created = await this.client.actions.create(actionToCreate);
     if (currentVersion) {
-      await this.actionVersionHandler.createActionVersions([ { ...currentVersion, action_id: created.id } ]);
-    }
-
-    if (bindings) {
-      const bindingsToCreate = [];
-      bindings.forEach(f => bindingsToCreate.push({ trigger_id: f.trigger_id, display_name: action.name, action_id: created.id }));
-      await this.actionBindingsHandler.createActionBindings(bindingsToCreate);
+      await this.createVersions([ { ...currentVersion, action_id: created.id } ]);
     }
     return created;
   }
@@ -173,8 +298,8 @@ export default class ActionHandler extends DefaultHandler {
   }
 
   async deleteAction(action) {
-    await this.actionBindingsHandler.deleteActionBindings(action.bindings);
-    await this.client.actions.delete({ action_id: action.id });
+    // force=true forced bound actions to delete
+    await this.client.actions.delete({ action_id: action.id, force: true });
   }
 
   async deleteActions(dels) {
@@ -196,16 +321,10 @@ export default class ActionHandler extends DefaultHandler {
 
   async updateAction(action, existing) {
     const found = existing.find(existingAction => existingAction.name === action.name);
-
     // update current version
-    const currentVersionChanges = this.actionVersionHandler.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
-    if (currentVersionChanges.del.length > 0 || currentVersionChanges.create.length > 0) {
-      await this.actionVersionHandler.processChanges(currentVersionChanges);
-    }
-
-    const bindingChanges = await this.actionBindingsHandler.calcChanges(found, action.bindings, found.bindings);
-    if (bindingChanges.del.length > 0 || bindingChanges.create.length > 0) {
-      await this.actionBindingsHandler.processChanges(bindingChanges);
+    const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
+    if (currentVersionChanges.create.length > 0) {
+      await this.processVersionsChanges(currentVersionChanges);
     }
 
     return found;
@@ -223,30 +342,23 @@ export default class ActionHandler extends DefaultHandler {
     }).promise();
   }
 
-  async getActionBinding(actionId) {
-    const bindings = await this.actionBindingsHandler.getType();
-    return bindings.filter(b => b.action.id === actionId);
-  }
-
   async calcChanges(actionsAssets, existing) {
     // Calculate the changes required between two sets of assets.
     const update = [];
     let del = [ ...existing ];
     const create = [];
-
     actionsAssets.forEach(async (action) => {
       const found = existing.find(existingAction => existingAction.name === action.name);
       if (found) {
         del = del.filter(e => e.id !== found.id);
         // current version changes
-        const currentVersionChanges = this.actionVersionHandler.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
-        const hasCurrentVersionChanges = currentVersionChanges.del.length > 0 || currentVersionChanges.create.length > 0;
-        // bindings changes
-        const bindingChanges = await this.actionBindingsHandler.calcChanges(found, action.bindings, found.bindings);
-        const hasBindingChanges = bindingChanges.del.length > 0 || bindingChanges.create.length > 0;
+        const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
         if (action.name !== found.name
-          || hasCurrentVersionChanges
-          || hasBindingChanges) {
+            || action.code !== found.code
+            || !areArraysEquals(action.dependencies, found.dependencies)
+            || !areArraysEquals((action.secrets || []).map(s => s.name), (found.secrets || []).map(s => s.name))
+            || action.runtime !== found.runtime
+            || currentVersionChanges.create.length > 0) {
           update.push(action);
         }
       } else {

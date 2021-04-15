@@ -21,6 +21,7 @@ import * as branding from './branding';
 import * as prompts from './prompts';
 import * as migrations from './migrations';
 import * as actions from './actions';
+import * as triggers from './triggers';
 import * as organizations from './organizations';
 
 export {
@@ -47,5 +48,6 @@ export {
   prompts,
   migrations,
   actions,
+  triggers,
   organizations
 };
