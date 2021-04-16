@@ -118,15 +118,15 @@ export const schema = {
 
 function wait(n) { return new Promise(resolve => setTimeout(resolve, n)); }
 
-function mapSecrets(holder) {
-  if (holder && holder.secrets) {
-    return holder.secrets.map(secret => ({ ...secret, value: HIDDEN_SECRET_VALUE }));
+function mapSecrets(secrets) {
+  if (secrets) {
+    return secrets.map(secret => ({ ...secret, value: HIDDEN_SECRET_VALUE }));
   }
 }
 
 function mapCurrentVersion(currentVersion) {
   if (currentVersion) {
-    return ({ ...currentVersion, secrets: mapSecrets(currentVersion) });
+    return ({ ...currentVersion, secrets: mapSecrets(currentVersion.secrets) });
   }
 }
 
@@ -186,7 +186,7 @@ export default class ActionHandler extends DefaultHandler {
       // need to get complete current version for each action
       // the current_version inside the action doesn't have all the necessary information
       this.existing = await Promise.all(actions.actions.map(action => this.getVersionById(action.id, action.current_version)
-        .then(async currentVersion => ({ ...action, secrets: mapSecrets(action), current_version: mapCurrentVersion(currentVersion) }))));
+        .then(async currentVersion => ({ ...action, secrets: mapSecrets(action.secrets), current_version: mapCurrentVersion(currentVersion) }))));
       return this.existing;
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {

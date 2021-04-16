@@ -10,7 +10,13 @@ export const schema = {
     type: 'object',
     additionalProperties: true,
     properties: {
-      trigger_id: { type: 'string' }
+      trigger_id: {
+        type: 'object',
+        properties: {
+          action_name: { type: 'string', default: '' },
+          display_name: { type: 'string', default: '' }
+        }
+      }
     }
   }
 };
