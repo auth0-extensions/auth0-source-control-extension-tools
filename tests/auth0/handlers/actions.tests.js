@@ -172,14 +172,14 @@ describe('#actions handler', () => {
         {
           id: 'action-id-1',
           name: 'action-test-1',
+          secrets: [],
           supported_triggers: [
             {
               id: 'post-login',
               version: 'v1'
             }
           ],
-          current_version: { id: version.id },
-          bindings: []
+          current_version: { id: version.id }
         }
       ];
 

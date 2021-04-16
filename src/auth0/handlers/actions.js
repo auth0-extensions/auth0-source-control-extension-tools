@@ -3,7 +3,8 @@ import DefaultHandler, { order } from './default';
 import log from '../../logger';
 import { areArraysEquals } from '../../utils';
 
-const WAIT_FOR_DEPLOY = 30; // seconds to wait for the version to deploy
+const WAIT_FOR_DEPLOY = 60; // seconds to wait for the version to deploy
+const HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
 
 // With this schema, we can only validate property types but not valid properties on per type basis
 export const schema = {
@@ -110,22 +111,24 @@ export const schema = {
             }
           }
         }
-      },
-      bindings: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: [ 'trigger_id' ],
-          properties: {
-            trigger_id: { type: 'string' }
-          }
-        }
       }
     }
   }
 };
 
 function wait(n) { return new Promise(resolve => setTimeout(resolve, n)); }
+
+function mapSecrets(holder) {
+  if (holder && holder.secrets) {
+    return holder.secrets.map(secret => ({ ...secret, value: HIDDEN_SECRET_VALUE }));
+  }
+}
+
+function mapCurrentVersion(currentVersion) {
+  if (currentVersion) {
+    return ({ ...currentVersion, secrets: mapSecrets(currentVersion) });
+  }
+}
 
 async function waitUntilVersionIsDeployed(client, actionId, versionId, retries) {
   const version = await client.actions.getVersion({ action_id: actionId, version_id: versionId });
@@ -180,10 +183,10 @@ export default class ActionHandler extends DefaultHandler {
 
     try {
       const actions = await this.client.actions.getAll();
-      // need to get complete current version and all bindings for each action
+      // need to get complete current version for each action
       // the current_version inside the action doesn't have all the necessary information
       this.existing = await Promise.all(actions.actions.map(action => this.getVersionById(action.id, action.current_version)
-        .then(async currentVersion => ({ ...action, current_version: currentVersion }))));
+        .then(async currentVersion => ({ ...action, secrets: mapSecrets(action), current_version: mapCurrentVersion(currentVersion) }))));
       return this.existing;
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {
@@ -199,16 +202,13 @@ export default class ActionHandler extends DefaultHandler {
     const versionToCreate = {
       code: version.code,
       dependencies: version.dependencies,
-      secrets: version.secrets,
+      secrets: version.secrets.filter(secret => secret.value !== HIDDEN_SECRET_VALUE),
       runtime: version.runtime
     };
     const newVersion = await this.client.actions.createVersion({ action_id: actionId }, versionToCreate);
 
     // wait WAIT_FOR_DEPLOY seconds for version deploy, if can't deploy an error will arise
     await waitUntilVersionIsDeployed(this.client, actionId, newVersion.id, WAIT_FOR_DEPLOY);
-
-    // create draft version with the same values of current version
-    await this.client.actions.update({ action_id: actionId }, versionToCreate);
 
     return newVersion;
   }
@@ -327,6 +327,16 @@ export default class ActionHandler extends DefaultHandler {
       await this.processVersionsChanges(currentVersionChanges);
     }
 
+    const updatedFields = {
+      code: action.code,
+      dependencies: action.dependencies,
+      secrets: action.secrets.filter(secret => secret.value !== HIDDEN_SECRET_VALUE),
+      runtime: action.runtime,
+      supported_triggers: action.supported_triggers
+    };
+
+    // Update action
+    await this.client.actions.update({ action_id: found.id }, updatedFields);
     return found;
   }
 

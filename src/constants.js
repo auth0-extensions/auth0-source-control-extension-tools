@@ -10,6 +10,7 @@ constants.HOOKS_HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
 
 constants.HOOKS_DIRECTORY = 'hooks';
 constants.ACTIONS_DIRECTORY = 'actions';
+constants.TRIGGERS_DIRECTORY = 'triggers';
 
 constants.RULES_CONFIGS_DIRECTORY = 'rules-configs';
 
