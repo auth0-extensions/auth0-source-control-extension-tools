@@ -1,8 +1,8 @@
 /* eslint-disable consistent-return */
+import _ from 'lodash';
 import DefaultHandler, { order } from './default';
 import log from '../../logger';
 import { areArraysEquals } from '../../utils';
-import _ from "lodash"
 
 const WAIT_FOR_DEPLOY = 60; // seconds to wait for the version to deploy
 const HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
@@ -12,7 +12,7 @@ export const schema = {
   type: 'array',
   items: {
     type: 'object',
-    required: [ 'name', 'supported_triggers', 'code', 'runtime'],
+    required: [ 'name', 'supported_triggers', 'code', 'runtime' ],
     additionalProperties: false,
     properties: {
       code: { type: 'string', default: '' },
@@ -264,26 +264,26 @@ export default class ActionHandler extends DefaultHandler {
     }));
   }
 
-  async actionChanges(action, found){
-    let actionChanges = {};
+  async actionChanges(action, found) {
+    const actionChanges = {};
 
-    if(action.name !== found.name){
-      actionChanges["name"] = action.name;
+    if (action.name !== found.name) {
+      actionChanges.name = action.name;
     }
-    if(action.code !== found.code){
-      actionChanges["code"] = action.code;
-    }
-
-    if(!areArraysEquals(action.dependencies, found.dependencies)){
-      actionChanges["dependencies"] = action.dependencies;
-    }
-    
-    if(!areArraysEquals((action.secrets || []).map(s => s.name), (found.secrets || []).map(s => s.name))){
-      actionChanges["secrets"] = action.secrets;
+    if (action.code !== found.code) {
+      actionChanges.code = action.code;
     }
 
-    if(action.runtime !== found.runtime){
-      actionChanges["runtime"] = action.runtime;
+    if (!areArraysEquals(action.dependencies, found.dependencies)) {
+      actionChanges.dependencies = action.dependencies;
+    }
+
+    if (!areArraysEquals((action.secrets || []).map(s => s.name), (found.secrets || []).map(s => s.name))) {
+      actionChanges.secrets = action.secrets;
+    }
+
+    if (action.runtime !== found.runtime) {
+      actionChanges.runtime = action.runtime;
     }
 
     return actionChanges;
@@ -350,9 +350,9 @@ export default class ActionHandler extends DefaultHandler {
     if (currentVersionChanges.create.length > 0) {
       await this.processVersionsChanges(currentVersionChanges);
     }
-    const updatedFields = await this.actionChanges(action, found)
+    const updatedFields = await this.actionChanges(action, found);
     // Update action if there is something to update
-    if(!_.isEmpty(updatedFields)){
+    if (!_.isEmpty(updatedFields)) {
       await this.client.actions.update({ action_id: found.id }, updatedFields);
     }
     return found;
