@@ -72,7 +72,7 @@ export default class ConnectionsHandler extends DefaultHandler {
       {
         ...connection,
         ...this.getFormattedOptions(connection, clients),
-        ...(connection.enabled_clients && { enabled_clients: getEnabledClients(assets, connection, existingConnections, clients) })
+        ...(connection.enabled_clients && { enabled_clients: getEnabledClients(assets, connection, existingConexions, clients) })
       }
     ));
     return super.calcChanges({ ...assets, connections: formatted });
