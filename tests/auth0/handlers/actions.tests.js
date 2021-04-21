@@ -89,8 +89,7 @@ describe('#actions handler', () => {
             dependencies: [],
             secrets: [],
             runtime: 'node12'
-          },
-          bindings: [ { trigger_id: 'post-login' } ]
+          }
         }
       ];
 
@@ -145,21 +144,8 @@ describe('#actions handler', () => {
             }
 
             return Promise.resolve({ actions: [ { name: action.name, supported_triggers: action.supported_triggers, id: actionId } ] });
-          }
-        },
-        actionVersions: {
-          create: () => Promise.resolve(version),
-          upsertDraft: () => Promise.resolve(version)
-        },
-        actionBindings: {
-          getAll: () => Promise.resolve({ bindings: [] }),
-          create: () => Promise.resolve({
-            id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
-            trigger_id: 'post-login',
-            created_at: '2020-12-08T21:26:21.982298158Z',
-            updated_at: '2020-12-08T21:26:21.982298158Z',
-            display_name: 'action-test'
-          })
+          },
+          createVersion: () => Promise.resolve(version)
         },
         pool,
         getAllCalled: false
@@ -186,23 +172,21 @@ describe('#actions handler', () => {
         {
           id: 'action-id-1',
           name: 'action-test-1',
+          secrets: [],
           supported_triggers: [
             {
               id: 'post-login',
               version: 'v1'
             }
           ],
-          current_version: { id: version.id },
-          bindings: []
+          current_version: { id: version.id }
         }
       ];
 
       const auth0 = {
         actions: {
-          getAll: () => Promise.resolve({ actions: actionsData })
-        },
-        actionVersions: {
-          get: (params) => {
+          getAll: () => Promise.resolve({ actions: actionsData }),
+          getVersions: (params) => {
             expect(params.action_id).to.equal('action-id-1');
             expect(params.version_id).to.equal('version-id');
             return Promise.resolve(version);
@@ -269,85 +253,6 @@ describe('#actions handler', () => {
       }
     });
 
-
-    it('should update action creating binding', async () => {
-      const action = {
-        name: 'action-test',
-        supported_triggers: [ {
-          id: 'post-login',
-          version: 'v1'
-        } ],
-        current_version: {
-          code: '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
-          dependencies: [],
-          secrets: [],
-          runtime: 'node12'
-        },
-        bindings: [ { trigger_id: 'post-login' } ]
-      };
-
-      const auth0 = {
-        actions: {
-          create: () => Promise.resolve([]),
-          update: () => Promise.resolve([]),
-          delete: () => Promise.resolve([]),
-          getAll: () => Promise.resolve({
-            actions: [
-              {
-                id: '1',
-                name: 'action-test',
-                supported_triggers: [
-                  {
-                    id: 'post-login',
-                    version: 'v1'
-                  }
-                ],
-                current_version: {
-                  code: '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
-                  dependencies: [],
-                  secrets: [],
-                  runtime: 'node12'
-                }
-              }
-            ]
-          })
-        },
-        actionBindings: {
-          getAll: () => Promise.resolve({ bindings: [] }),
-          updateList: () => Promise.resolve()
-        },
-        actionVersions: {
-          get: () => Promise.resolve({
-            action: {},
-            code:
-              '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
-            dependencies: [],
-            runtime: 'node12',
-            id: '0906fe5b-f4d6-44ec-a8f1-3c05fc186483',
-            deployed: true,
-            number: 1,
-            built_at: '2020-12-03T15:20:54.413725492Z',
-            status: 'built',
-            created_at: '2020-12-03T15:20:52.094497448Z',
-            updated_at: '2020-12-03T15:20:54.415669983Z'
-          })
-        },
-        createActionBinding: () => Promise.resolve({
-          id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
-          trigger_id: 'post-login',
-          created_at: '2020-12-08T21:26:21.982298158Z',
-          updated_at: '2020-12-08T21:26:21.982298158Z',
-          display_name: 'action-test'
-        }),
-        pool
-      };
-
-      const handler = new actions.default({ client: auth0, config });
-      const stageFn = Object.getPrototypeOf(handler).processChanges;
-
-      await stageFn.apply(handler, [ { actions: [ action ] } ]);
-    });
-
     it('should remove action', async () => {
       const auth0 = {
         actions: {
@@ -371,25 +276,8 @@ describe('#actions handler', () => {
                 ]
               }
             ]
-          })
-        },
-        actionBindings: {
-          getAll: () => Promise.resolve({
-            bindings: [ {
-              id: '35409a5b-0326-4e81-ad9b-ac19502cee58',
-              trigger_id: 'post-login',
-              display_name: 'action-test'
-            } ]
           }),
-          delete: (data) => {
-            expect(data).to.be.an('object');
-            expect(data.id).to.equal('35409a5b-0326-4e81-ad9b-ac19502cee58');
-            expect(data.trigger_id).to.equal('post-login');
-            return Promise.resolve(data);
-          }
-        },
-        actionVersions: {
-          get: () => Promise.resolve({
+          getVersion: () => Promise.resolve({
             action: {},
             code:
               '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
