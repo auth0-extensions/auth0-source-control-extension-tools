@@ -2,6 +2,7 @@
 import DefaultHandler, { order } from './default';
 import log from '../../logger';
 import { areArraysEquals } from '../../utils';
+import _ from "lodash"
 
 const WAIT_FOR_DEPLOY = 60; // seconds to wait for the version to deploy
 const HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
@@ -11,7 +12,7 @@ export const schema = {
   type: 'array',
   items: {
     type: 'object',
-    required: [ 'name', 'supported_triggers' ],
+    required: [ 'name', 'supported_triggers', 'code', 'runtime'],
     additionalProperties: false,
     properties: {
       code: { type: 'string', default: '' },
@@ -213,7 +214,7 @@ export default class ActionHandler extends DefaultHandler {
     return newVersion;
   }
 
-  calcCurrentVersionChanges(actionId, currentVersionAssets, existing) {
+  async calcCurrentVersionChanges(actionId, currentVersionAssets, existing) {
     const create = [];
 
     // Figure out what needs to be deleted or created
@@ -225,14 +226,12 @@ export default class ActionHandler extends DefaultHandler {
       create.push({ ...currentVersionAssets, action_id: actionId });
       return { create };
     }
-
     if (currentVersionAssets.code !== existing.code
           || currentVersionAssets.runtime !== existing.runtime
           || !areArraysEquals(currentVersionAssets.dependencies, existing.dependencies)
           || !areArraysEquals((currentVersionAssets.secrets || []).map(s => s.name), (existing.secrets || []).map(s => s.name))) {
       create.push({ ...currentVersionAssets, action_id: actionId });
     }
-
     return {
       create: create
     };
@@ -263,6 +262,31 @@ export default class ActionHandler extends DefaultHandler {
           break;
       }
     }));
+  }
+
+  async actionChanges(action, found){
+    let actionChanges = {};
+
+    if(action.name !== found.name){
+      actionChanges["name"] = action.name;
+    }
+    if(action.code !== found.code){
+      actionChanges["code"] = action.code;
+    }
+
+    if(!areArraysEquals(action.dependencies, found.dependencies)){
+      actionChanges["dependencies"] = action.dependencies;
+    }
+    
+    if(!areArraysEquals((action.secrets || []).map(s => s.name), (found.secrets || []).map(s => s.name))){
+      actionChanges["secrets"] = action.secrets;
+    }
+
+    if(action.runtime !== found.runtime){
+      actionChanges["runtime"] = action.runtime;
+    }
+
+    return actionChanges;
   }
 
   async createAction(data) {
@@ -326,17 +350,11 @@ export default class ActionHandler extends DefaultHandler {
     if (currentVersionChanges.create.length > 0) {
       await this.processVersionsChanges(currentVersionChanges);
     }
-
-    const updatedFields = {
-      code: action.code,
-      dependencies: action.dependencies,
-      secrets: action.secrets.filter(secret => secret.value !== HIDDEN_SECRET_VALUE),
-      runtime: action.runtime,
-      supported_triggers: action.supported_triggers
-    };
-
-    // Update action
-    await this.client.actions.update({ action_id: found.id }, updatedFields);
+    const updatedFields = await this.actionChanges(action, found)
+    // Update action if there is something to update
+    if(!_.isEmpty(updatedFields)){
+      await this.client.actions.update({ action_id: found.id }, updatedFields);
+    }
     return found;
   }
 
