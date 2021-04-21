@@ -233,8 +233,5 @@ export function filterExcluded(changes, exclude) {
 }
 
 export function areArraysEquals(x, y) {
-  if (x && y && x.length !== y.length) {
-    return false;
-  }
-  return _(x).differenceWith(y, _.isEqual).isEmpty();
+    return _.isEqual( x && x.sort(), y && y.sort());
 }
