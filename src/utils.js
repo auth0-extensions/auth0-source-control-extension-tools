@@ -233,5 +233,5 @@ export function filterExcluded(changes, exclude) {
 }
 
 export function areArraysEquals(x, y) {
-    return _.isEqual( x && x.sort(), y && y.sort());
+  return _.isEqual(x && x.sort(), y && y.sort());
 }
