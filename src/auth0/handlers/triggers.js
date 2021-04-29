@@ -42,27 +42,26 @@ export default class TriggersHandler extends DefaultHandler {
       return [];
     }
 
-    const res = await this.client.actions.getAllTriggers();
-
-    const triggers = _(res.triggers).map('id').uniq().value();
-
     const triggerBindings = {};
 
-    for (let i = 0; i < triggers.length; i++) {
-      const triggerId = triggers[i];
+    try {
+      const res = await this.client.actions.getAllTriggers();
+      const triggers = _(res.triggers).map('id').uniq().value();
 
-      try {
+      for (let i = 0; i < triggers.length; i++) {
+        const triggerId = triggers[i];
         const { bindings } = await this.client.actions.getTriggerBindings({ trigger_id: triggerId });
         triggerBindings[triggerId] = bindings.map(binding => ({ action_name: binding.action.name, display_name: binding.display_name }));
-      } catch (err) {
-        if (err.statusCode === 404 || err.statusCode === 501) {
-          return null;
-        }
-        throw err;
       }
-    }
 
-    return triggerBindings;
+      this.existing = triggerBindings;
+      return this.existing;
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 501) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   async updateTrigger(updates) {
