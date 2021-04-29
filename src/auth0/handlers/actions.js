@@ -6,13 +6,14 @@ import { areArraysEquals } from '../../utils';
 
 const WAIT_FOR_DEPLOY = 60; // seconds to wait for the version to deploy
 const HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
+const DEFAULT_RUNTIME = 'node12';
 
 // With this schema, we can only validate property types but not valid properties on per type basis
 export const schema = {
   type: 'array',
   items: {
     type: 'object',
-    required: [ 'name', 'supported_triggers', 'code', 'runtime' ],
+    required: [ 'name', 'supported_triggers', 'code' ],
     additionalProperties: false,
     properties: {
       code: { type: 'string', default: '' },
@@ -29,7 +30,6 @@ export const schema = {
         }
       },
       status: { type: 'string', default: '' },
-      runtime: { type: 'string', default: '' },
       secrets: {
         type: 'array',
         items: {
@@ -83,36 +83,7 @@ export const schema = {
           }
         }
       },
-      current_version: {
-        type: 'object',
-        properties: {
-          code: { type: 'string', default: '' },
-          dependencies: {
-            type: 'array',
-            items: {
-              type: 'object',
-              additionalProperties: false,
-              properties: {
-                name: { type: 'string' },
-                version: { type: 'string' },
-                registry_url: { type: 'string' }
-              }
-            }
-          },
-          runtime: { type: 'string', default: '' },
-          secrets: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                name: { type: 'string' },
-                value: { type: 'string' },
-                updated_at: { type: 'string', format: 'date-time' }
-              }
-            }
-          }
-        }
-      }
+      deployed: { type: 'boolean' }
     }
   }
 };
@@ -129,6 +100,18 @@ function mapCurrentVersion(currentVersion) {
   if (currentVersion) {
     return ({ ...currentVersion, secrets: mapSecrets(currentVersion.secrets) });
   }
+}
+
+function mapAction(action, version) {
+  return {
+    ...action,
+    code: version ? version.code : action.code,
+    deployed: !!version,
+    secrets: version ? mapSecrets(version.secrets) : mapSecrets(action.secrets),
+    dependencies: version ? version.dependencies : action.dependencies,
+    status: version ? version.status : action.status,
+    current_version: mapCurrentVersion(version)
+  };
 }
 
 async function waitUntilVersionIsDeployed(client, actionId, versionId, retries) {
@@ -187,11 +170,11 @@ export default class ActionHandler extends DefaultHandler {
       // need to get complete current version for each action
       // the current_version inside the action doesn't have all the necessary information
       this.existing = await Promise.all(actions.actions.map(action => this.getVersionById(action.id, action.current_version)
-        .then(async currentVersion => ({ ...action, secrets: mapSecrets(action.secrets), current_version: mapCurrentVersion(currentVersion) }))));
+        .then(async currentVersion => mapAction(action, currentVersion))));
       return this.existing;
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {
-        return [];
+        return null;
       }
       throw err;
     }
@@ -203,35 +186,38 @@ export default class ActionHandler extends DefaultHandler {
     const versionToCreate = {
       code: version.code,
       dependencies: version.dependencies,
-      secrets: version.secrets.filter(secret => secret.value !== HIDDEN_SECRET_VALUE),
-      runtime: version.runtime
+      runtime: DEFAULT_RUNTIME
     };
     const newVersion = await this.client.actions.createVersion({ action_id: actionId }, versionToCreate);
 
     // wait WAIT_FOR_DEPLOY seconds for version deploy, if can't deploy an error will arise
     await waitUntilVersionIsDeployed(this.client, actionId, newVersion.id, WAIT_FOR_DEPLOY);
 
+    // Update draft version
+    await this.client.actions.update({ action_id: actionId }, versionToCreate);
+
     return newVersion;
   }
 
-  async calcCurrentVersionChanges(actionId, currentVersionAssets, existing) {
+  async calcCurrentVersionChanges(actionId, actionAsset, existingVersion) {
     const create = [];
 
-    // Figure out what needs to be deleted or created
-    if (!currentVersionAssets && !existing) {
-      return { create };
+    if (actionAsset.deployed) {
+      const versionToCreate = {
+        action_id: actionId,
+        code: actionAsset.code,
+        dependencies: actionAsset.dependencies
+      };
+      if (existingVersion) {
+        // name or secrets modifications are not supported yet
+        if (actionAsset.code !== existingVersion.code || !areArraysEquals(actionAsset.dependencies, existingVersion.dependencies)) {
+          create.push(versionToCreate);
+        }
+      } else {
+        create.push(versionToCreate);
+      }
     }
 
-    if (currentVersionAssets && !existing) {
-      create.push({ ...currentVersionAssets, action_id: actionId });
-      return { create };
-    }
-    if (currentVersionAssets.code !== existing.code
-          || currentVersionAssets.runtime !== existing.runtime
-          || !areArraysEquals(currentVersionAssets.dependencies, existing.dependencies)
-          || !areArraysEquals((currentVersionAssets.secrets || []).map(s => s.name), (existing.secrets || []).map(s => s.name))) {
-      create.push({ ...currentVersionAssets, action_id: actionId });
-    }
     return {
       create: create
     };
@@ -267,23 +253,24 @@ export default class ActionHandler extends DefaultHandler {
   async actionChanges(action, found) {
     const actionChanges = {};
 
-    if (action.name !== found.name) {
-      actionChanges.name = action.name;
-    }
-    if (action.code !== found.code) {
-      actionChanges.code = action.code;
+    // if action is deployed, should compare against curren_version - calcCurrentVersionChanges method
+    if (!action.deployed) {
+      // name or secrets modifications are not supported yet
+      if (action.code !== found.code) {
+        actionChanges.code = action.code;
+      }
+
+      if (!areArraysEquals(action.dependencies, found.dependencies)) {
+        actionChanges.dependencies = action.dependencies;
+      }
     }
 
-    if (!areArraysEquals(action.dependencies, found.dependencies)) {
-      actionChanges.dependencies = action.dependencies;
+    if (!areArraysEquals(action.required_configuration, found.required_configuration)) {
+      actionChanges.required_configuration = action.required_configuration;
     }
 
-    if (!areArraysEquals((action.secrets || []).map(s => s.name), (found.secrets || []).map(s => s.name))) {
-      actionChanges.secrets = action.secrets;
-    }
-
-    if (action.runtime !== found.runtime) {
-      actionChanges.runtime = action.runtime;
+    if (!areArraysEquals(action.supported_triggers, found.supported_triggers)) {
+      actionChanges.supported_triggers = action.supported_triggers;
     }
 
     return actionChanges;
@@ -291,20 +278,24 @@ export default class ActionHandler extends DefaultHandler {
 
   async createAction(data) {
     const action = { ...data };
-    const currentVersion = action.current_version;
     // eslint-disable-next-line prefer-destructuring
     const actionToCreate = {
       name: action.name,
       supported_triggers: action.supported_triggers,
       code: action.code,
       dependencies: action.dependencies,
-      secrets: action.secrets,
-      runtime: action.runtime
+      runtime: DEFAULT_RUNTIME
     };
 
     const created = await this.client.actions.create(actionToCreate);
-    if (currentVersion) {
-      await this.createVersions([ { ...currentVersion, action_id: created.id } ]);
+
+    // if action.deployed is true an actionVersion should be created
+    if (action.deployed) {
+      await this.createVersions([ {
+        code: action.code,
+        dependencies: action.dependencies,
+        action_id: created.id
+      } ]);
     }
     return created;
   }
@@ -346,7 +337,7 @@ export default class ActionHandler extends DefaultHandler {
   async updateAction(action, existing) {
     const found = existing.find(existingAction => existingAction.name === action.name);
     // update current version
-    const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
+    const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action, found.current_version);
     if (currentVersionChanges.create.length > 0) {
       await this.processVersionsChanges(currentVersionChanges);
     }
@@ -380,12 +371,11 @@ export default class ActionHandler extends DefaultHandler {
       if (found) {
         del = del.filter(e => e.id !== found.id);
         // current version changes
-        const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action.current_version, found.current_version);
-        if (action.name !== found.name
-            || action.code !== found.code
+        const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action, found.current_version);
+        if (action.code !== found.code
             || !areArraysEquals(action.dependencies, found.dependencies)
-            || !areArraysEquals((action.secrets || []).map(s => s.name), (found.secrets || []).map(s => s.name))
-            || action.runtime !== found.runtime
+            || !areArraysEquals(action.required_configuration, found.required_configuration)
+            || !areArraysEquals(action.supported_triggers, found.supported_triggers)
             || currentVersionChanges.create.length > 0) {
           update.push(action);
         }

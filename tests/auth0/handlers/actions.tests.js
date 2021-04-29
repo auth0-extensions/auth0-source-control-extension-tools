@@ -165,7 +165,8 @@ describe('#actions handler', () => {
         dependencies: [],
         id: 'version-id',
         runtime: 'node12',
-        secrets: []
+        secrets: [],
+        status: 'build'
       };
 
       const actionsData = [
@@ -173,6 +174,9 @@ describe('#actions handler', () => {
           id: 'action-id-1',
           name: 'action-test-1',
           secrets: [],
+          dependencies: [],
+          code: code,
+          status: 'build',
           supported_triggers: [
             {
               id: 'post-login',
@@ -196,10 +200,10 @@ describe('#actions handler', () => {
 
       const handler = new actions.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ { ...actionsData[0], current_version: version } ]);
+      expect(data).to.deep.equal([ { ...actionsData[0], deployed: true, current_version: version } ]);
     });
 
-    it('should return an empty array for 501 status code', async () => {
+    it('should return an null for 501 status code', async () => {
       const auth0 = {
         actions: {
           getAll: () => {
@@ -213,10 +217,10 @@ describe('#actions handler', () => {
 
       const handler = new actions.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([]);
+      expect(data).to.deep.equal(null);
     });
 
-    it('should return an empty array for 404 status code', async () => {
+    it('should return an null for 404 status code', async () => {
       const auth0 = {
         actions: {
           getAll: () => {
@@ -230,7 +234,7 @@ describe('#actions handler', () => {
 
       const handler = new actions.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([]);
+      expect(data).to.deep.equal(null);
     });
 
     it('should throw an error for all other failed requests', async () => {
