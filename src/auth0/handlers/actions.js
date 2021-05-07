@@ -6,7 +6,6 @@ import { areArraysEquals } from '../../utils';
 
 const WAIT_FOR_DEPLOY = 60; // seconds to wait for the version to deploy
 const HIDDEN_SECRET_VALUE = '_VALUE_NOT_SHOWN_';
-const DEFAULT_RUNTIME = 'node12';
 
 // With this schema, we can only validate property types but not valid properties on per type basis
 export const schema = {
@@ -53,36 +52,6 @@ export const schema = {
           }
         }
       },
-      required_configuration: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: [ 'name', 'label', 'type' ],
-          properties: {
-            name: { type: 'string' },
-            label: { type: 'string' },
-            type: { type: 'string' },
-            placeholder: { type: 'string' },
-            description: { type: 'string' },
-            default_value: { type: 'string' }
-          }
-        }
-      },
-      required_secrets: {
-        type: 'array',
-        items: {
-          type: 'object',
-          required: [ 'name', 'label', 'type' ],
-          properties: {
-            name: { type: 'string' },
-            label: { type: 'string' },
-            type: { type: 'string' },
-            placeholder: { type: 'string' },
-            description: { type: 'string' },
-            default_value: { type: 'string' }
-          }
-        }
-      },
       deployed: { type: 'boolean' }
     }
   }
@@ -96,21 +65,21 @@ function mapSecrets(secrets) {
   }
 }
 
-function mapCurrentVersion(currentVersion) {
-  if (currentVersion) {
-    return ({ ...currentVersion, secrets: mapSecrets(currentVersion.secrets) });
+function mapDeployedVersion(deployedVersion) {
+  if (deployedVersion) {
+    return ({ ...deployedVersion, secrets: mapSecrets(deployedVersion.secrets) });
   }
 }
 
-function mapAction(action, version) {
+function mapAction(action, deployedVersion) {
   return {
     ...action,
-    code: version ? version.code : action.code,
-    deployed: !!version,
-    secrets: version ? mapSecrets(version.secrets) : mapSecrets(action.secrets),
-    dependencies: version ? version.dependencies : action.dependencies,
-    status: version ? version.status : action.status,
-    current_version: mapCurrentVersion(version)
+    code: deployedVersion ? deployedVersion.code : action.code,
+    deployed: !!deployedVersion,
+    secrets: deployedVersion ? mapSecrets(deployedVersion.secrets) : mapSecrets(action.secrets),
+    dependencies: deployedVersion ? deployedVersion.dependencies : action.dependencies,
+    status: deployedVersion ? deployedVersion.status : action.status,
+    deployed_version: mapDeployedVersion(deployedVersion)
   };
 }
 
@@ -135,18 +104,18 @@ export default class ActionHandler extends DefaultHandler {
     });
   }
 
-  async getVersionById(actionId, currentVersion) {
+  async getVersionById(actionId, deployedVersion) {
     // in case client version does not support actionVersions
     if (typeof this.client.actions.getVersions !== 'function') {
       return null;
     }
     // in case action doesn't have a current version yet
-    if (!currentVersion) {
+    if (!deployedVersion) {
       return null;
     }
 
     try {
-      return await this.client.actions.getVersions({ action_id: actionId, version_id: currentVersion.id });
+      return await this.client.actions.getVersions({ action_id: actionId, version_id: deployedVersion.id });
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {
         return null;
@@ -168,9 +137,9 @@ export default class ActionHandler extends DefaultHandler {
     try {
       const actions = await this.client.actions.getAll();
       // need to get complete current version for each action
-      // the current_version inside the action doesn't have all the necessary information
-      this.existing = await Promise.all(actions.actions.map(action => this.getVersionById(action.id, action.current_version)
-        .then(async currentVersion => mapAction(action, currentVersion))));
+      // the deployed_version inside the action doesn't have all the necessary information
+      this.existing = await Promise.all(actions.actions.map(action => this.getVersionById(action.id, action.deployed_version)
+        .then(async deployedVersion => mapAction(action, deployedVersion))));
       return this.existing;
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {
@@ -185,8 +154,7 @@ export default class ActionHandler extends DefaultHandler {
     const actionId = version.action_id;
     const versionToCreate = {
       code: version.code,
-      dependencies: version.dependencies,
-      runtime: DEFAULT_RUNTIME
+      dependencies: version.dependencies
     };
     const newVersion = await this.client.actions.createVersion({ action_id: actionId }, versionToCreate);
 
@@ -199,7 +167,7 @@ export default class ActionHandler extends DefaultHandler {
     return newVersion;
   }
 
-  async calcCurrentVersionChanges(actionId, actionAsset, existingVersion) {
+  async calcDeployedVersionChanges(actionId, actionAsset, existingVersion) {
     const create = [];
 
     if (actionAsset.deployed) {
@@ -253,7 +221,7 @@ export default class ActionHandler extends DefaultHandler {
   async actionChanges(action, found) {
     const actionChanges = {};
 
-    // if action is deployed, should compare against curren_version - calcCurrentVersionChanges method
+    // if action is deployed, should compare against curren_version - calcDeployedVersionChanges method
     if (!action.deployed) {
       // name or secrets modifications are not supported yet
       if (action.code !== found.code) {
@@ -263,10 +231,6 @@ export default class ActionHandler extends DefaultHandler {
       if (!areArraysEquals(action.dependencies, found.dependencies)) {
         actionChanges.dependencies = action.dependencies;
       }
-    }
-
-    if (!areArraysEquals(action.required_configuration, found.required_configuration)) {
-      actionChanges.required_configuration = action.required_configuration;
     }
 
     if (!areArraysEquals(action.supported_triggers, found.supported_triggers)) {
@@ -283,8 +247,7 @@ export default class ActionHandler extends DefaultHandler {
       name: action.name,
       supported_triggers: action.supported_triggers,
       code: action.code,
-      dependencies: action.dependencies,
-      runtime: DEFAULT_RUNTIME
+      dependencies: action.dependencies
     };
 
     const created = await this.client.actions.create(actionToCreate);
@@ -337,7 +300,7 @@ export default class ActionHandler extends DefaultHandler {
   async updateAction(action, existing) {
     const found = existing.find(existingAction => existingAction.name === action.name);
     // update current version
-    const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action, found.current_version);
+    const currentVersionChanges = await this.calcDeployedVersionChanges(found.id, action, found.deployed_version);
     if (currentVersionChanges.create.length > 0) {
       await this.processVersionsChanges(currentVersionChanges);
     }
@@ -371,10 +334,9 @@ export default class ActionHandler extends DefaultHandler {
       if (found) {
         del = del.filter(e => e.id !== found.id);
         // current version changes
-        const currentVersionChanges = await this.calcCurrentVersionChanges(found.id, action, found.current_version);
+        const currentVersionChanges = await this.calcDeployedVersionChanges(found.id, action, found.deployed_version);
         if (action.code !== found.code
             || !areArraysEquals(action.dependencies, found.dependencies)
-            || !areArraysEquals(action.required_configuration, found.required_configuration)
             || !areArraysEquals(action.supported_triggers, found.supported_triggers)
             || currentVersionChanges.create.length > 0) {
           update.push(action);

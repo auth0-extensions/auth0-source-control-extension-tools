@@ -71,7 +71,7 @@ describe('#actions handler', () => {
             id: 'post-login',
             version: 'v1'
           } ],
-          current_version: {
+          deployed_version: {
             code: 'some code',
             dependencies: [],
             secrets: [],
@@ -84,7 +84,7 @@ describe('#actions handler', () => {
             id: 'post-login',
             version: 'v1'
           } ],
-          current_version: {
+          deployed_version: {
             code: '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
             dependencies: [],
             secrets: [],
@@ -114,7 +114,7 @@ describe('#actions handler', () => {
           id: 'post-login',
           version: 'v1'
         } ],
-        current_version: {
+        deployed_version: {
           code: 'some code',
           dependencies: [],
           secrets: [],
@@ -183,7 +183,7 @@ describe('#actions handler', () => {
               version: 'v1'
             }
           ],
-          current_version: { id: version.id }
+          deployed_version: { id: version.id }
         }
       ];
 
@@ -200,7 +200,7 @@ describe('#actions handler', () => {
 
       const handler = new actions.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ { ...actionsData[0], deployed: true, current_version: version } ]);
+      expect(data).to.deep.equal([ { ...actionsData[0], deployed: true, deployed_version: version } ]);
     });
 
     it('should return an null for 501 status code', async () => {
