@@ -32,21 +32,26 @@ describe('#actions handler', () => {
       const data = [
         {
           name: 'actions-one',
-          supported_triggers: [ {
-            id: 'post-login',
-            version: 'v1'
-          } ]
+          supported_triggers: [
+            {
+              id: 'post-login',
+              version: 'v1'
+            }
+          ]
         },
         {
           name: 'actions-one',
-          supported_triggers: [ {
-            id: 'credentials-exchange',
-            version: 'v1'
-          } ]
+          supported_triggers: [
+            {
+              id: 'credentials-exchange',
+              version: 'v1'
+            }
+          ]
         }
       ];
 
-      stageFn.apply(handler, [ { actions: data } ])
+      stageFn
+        .apply(handler, [ { actions: data } ])
         .then(() => done(new Error('Expecting error')))
         .catch((err) => {
           expect(err).to.be.an('object');
@@ -67,10 +72,12 @@ describe('#actions handler', () => {
       const data = [
         {
           name: 'action-one',
-          supported_triggers: [ {
-            id: 'post-login',
-            version: 'v1'
-          } ],
+          supported_triggers: [
+            {
+              id: 'post-login',
+              version: 'v1'
+            }
+          ],
           deployed_version: {
             code: 'some code',
             dependencies: [],
@@ -80,12 +87,14 @@ describe('#actions handler', () => {
         },
         {
           name: 'action-two',
-          supported_triggers: [ {
-            id: 'post-login',
-            version: 'v1'
-          } ],
+          supported_triggers: [
+            {
+              id: 'post-login',
+              version: 'v1'
+            }
+          ],
           deployed_version: {
-            code: '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
+            code: "/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log('new version');\n    return {};\n  };\n  ",
             dependencies: [],
             secrets: [],
             runtime: 'node12'
@@ -110,10 +119,12 @@ describe('#actions handler', () => {
       const actionId = 'new-action-id';
       const action = {
         name: 'action-test',
-        supported_triggers: [ {
-          id: 'post-login',
-          version: 'v1'
-        } ],
+        supported_triggers: [
+          {
+            id: 'post-login',
+            version: 'v1'
+          }
+        ],
         deployed_version: {
           code: 'some code',
           dependencies: [],
@@ -143,7 +154,15 @@ describe('#actions handler', () => {
               return Promise.resolve({ actions: [] });
             }
 
-            return Promise.resolve({ actions: [ { name: action.name, supported_triggers: action.supported_triggers, id: actionId } ] });
+            return Promise.resolve({
+              actions: [
+                {
+                  name: action.name,
+                  supported_triggers: action.supported_triggers,
+                  id: actionId
+                }
+              ]
+            });
           },
           createVersion: () => Promise.resolve(version)
         },
@@ -200,7 +219,9 @@ describe('#actions handler', () => {
 
       const handler = new actions.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ { ...actionsData[0], deployed: true, deployed_version: version } ]);
+      expect(data).to.deep.equal([
+        { ...actionsData[0], deployed: true, deployed_version: version }
+      ]);
     });
 
     it('should return an null for 501 status code', async () => {
@@ -235,6 +256,30 @@ describe('#actions handler', () => {
       const handler = new actions.default({ client: auth0, config });
       const data = await handler.getType();
       expect(data).to.deep.equal(null);
+    });
+
+    it('should return an empty array when the feature flag is disabled', async () => {
+      const auth0 = {
+        actions: {
+          getAll: () => {
+            const error = new Error('Not enabled');
+            error.statusCode = 403;
+            error.originalError = {
+              response: {
+                body: {
+                  errorCode: 'feature_not_enabled'
+                }
+              }
+            };
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new actions.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([]);
     });
 
     it('should throw an error for all other failed requests', async () => {
@@ -283,8 +328,7 @@ describe('#actions handler', () => {
           }),
           getVersion: () => Promise.resolve({
             action: {},
-            code:
-              '/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log(\'new version\');\n    return {};\n  };\n  ',
+            code: "/** @type {PostLoginAction} */\nmodule.exports = async (event, context) => {\n    console.log('new version');\n    return {};\n  };\n  ",
             dependencies: [],
             runtime: 'node12',
             id: '0906fe5b-f4d6-44ec-a8f1-3c05fc186483',
