@@ -26,7 +26,9 @@ describe('#triggers handler', () => {
       const handler = new triggers.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).validate;
       const data = {
-        'post-login': [ { action_name: 'action-one', display_name: 'dysplay-name' } ],
+        'post-login': [
+          { action_name: 'action-one', display_name: 'dysplay-name' }
+        ],
         'credentials-exchange': [],
         'pre-user-registration': [],
         'post-user-registration': [],
@@ -41,7 +43,9 @@ describe('#triggers handler', () => {
   describe('#triggers process', () => {
     it('should bind a  trigger', async () => {
       const triggersBindings = {
-        'post-login': [ { action_name: 'action-one', display_name: 'dysplay-name' } ],
+        'post-login': [
+          { action_name: 'action-one', display_name: 'dysplay-name' }
+        ],
         'credentials-exchange': [],
         'pre-user-registration': [],
         'post-user-registration': [],
@@ -66,7 +70,9 @@ describe('#triggers handler', () => {
 
     it('should get all triggers', async () => {
       const triggersBindings = {
-        'post-login': [ { action_name: 'action-one', display_name: 'display-name' } ],
+        'post-login': [
+          { action_name: 'action-one', display_name: 'display-name' }
+        ],
         'credentials-exchange': [],
         'pre-user-registration': [],
         'post-user-registration': [],
@@ -76,12 +82,28 @@ describe('#triggers handler', () => {
 
       const auth0 = {
         actions: {
-          getAllTriggers: () => Promise.resolve({ triggers: [ { id: 'post-login' }, { id: 'credentials-exchange' }, { id: 'pre-user-registration' }, { id: 'post-user-registration' }, { id: 'post-change-password' }, { id: 'send-phone-message' } ] }),
+          getAllTriggers: () => Promise.resolve({
+            triggers: [
+              { id: 'post-login' },
+              { id: 'credentials-exchange' },
+              { id: 'pre-user-registration' },
+              { id: 'post-user-registration' },
+              { id: 'post-change-password' },
+              { id: 'send-phone-message' }
+            ]
+          }),
           getTriggerBindings: (params) => {
             let res = {};
             switch (params.trigger_id) {
               case 'post-login':
-                res = { bindings: [ { action: { name: 'action-one' }, display_name: 'display-name' } ] };
+                res = {
+                  bindings: [
+                    {
+                      action: { name: 'action-one' },
+                      display_name: 'display-name'
+                    }
+                  ]
+                };
                 break;
               case 'credentials-exchange':
                 res = { bindings: [] };
@@ -117,6 +139,30 @@ describe('#triggers handler', () => {
           getTriggerBindings: () => {
             const error = new Error('Not found');
             error.statusCode = 404;
+            throw error;
+          }
+        },
+        pool
+      };
+
+      const handler = new triggers.default({ client: auth0, config });
+      const data = await handler.getType();
+      expect(data).to.deep.equal([]);
+    });
+
+    it('should return an empty array when the feature flag is disabled', async () => {
+      const auth0 = {
+        actions: {
+          getAllTriggers: () => {
+            const error = new Error('Not enabled');
+            error.statusCode = 403;
+            error.originalError = {
+              response: {
+                body: {
+                  errorCode: 'feature_not_enabled'
+                }
+              }
+            };
             throw error;
           }
         },

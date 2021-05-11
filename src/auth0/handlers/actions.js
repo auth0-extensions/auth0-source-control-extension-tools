@@ -57,7 +57,9 @@ export const schema = {
   }
 };
 
-function wait(n) { return new Promise(resolve => setTimeout(resolve, n)); }
+function wait(n) {
+  return new Promise(resolve => setTimeout(resolve, n));
+}
 
 function mapSecrets(secrets) {
   if (secrets) {
@@ -67,7 +69,7 @@ function mapSecrets(secrets) {
 
 function mapDeployedVersion(deployedVersion) {
   if (deployedVersion) {
-    return ({ ...deployedVersion, secrets: mapSecrets(deployedVersion.secrets) });
+    return { ...deployedVersion, secrets: mapSecrets(deployedVersion.secrets) };
   }
 }
 
@@ -76,15 +78,27 @@ function mapAction(action, deployedVersion) {
     ...action,
     code: deployedVersion ? deployedVersion.code : action.code,
     deployed: !!deployedVersion,
-    secrets: deployedVersion ? mapSecrets(deployedVersion.secrets) : mapSecrets(action.secrets),
-    dependencies: deployedVersion ? deployedVersion.dependencies : action.dependencies,
+    secrets: deployedVersion
+      ? mapSecrets(deployedVersion.secrets)
+      : mapSecrets(action.secrets),
+    dependencies: deployedVersion
+      ? deployedVersion.dependencies
+      : action.dependencies,
     status: deployedVersion ? deployedVersion.status : action.status,
     deployed_version: mapDeployedVersion(deployedVersion)
   };
 }
 
-async function waitUntilVersionIsDeployed(client, actionId, versionId, retries) {
-  const version = await client.actions.getVersion({ action_id: actionId, version_id: versionId });
+async function waitUntilVersionIsDeployed(
+  client,
+  actionId,
+  versionId,
+  retries
+) {
+  const version = await client.actions.getVersion({
+    action_id: actionId,
+    version_id: versionId
+  });
   if (retries > 0 && !version.deployed) {
     await wait(1000);
     await waitUntilVersionIsDeployed(client, actionId, versionId, retries - 1);
@@ -95,6 +109,13 @@ async function waitUntilVersionIsDeployed(client, actionId, versionId, retries) 
   }
 }
 
+function isActionsDisabled(err) {
+  const errorBody = _.get(err, 'originalError.response.body') || {};
+
+  return (
+    err.statusCode === 403 && errorBody.errorCode === 'feature_not_enabled'
+  );
+}
 
 export default class ActionHandler extends DefaultHandler {
   constructor(options) {
@@ -115,10 +136,17 @@ export default class ActionHandler extends DefaultHandler {
     }
 
     try {
-      return await this.client.actions.getVersions({ action_id: actionId, version_id: deployedVersion.id });
+      return await this.client.actions.getVersions({
+        action_id: actionId,
+        version_id: deployedVersion.id
+      });
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {
         return null;
+      }
+      if (isActionsDisabled(err)) {
+        log.info('Skipping actions because it is not enabled.');
+        return [];
       }
       throw err;
     }
@@ -130,7 +158,10 @@ export default class ActionHandler extends DefaultHandler {
     }
 
     // in case client version does not support actions
-    if (!this.client.actions || typeof this.client.actions.getAll !== 'function') {
+    if (
+      !this.client.actions
+      || typeof this.client.actions.getAll !== 'function'
+    ) {
       return [];
     }
 
@@ -138,17 +169,25 @@ export default class ActionHandler extends DefaultHandler {
       const actions = await this.client.actions.getAll();
       // need to get complete current version for each action
       // the deployed_version inside the action doesn't have all the necessary information
-      this.existing = await Promise.all(actions.actions.map(action => this.getVersionById(action.id, action.deployed_version)
-        .then(async deployedVersion => mapAction(action, deployedVersion))));
+      this.existing = await Promise.all(
+        actions.actions.map(action => this.getVersionById(action.id, action.deployed_version).then(
+          async deployedVersion => mapAction(action, deployedVersion)
+        ))
+      );
       return this.existing;
     } catch (err) {
       if (err.statusCode === 404 || err.statusCode === 501) {
         return null;
       }
+
+      if (isActionsDisabled(err)) {
+        log.info('Skipping actions because it is not enabled.');
+        return [];
+      }
+
       throw err;
     }
   }
-
 
   async createVersion(version) {
     const actionId = version.action_id;
@@ -156,10 +195,18 @@ export default class ActionHandler extends DefaultHandler {
       code: version.code,
       dependencies: version.dependencies
     };
-    const newVersion = await this.client.actions.createVersion({ action_id: actionId }, versionToCreate);
+    const newVersion = await this.client.actions.createVersion(
+      { action_id: actionId },
+      versionToCreate
+    );
 
     // wait WAIT_FOR_DEPLOY seconds for version deploy, if can't deploy an error will arise
-    await waitUntilVersionIsDeployed(this.client, actionId, newVersion.id, WAIT_FOR_DEPLOY);
+    await waitUntilVersionIsDeployed(
+      this.client,
+      actionId,
+      newVersion.id,
+      WAIT_FOR_DEPLOY
+    );
 
     // Update draft version
     await this.client.actions.update({ action_id: actionId }, versionToCreate);
@@ -178,7 +225,13 @@ export default class ActionHandler extends DefaultHandler {
       };
       if (existingVersion) {
         // name or secrets modifications are not supported yet
-        if (actionAsset.code !== existingVersion.code || !areArraysEquals(actionAsset.dependencies, existingVersion.dependencies)) {
+        if (
+          actionAsset.code !== existingVersion.code
+          || !areArraysEquals(
+            actionAsset.dependencies,
+            existingVersion.dependencies
+          )
+        ) {
           create.push(versionToCreate);
         }
       } else {
@@ -192,30 +245,40 @@ export default class ActionHandler extends DefaultHandler {
   }
 
   async createVersions(creates) {
-    await this.client.pool.addEachTask({
-      data: creates || [],
-      generator: item => this.createVersion(item).then((data) => {
-        this.didCreate({ version_id: data.id });
-        this.created += 1;
-      }).catch((err) => {
-        throw new Error(`Problem creating ${this.type} ${this.objString(item)}\n${err}`);
+    await this.client.pool
+      .addEachTask({
+        data: creates || [],
+        generator: item => this.createVersion(item)
+          .then((data) => {
+            this.didCreate({ version_id: data.id });
+            this.created += 1;
+          })
+          .catch((err) => {
+            throw new Error(
+              `Problem creating ${this.type} ${this.objString(item)}\n${err}`
+            );
+          })
       })
-    }).promise();
+      .promise();
   }
 
   async processVersionsChanges(changes) {
-    log.info(`Start processChanges for action versions [create:${changes.create.length}]`);
+    log.info(
+      `Start processChanges for action versions [create:${changes.create.length}]`
+    );
 
     const myChanges = [ { create: changes.create } ];
-    await Promise.all(myChanges.map(async (change) => {
-      switch (true) {
-        case change.create && change.create.length > 0:
-          await this.createVersions(changes.create);
-          break;
-        default:
-          break;
-      }
-    }));
+    await Promise.all(
+      myChanges.map(async (change) => {
+        switch (true) {
+          case change.create && change.create.length > 0:
+            await this.createVersions(changes.create);
+            break;
+          default:
+            break;
+        }
+      })
+    );
   }
 
   async actionChanges(action, found) {
@@ -254,25 +317,33 @@ export default class ActionHandler extends DefaultHandler {
 
     // if action.deployed is true an actionVersion should be created
     if (action.deployed) {
-      await this.createVersions([ {
-        code: action.code,
-        dependencies: action.dependencies,
-        action_id: created.id
-      } ]);
+      await this.createVersions([
+        {
+          code: action.code,
+          dependencies: action.dependencies,
+          action_id: created.id
+        }
+      ]);
     }
     return created;
   }
 
   async createActions(creates) {
-    await this.client.pool.addEachTask({
-      data: creates || [],
-      generator: item => this.createAction(item).then((data) => {
-        this.didCreate({ action_id: data.id });
-        this.created += 1;
-      }).catch((err) => {
-        throw new Error(`Problem creating ${this.type} ${this.objString(item)}\n${err}`);
+    await this.client.pool
+      .addEachTask({
+        data: creates || [],
+        generator: item => this.createAction(item)
+          .then((data) => {
+            this.didCreate({ action_id: data.id });
+            this.created += 1;
+          })
+          .catch((err) => {
+            throw new Error(
+              `Problem creating ${this.type} ${this.objString(item)}\n${err}`
+            );
+          })
       })
-    }).promise();
+      .promise();
   }
 
   async deleteAction(action) {
@@ -281,16 +352,27 @@ export default class ActionHandler extends DefaultHandler {
   }
 
   async deleteActions(dels) {
-    if (this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true) {
-      await this.client.pool.addEachTask({
-        data: dels || [],
-        generator: action => this.deleteAction(action).then(() => {
-          this.didDelete({ action_id: action.id });
-          this.deleted += 1;
-        }).catch((err) => {
-          throw new Error(`Problem deleting ${this.type} ${this.objString({ action_id: action.id })}\n${err}`);
+    if (
+      this.config('AUTH0_ALLOW_DELETE') === 'true'
+      || this.config('AUTH0_ALLOW_DELETE') === true
+    ) {
+      await this.client.pool
+        .addEachTask({
+          data: dels || [],
+          generator: action => this.deleteAction(action)
+            .then(() => {
+              this.didDelete({ action_id: action.id });
+              this.deleted += 1;
+            })
+            .catch((err) => {
+              throw new Error(
+                `Problem deleting ${this.type} ${this.objString({
+                  action_id: action.id
+                })}\n${err}`
+              );
+            })
         })
-      }).promise();
+        .promise();
     } else {
       log.warn(`Detected the following actions should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
       \n${dels.map(i => this.objString(i)).join('\n')}`);
@@ -298,9 +380,15 @@ export default class ActionHandler extends DefaultHandler {
   }
 
   async updateAction(action, existing) {
-    const found = existing.find(existingAction => existingAction.name === action.name);
+    const found = existing.find(
+      existingAction => existingAction.name === action.name
+    );
     // update current version
-    const currentVersionChanges = await this.calcDeployedVersionChanges(found.id, action, found.deployed_version);
+    const currentVersionChanges = await this.calcDeployedVersionChanges(
+      found.id,
+      action,
+      found.deployed_version
+    );
     if (currentVersionChanges.create.length > 0) {
       await this.processVersionsChanges(currentVersionChanges);
     }
@@ -313,15 +401,21 @@ export default class ActionHandler extends DefaultHandler {
   }
 
   async updateActions(updates, actions) {
-    await this.client.pool.addEachTask({
-      data: updates || [],
-      generator: item => this.updateAction(item, actions).then((data) => {
-        this.didUpdate({ action_id: data.id });
-        this.updated += 1;
-      }).catch((err) => {
-        throw new Error(`Problem updating ${this.type} ${this.objString(item)}\n${err}`);
+    await this.client.pool
+      .addEachTask({
+        data: updates || [],
+        generator: item => this.updateAction(item, actions)
+          .then((data) => {
+            this.didUpdate({ action_id: data.id });
+            this.updated += 1;
+          })
+          .catch((err) => {
+            throw new Error(
+              `Problem updating ${this.type} ${this.objString(item)}\n${err}`
+            );
+          })
       })
-    }).promise();
+      .promise();
   }
 
   async calcChanges(actionsAssets, existing) {
@@ -330,15 +424,26 @@ export default class ActionHandler extends DefaultHandler {
     let del = [ ...existing ];
     const create = [];
     actionsAssets.forEach(async (action) => {
-      const found = existing.find(existingAction => existingAction.name === action.name);
+      const found = existing.find(
+        existingAction => existingAction.name === action.name
+      );
       if (found) {
         del = del.filter(e => e.id !== found.id);
         // current version changes
-        const currentVersionChanges = await this.calcDeployedVersionChanges(found.id, action, found.deployed_version);
-        if (action.code !== found.code
-            || !areArraysEquals(action.dependencies, found.dependencies)
-            || !areArraysEquals(action.supported_triggers, found.supported_triggers)
-            || currentVersionChanges.create.length > 0) {
+        const currentVersionChanges = await this.calcDeployedVersionChanges(
+          found.id,
+          action,
+          found.deployed_version
+        );
+        if (
+          action.code !== found.code
+          || !areArraysEquals(action.dependencies, found.dependencies)
+          || !areArraysEquals(
+            action.supported_triggers,
+            found.supported_triggers
+          )
+          || currentVersionChanges.create.length > 0
+        ) {
           update.push(action);
         }
       } else {
@@ -366,22 +471,30 @@ export default class ActionHandler extends DefaultHandler {
 
     const changes = await this.calcChanges(actions, existing);
 
-    log.info(`Start processChanges for actions [delete:${changes.del.length}] [update:${changes.update.length}], [create:${changes.create.length}]`);
-    const myChanges = [ { del: changes.del }, { create: changes.create }, { update: changes.update } ];
-    await Promise.all(myChanges.map(async (change) => {
-      switch (true) {
-        case change.del && change.del.length > 0:
-          await this.deleteActions(change.del);
-          break;
-        case change.create && change.create.length > 0:
-          await this.createActions(changes.create);
-          break;
-        case change.update && change.update.length > 0:
-          await this.updateActions(change.update, existing);
-          break;
-        default:
-          break;
-      }
-    }));
+    log.info(
+      `Start processChanges for actions [delete:${changes.del.length}] [update:${changes.update.length}], [create:${changes.create.length}]`
+    );
+    const myChanges = [
+      { del: changes.del },
+      { create: changes.create },
+      { update: changes.update }
+    ];
+    await Promise.all(
+      myChanges.map(async (change) => {
+        switch (true) {
+          case change.del && change.del.length > 0:
+            await this.deleteActions(change.del);
+            break;
+          case change.create && change.create.length > 0:
+            await this.createActions(changes.create);
+            break;
+          case change.update && change.update.length > 0:
+            await this.updateActions(change.update, existing);
+            break;
+          default:
+            break;
+        }
+      })
+    );
   }
 }
