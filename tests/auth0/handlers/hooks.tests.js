@@ -217,7 +217,7 @@ describe('#hooks handler', () => {
 
       const handler = new hooks.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal(hooksData.map(hook => ({ ...hook, code, secrets: { SECRET: `hook-${hook.id}-secret` } })));
+      expect(data).to.deep.equal(hooksData.map((hook) => ({ ...hook, code, secrets: { SECRET: `hook-${hook.id}-secret` } })));
     });
 
     it('should return an empty array for 501 status code', async () => {
@@ -273,7 +273,6 @@ describe('#hooks handler', () => {
         expect(error).to.be.an.instanceOf(Error);
       }
     });
-
 
     it('should update hook', async () => {
       const auth0 = {

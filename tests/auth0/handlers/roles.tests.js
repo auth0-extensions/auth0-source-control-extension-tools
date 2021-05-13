@@ -169,7 +169,6 @@ describe('#roles handler', () => {
       expect(data).to.deep.equal([]);
     });
 
-
     it('should throw an error for all other failed requests', async () => {
       const auth0 = {
         roles: {

@@ -104,11 +104,11 @@ describe('#rules handler', () => {
       ];
 
       const output = await stageFn.apply(handler, [ { rules: data } ], true);
-      const newRulesOrder = [ ...output.create, ...output.update ].map(rule => rule.order);
-      const reorderedRulesOrder = output.reOrder.map(rule => rule.order);
+      const newRulesOrder = [ ...output.create, ...output.update ].map((rule) => rule.order);
+      const reorderedRulesOrder = output.reOrder.map((rule) => rule.order);
 
       //  check if there is no collisions between rules order
-      const checker = (arr, target) => target.every(v => arr.includes(v));
+      const checker = (arr, target) => target.every((v) => arr.includes(v));
       expect(checker(newRulesOrder, reorderedRulesOrder)).to.be.equal(false);
     });
 
@@ -142,11 +142,11 @@ describe('#rules handler', () => {
       ];
 
       const output = await stageFn.apply(handler, [ { rules: data } ], true);
-      const newRulesOrder = [ ...output.create, ...output.update ].map(rule => rule.order);
-      const reorderedRulesOrder = output.reOrder.map(rule => rule.order);
+      const newRulesOrder = [ ...output.create, ...output.update ].map((rule) => rule.order);
+      const reorderedRulesOrder = output.reOrder.map((rule) => rule.order);
 
       //  check if there is no collisions between rules order
-      const checker = (arr, target) => target.every(v => arr.includes(v));
+      const checker = (arr, target) => target.every((v) => arr.includes(v));
       expect(checker(newRulesOrder, reorderedRulesOrder)).to.be.equal(false);
     });
 

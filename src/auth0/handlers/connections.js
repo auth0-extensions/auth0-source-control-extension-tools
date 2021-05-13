@@ -17,7 +17,6 @@ export const schema = {
   }
 };
 
-
 export default class ConnectionsHandler extends DefaultHandler {
   constructor(config) {
     super({
@@ -54,7 +53,7 @@ export default class ConnectionsHandler extends DefaultHandler {
     if (this.existing) return this.existing;
     const connections = await this.client.connections.getAll({ paginate: true });
     // Filter out database connections
-    this.existing = connections.filter(c => c.strategy !== 'auth0');
+    this.existing = connections.filter((c) => c.strategy !== 'auth0');
 
     return this.existing;
   }
@@ -68,7 +67,7 @@ export default class ConnectionsHandler extends DefaultHandler {
     // Convert enabled_clients by name to the id
     const clients = await this.client.clients.getAll({ paginate: true });
     const existingConnections = await this.client.connections.getAll({ paginate: true });
-    const formatted = assets.connections.map(connection => (
+    const formatted = assets.connections.map((connection) => (
       {
         ...connection,
         ...this.getFormattedOptions(connection, clients),
@@ -77,7 +76,6 @@ export default class ConnectionsHandler extends DefaultHandler {
     ));
     return super.calcChanges({ ...assets, connections: formatted });
   }
-
 
   // Run after clients are updated so we can convert all the enabled_clients names to id's
   @order('60')

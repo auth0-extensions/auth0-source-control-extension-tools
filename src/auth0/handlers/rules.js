@@ -47,7 +47,6 @@ export const schema = {
   }
 };
 
-
 export default class RulesHandler extends DefaultHandler {
   constructor(options) {
     super({
@@ -76,8 +75,8 @@ export default class RulesHandler extends DefaultHandler {
 
     // Filter excluded rules
     if (!includeExcluded) {
-      rules = rules.filter(r => !excludedRules.includes(r.name));
-      existing = existing.filter(r => !excludedRules.includes(r.name));
+      rules = rules.filter((r) => !excludedRules.includes(r.name));
+      existing = existing.filter((r) => !excludedRules.includes(r.name));
     }
 
     // Figure out what needs to be updated vs created
@@ -88,12 +87,12 @@ export default class RulesHandler extends DefaultHandler {
     // Figure out the rules that need to be re-ordered
     const futureRules = [ ...create, ...update ];
 
-    const futureMaxOrder = Math.max(...futureRules.map(r => r.order));
-    const existingMaxOrder = Math.max(...existing.map(r => r.order));
+    const futureMaxOrder = Math.max(...futureRules.map((r) => r.order));
+    const existingMaxOrder = Math.max(...existing.map((r) => r.order));
     let nextOrderNo = Math.max(futureMaxOrder, existingMaxOrder);
 
     const reOrder = futureRules.reduce((accum, r) => {
-      const conflict = existing.find(f => r.order === f.order && r.name !== f.name);
+      const conflict = existing.find((f) => r.order === f.order && r.name !== f.name);
       if (conflict) {
         nextOrderNo += 1;
         accum.push({
@@ -125,12 +124,12 @@ export default class RulesHandler extends DefaultHandler {
     const { update, create, del } = await this.calcChanges(assets, true);
     // Include del rules which are actually not going to be deleted but are excluded
     // they can still muck up the ordering so we must take it into consideration.
-    const futureRules = [ ...create, ...update, ...del.filter(r => excludedRules.includes(r.name)) ];
+    const futureRules = [ ...create, ...update, ...del.filter((r) => excludedRules.includes(r.name)) ];
 
     // Detect rules with the same order
     const rulesSameOrder = duplicateItems(futureRules, 'order');
     if (rulesSameOrder.length > 0) {
-      const formatted = rulesSameOrder.map(dups => dups.map(d => `${d.name}`));
+      const formatted = rulesSameOrder.map((dups) => dups.map((d) => `${d.name}`));
       throw new ValidationError(`There are multiple rules for the following stage-order combinations
       ${dumpJSON(formatted)}.
        Only one rule must be defined for the same order number in a stage.`);
@@ -140,8 +139,8 @@ export default class RulesHandler extends DefaultHandler {
     const existing = await this.getType();
     const stateChanged = futureRules.reduce((changed, rule) => ([
       ...changed,
-      ...existing.filter(r => rule.name.toLowerCase() === r.name.toLowerCase() && r.stage !== rule.stage)
-    ]), []).map(r => r.name);
+      ...existing.filter((r) => rule.name.toLowerCase() === r.name.toLowerCase() && r.stage !== rule.stage)
+    ]), []).map((r) => r.name);
 
     if (stateChanged.length > 0) {
       throw new ValidationError(`The following rules changed stage which is not allowed:
@@ -164,7 +163,7 @@ export default class RulesHandler extends DefaultHandler {
     // Temporally re-order rules with conflicting ordering
     await this.client.pool.addEachTask({
       data: changes.reOrder,
-      generator: rule => this.client.updateRule({ id: rule.id }, stripFields(rule, this.stripUpdateFields)).then(() => {
+      generator: (rule) => this.client.updateRule({ id: rule.id }, stripFields(rule, this.stripUpdateFields)).then(() => {
         const updated = {
           name: rule.name, stage: rule.stage, order: rule.order, id: rule.id
         };

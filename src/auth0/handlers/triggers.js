@@ -61,7 +61,7 @@ export default class TriggersHandler extends DefaultHandler {
         const { bindings } = await this.client.actions.getTriggerBindings({
           trigger_id: triggerId
         });
-        triggerBindings[triggerId] = bindings.map(binding => ({
+        triggerBindings[triggerId] = bindings.map((binding) => ({
           action_name: binding.action.name,
           display_name: binding.display_name
         }));
@@ -85,7 +85,7 @@ export default class TriggersHandler extends DefaultHandler {
 
   async updateTrigger(updates) {
     const triggerId = updates.trigger_id;
-    const bindings = updates.bindings.map(binding => ({
+    const bindings = updates.bindings.map((binding) => ({
       ref: { type: 'action_name', value: binding.action_name },
       display_name: binding.display_name
     }));
@@ -110,7 +110,7 @@ export default class TriggersHandler extends DefaultHandler {
     await this.client.pool
       .addEachTask({
         data: updates || [],
-        generator: item => this.updateTrigger(item)
+        generator: (item) => this.updateTrigger(item)
           .then((triggerId) => {
             this.didUpdate({ trigger: triggerId });
             this.updated += 1;

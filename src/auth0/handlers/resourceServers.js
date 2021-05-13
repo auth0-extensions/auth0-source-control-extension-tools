@@ -33,7 +33,6 @@ export const schema = {
   }
 };
 
-
 export default class ResourceServersHandler extends DefaultHandler {
   constructor(options) {
     super({
@@ -50,7 +49,7 @@ export default class ResourceServersHandler extends DefaultHandler {
   async getType() {
     if (this.existing) return this.existing;
     const resourceServers = await this.client.resourceServers.getAll({ paginate: true });
-    return resourceServers.filter(rs => rs.name !== constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME);
+    return resourceServers.filter((rs) => rs.name !== constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME);
   }
 
   async calcChanges(assets) {
@@ -64,8 +63,8 @@ export default class ResourceServersHandler extends DefaultHandler {
     let existing = await this.getType();
 
     // Filter excluded
-    resourceServers = resourceServers.filter(r => !excluded.includes(r.name));
-    existing = existing.filter(r => !excluded.includes(r.name));
+    resourceServers = resourceServers.filter((r) => !excluded.includes(r.name));
+    existing = existing.filter((r) => !excluded.includes(r.name));
 
     return calcChanges(resourceServers, existing, [ 'id', 'identifier' ]);
   }
@@ -76,7 +75,7 @@ export default class ResourceServersHandler extends DefaultHandler {
     // Do nothing if not set
     if (!resourceServers) return;
 
-    const mgmtAPIResource = resourceServers.find(r => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME);
+    const mgmtAPIResource = resourceServers.find((r) => r.name === constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME);
     if (mgmtAPIResource) {
       throw new ValidationError(`You can not configure the '${constants.RESOURCE_SERVERS_MANAGEMENT_API_NAME}'.`);
     }

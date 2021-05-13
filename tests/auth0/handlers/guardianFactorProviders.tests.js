@@ -63,7 +63,7 @@ describe('#guardianFactorProviders handler', () => {
     it('should get guardianFactorProviders', async () => {
       const auth0 = {
         guardian: {
-          getFactorProvider: params => ({ ...params, test: 'data' })
+          getFactorProvider: (params) => ({ ...params, test: 'data' })
         },
         pool
       };

@@ -51,7 +51,7 @@ export default class RoleHandler extends DefaultHandler {
   async createRoles(creates) {
     await this.client.pool.addEachTask({
       data: creates || [],
-      generator: item => this.createRole(item).then((data) => {
+      generator: (item) => this.createRole(item).then((data) => {
         this.didCreate(data);
         this.created += 1;
       }).catch((err) => {
@@ -68,7 +68,7 @@ export default class RoleHandler extends DefaultHandler {
     if (this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true) {
       await this.client.pool.addEachTask({
         data: dels || [],
-        generator: item => this.deleteRole(item).then(() => {
+        generator: (item) => this.deleteRole(item).then(() => {
           this.didDelete(item);
           this.deleted += 1;
         }).catch((err) => {
@@ -77,12 +77,12 @@ export default class RoleHandler extends DefaultHandler {
       }).promise();
     } else {
       log.warn(`Detected the following roles should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
-      \n${dels.map(i => this.objString(i)).join('\n')}`);
+      \n${dels.map((i) => this.objString(i)).join('\n')}`);
     }
   }
 
   async updateRole(data, roles) {
-    const existingRole = await roles.find(roleDataForUpdate => roleDataForUpdate.name === data.name);
+    const existingRole = await roles.find((roleDataForUpdate) => roleDataForUpdate.name === data.name);
 
     const params = { id: data.id };
     const newPermissions = data.permissions;
@@ -106,7 +106,7 @@ export default class RoleHandler extends DefaultHandler {
   async updateRoles(updates, roles) {
     await this.client.pool.addEachTask({
       data: updates || [],
-      generator: item => this.updateRole(item, roles).then((data) => {
+      generator: (item) => this.updateRole(item, roles).then((data) => {
         this.didUpdate(data);
         this.updated += 1;
       }).catch((err) => {
@@ -145,7 +145,6 @@ export default class RoleHandler extends DefaultHandler {
       throw err;
     }
   }
-
 
   @order('60')
   async processChanges(assets) {

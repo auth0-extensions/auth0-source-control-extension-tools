@@ -12,7 +12,6 @@ export const schema = {
   }
 };
 
-
 export default class GuardianFactorsHandler extends DefaultHandler {
   constructor(options) {
     super({
