@@ -25,7 +25,6 @@ export const schema = {
   }
 };
 
-
 export default class DatabaseHandler extends DefaultHandler {
   constructor(config) {
     super({
@@ -45,7 +44,7 @@ export default class DatabaseHandler extends DefaultHandler {
     if (fn === this.functions.update) {
       return (params, payload) => this.client.connections.get(params)
         .then((connection) => {
-          payload.options = Object.assign({}, connection.options, payload.options);
+          payload.options = { ...connection.options, ...payload.options };
           return this.client.connections.update(params, payload);
         });
     }

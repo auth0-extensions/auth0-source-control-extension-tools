@@ -5,14 +5,14 @@
       "env",
       {
         "targets": {
-          "node": "8"
+          "node": "current"
         }
       }
     ]
   ],
   "plugins": [
-    "transform-decorators-legacy",
-    "transform-object-rest-spread",
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    "@babel/plugin-proposal-object-rest-spread",
     "dynamic-import-node",
     [
       "module-resolver",

@@ -24,7 +24,7 @@ describe('#schema validation tests', () => {
     }
   };
 
-  const failedCb = done => err => done(err || 'test failed');
+  const failedCb = (done) => (err) => done(err || 'test failed');
 
   const passedCb = (done, message, field) => (err) => {
     if (err || message) expect(err.message).to.contain(message);
@@ -70,7 +70,6 @@ describe('#schema validation tests', () => {
         passedCb(done, `should be ${expectedType}`, field)
       );
   };
-
 
   describe('#branding validate', () => {
     it('should fail validation if branding is not an object', (done) => {

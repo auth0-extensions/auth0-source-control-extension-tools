@@ -33,7 +33,6 @@ const sampleEnabledConnection2 = {
   }
 };
 
-
 describe('#organizations handler', () => {
   const config = function(key) {
     return config.data && config.data[key];
@@ -180,7 +179,7 @@ describe('#organizations handler', () => {
 
       const handler = new organizations.default({ client: auth0, config });
       const data = await handler.getType();
-      expect(data).to.deep.equal([ Object.assign({}, sampleOrg, { connections: [ sampleEnabledConnection ] }) ]);
+      expect(data).to.deep.equal([ { ...sampleOrg, connections: [ sampleEnabledConnection ] } ]);
     });
 
     it('should get all organizations', async () => {

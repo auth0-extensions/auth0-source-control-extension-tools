@@ -14,7 +14,7 @@ describe('#schema validation tests', async () => {
 
     const mock = {
       clients: {
-        getAll: async args => new Promise((resolve) => {
+        getAll: async (args) => new Promise((resolve) => {
           const localArgs = { ...args };
           setTimeout(() => {
             resolve({
@@ -47,7 +47,7 @@ describe('#schema validation tests', async () => {
     const mock = {
       roles: {
         permissions: {
-          getAll: async localArgs => Promise.resolve({
+          getAll: async (localArgs) => Promise.resolve({
             start: localArgs.page * localArgs.per_page,
             total: expectedNbItems,
             permissions: permissions.slice(localArgs.page * localArgs.per_page, (localArgs.page + 1) * localArgs.per_page)

@@ -1,7 +1,6 @@
 import DefaultHandler from './default';
 import constants from '../../constants';
 
-
 export const schema = {
   type: 'array',
   items: {
@@ -12,7 +11,6 @@ export const schema = {
     required: [ 'name' ]
   }
 };
-
 
 export default class GuardianFactorTemplatesHandler extends DefaultHandler {
   constructor(options) {
@@ -32,7 +30,7 @@ export default class GuardianFactorTemplatesHandler extends DefaultHandler {
     }));
 
     // Filter out empty, should have more then 1 keys (name)
-    return data.filter(d => Object.keys(d).length > 1);
+    return data.filter((d) => Object.keys(d).length > 1);
   }
 
   async processChanges(assets) {

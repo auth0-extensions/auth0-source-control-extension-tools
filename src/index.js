@@ -11,7 +11,6 @@ export default {
   Auth0
 };
 
-
 export {
   constants,
   deploy,

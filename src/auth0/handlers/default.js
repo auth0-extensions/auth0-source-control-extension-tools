@@ -92,7 +92,7 @@ export default class DefaultHandler {
     // Do not allow items with same name
     const duplicateNames = duplicateItems(typeAssets, 'name');
     if (duplicateNames.length > 0) {
-      const formatted = duplicateNames.map(dups => dups.map(d => `${d.name}`));
+      const formatted = duplicateNames.map((dups) => dups.map((d) => `${d.name}`));
       throw new ValidationError(`There are multiple ${this.type} with the same name combinations
       ${dumpJSON(formatted)}.
        Names must be unique.`);
@@ -101,7 +101,7 @@ export default class DefaultHandler {
     // Do not allow items with same id
     const duplicateIDs = duplicateItems(typeAssets, this.id);
     if (duplicateIDs.length > 0) {
-      const formatted = duplicateIDs.map(dups => dups.map(d => `${d[this.id]}`));
+      const formatted = duplicateIDs.map((dups) => dups.map((d) => `${d[this.id]}`));
       throw new ValidationError(`There are multiple ${this.type} for the following stage-order combinations
       ${dumpJSON(formatted)}.
        Only one rule must be defined for the same order number in a stage.`);
@@ -127,7 +127,7 @@ export default class DefaultHandler {
       const shouldDelete = allowDelete || byExtension;
       if (!shouldDelete) {
         log.warn(`Detected the following ${this.type} should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
-        \n${changes.del.map(i => this.objString(i)).join('\n')}
+        \n${changes.del.map((i) => this.objString(i)).join('\n')}
          `);
       } else {
         await this.client.pool.addEachTask({
@@ -155,7 +155,7 @@ export default class DefaultHandler {
         const params = { [this.id]: updateItem[this.id] };
         const payload = stripFields({ ...updateItem }, this.stripUpdateFields);
         return updateFN(params, payload)
-          .then(data => this.didUpdate(data))
+          .then((data) => this.didUpdate(data))
           .catch((err) => {
             throw new Error(`Problem updating ${this.type} ${this.objString(updateItem)}\n${err}`);
           });

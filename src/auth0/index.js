@@ -16,7 +16,6 @@ function sortByOrder(toSort, stage) {
   return sorted;
 }
 
-
 export default class Auth0 {
   constructor(client, assets, config) {
     this.client = pagedClient(client);

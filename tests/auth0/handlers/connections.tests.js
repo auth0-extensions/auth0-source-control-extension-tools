@@ -228,7 +228,6 @@ describe('#connections handler', () => {
       await stageFn.apply(handler, [ { connections: data } ]);
     });
 
-
     it('should keep client ID in idpinitiated.client_id', async () => {
       const auth0 = {
         connections: {
@@ -429,7 +428,7 @@ describe('#connections handler', () => {
       config.data.AUTH0_ALLOW_DELETE = false;
       const auth0 = {
         connections: {
-          create: data => Promise.resolve(data),
+          create: (data) => Promise.resolve(data),
           update: () => Promise.resolve([]),
           delete: (params) => {
             expect(params).to.be.an('undefined');

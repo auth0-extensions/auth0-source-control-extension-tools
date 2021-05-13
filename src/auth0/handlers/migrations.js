@@ -6,7 +6,6 @@ export const schema = {
   additionalProperties: { type: 'boolean' }
 };
 
-
 export default class MigrationsHandler extends DefaultHandler {
   constructor(options) {
     super({
@@ -50,15 +49,15 @@ export default class MigrationsHandler extends DefaultHandler {
   }
 
   async removeUnavailableMigrations(migrations) {
-    const flags = Object.assign({}, migrations);
+    const flags = { ...migrations };
     const ignoreUnavailableMigrations = !!this.config('AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS');
     const existingMigrations = await this.getType();
-    const unavailableMigrations = Object.keys(flags).filter(flag => !(flag in existingMigrations));
-    const ignoredMigrations = unavailableMigrations.filter(flag => ignoreUnavailableMigrations || flags[flag] === false);
+    const unavailableMigrations = Object.keys(flags).filter((flag) => !(flag in existingMigrations));
+    const ignoredMigrations = unavailableMigrations.filter((flag) => ignoreUnavailableMigrations || flags[flag] === false);
 
     if (ignoredMigrations.length > 0) {
       this.logUnavailableMigrations(ignoreUnavailableMigrations, ignoredMigrations);
-      ignoredMigrations.forEach(flag => delete flags[flag]);
+      ignoredMigrations.forEach((flag) => delete flags[flag]);
     }
     return flags;
   }
