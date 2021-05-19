@@ -1,6 +1,6 @@
 {
   "name": "auth0-source-control-extension-tools",
-  "version": "4.7.1",
+  "version": "4.7.2",
   "description": "Supporting tools for the Source Control extensions",
   "main": "lib/index.js",
   "scripts": {

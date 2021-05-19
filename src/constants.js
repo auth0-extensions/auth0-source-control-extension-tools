@@ -118,7 +118,8 @@ constants.GUARDIAN_FACTORS = [
   'email',
   'duo',
   'webauthn-roaming',
-  'webauthn-platform'
+  'webauthn-platform',
+  'recovery-code'
 ];
 constants.GUARDIAN_POLICIES = [
   'all-applications',
