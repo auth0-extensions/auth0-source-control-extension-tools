@@ -3,6 +3,11 @@
 
 # Auth0 - Source Control Extension Tools
 
+## v6.x drops support for Node 8
+
+Node 8 is no longer supported start from v6.0.0
+
+
 ## v5.x supports only `auth0-deploy-cli`
 
 **NOTE**: Starting from v5.0.0, only `auth0-deploy-cli` will be supported.
