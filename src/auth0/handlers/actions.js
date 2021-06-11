@@ -423,7 +423,10 @@ export default class ActionHandler extends DefaultHandler {
     const update = [];
     let del = [ ...existing ];
     const create = [];
-    actionsAssets.forEach(async (action) => {
+
+    // Use a loop here so that the await blocks properly
+    // eslint-disable-next-line no-restricted-syntax
+    for (const action of actionsAssets) {
       const found = existing.find(
         (existingAction) => existingAction.name === action.name
       );
@@ -449,7 +452,7 @@ export default class ActionHandler extends DefaultHandler {
       } else {
         create.push(action);
       }
-    });
+    }
 
     // Figure out what needs to be updated vs created
     return {
