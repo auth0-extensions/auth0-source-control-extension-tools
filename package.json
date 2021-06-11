@@ -18,7 +18,6 @@
   "license": "MIT",
   "dependencies": {
     "ajv": "^6.5.2",
-    "auth0-extension-tools": "^1.5.0",
     "babel-preset-env": "^1.7.0",
     "dot-prop": "^4.2.0",
     "lodash": "^4.17.20",
