@@ -8,19 +8,17 @@ const mappings = Object.entries(constants.GUARDIAN_FACTOR_PROVIDERS).reduce((acc
   return accum;
 }, []);
 
-
 export const schema = {
   type: 'array',
   items: {
     type: 'object',
     properties: {
       name: { type: 'string', enum: constants.GUARDIAN_FACTORS },
-      provider: { type: 'string', enum: mappings.map(p => p.provider) }
+      provider: { type: 'string', enum: mappings.map((p) => p.provider) }
     },
     required: [ 'name', 'provider' ]
   }
 };
-
 
 export default class GuardianFactorProvidersHandler extends DefaultHandler {
   constructor(options) {
@@ -40,7 +38,7 @@ export default class GuardianFactorProvidersHandler extends DefaultHandler {
     }));
 
     // Filter out empty, should have more then 2 keys (name, provider)
-    return data.filter(d => Object.keys(d).length > 2);
+    return data.filter((d) => Object.keys(d).length > 2);
   }
 
   async processChanges(assets) {

@@ -11,7 +11,7 @@ const API_FREQUENCY_PER_SECOND = 8;
 const MAX_PAGE_SIZE = 100;
 
 function getEntity(rsp) {
-  const found = Object.values(rsp).filter(a => Array.isArray(a));
+  const found = Object.values(rsp).filter((a) => Array.isArray(a));
   if (found.length === 1) {
     return found[0];
   }
@@ -43,7 +43,7 @@ function pagedManager(client, manager) {
             // Run the first request to get the total number of entity items
             const rsp = await client.pool.addSingleTask({
               data: _.cloneDeep(newArgs),
-              generator: pageArgs => target[fnName](...pageArgs)
+              generator: (pageArgs) => target[fnName](...pageArgs)
             }).promise();
 
             data.push(...getEntity(rsp));
@@ -57,7 +57,7 @@ function pagedManager(client, manager) {
                   const pageArgs = _.cloneDeep(newArgs);
                   pageArgs[0].page = page + 1;
 
-                  return target[fnName](...pageArgs).then(r => getEntity(r));
+                  return target[fnName](...pageArgs).then((r) => getEntity(r));
                 }
               }).promise();
 

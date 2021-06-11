@@ -10,7 +10,7 @@ describe('#emailTemplates handler', () => {
     it('should update email template', async () => {
       const auth0 = {
         emailTemplates: {
-          create: data => Promise.resolve(data),
+          create: (data) => Promise.resolve(data),
           update: (params, data) => {
             expect(params).to.be.an('object');
             expect(data).to.be.an('object');
@@ -31,7 +31,7 @@ describe('#emailTemplates handler', () => {
     it('should get email templates', async () => {
       const auth0 = {
         emailTemplates: {
-          get: template => ({
+          get: (template) => ({
             template: template.name,
             enabled: true,
             body: '<html>some email</html>'
@@ -42,14 +42,13 @@ describe('#emailTemplates handler', () => {
       const handler = new emailTemplates.default({ client: auth0, config });
       const data = await handler.getType();
       expect(data.length).to.be.above(1);
-      const verify = data.find(t => t.template === 'verify_email');
+      const verify = data.find((t) => t.template === 'verify_email');
       expect(verify).to.deep.equal({
         template: 'verify_email',
         enabled: true,
         body: '<html>some email</html>'
       });
     });
-
 
     it('should create email template', async () => {
       const auth0 = {

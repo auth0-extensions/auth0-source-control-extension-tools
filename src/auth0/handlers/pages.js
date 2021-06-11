@@ -2,8 +2,8 @@ import DefaultHandler from './default';
 import constants from '../../constants';
 
 export const supportedPages = constants.PAGE_NAMES
-  .filter(p => p.includes('.json'))
-  .map(p => p.replace('.json', ''));
+  .filter((p) => p.includes('.json'))
+  .map((p) => p.replace('.json', ''));
 
 export const pageNameMap = {
   guardian_multifactor: 'guardian_mfa_page',
@@ -26,7 +26,6 @@ export const schema = {
     required: [ 'name' ]
   }
 };
-
 
 export default class PageHandler extends DefaultHandler {
   constructor(options) {
@@ -59,7 +58,7 @@ export default class PageHandler extends DefaultHandler {
   }
 
   async updatePages(pages) {
-    const toUpdate = pages.filter(p => supportedPages.includes(p.name));
+    const toUpdate = pages.filter((p) => supportedPages.includes(p.name));
     const update = toUpdate.reduce((accum, page) => {
       if (supportedPages.includes(page.name)) {
         const pageName = pageNameMap[page.name];
@@ -121,12 +120,12 @@ export default class PageHandler extends DefaultHandler {
     if (!pages) return;
 
     // Login page is handled via the global client
-    const loginPage = pages.find(p => p.name === 'login');
+    const loginPage = pages.find((p) => p.name === 'login');
     if (loginPage) {
       await this.updateLoginPage(loginPage);
     }
 
     // Rest of pages are on tenant level settings
-    await this.updatePages(pages.filter(p => p.name !== 'login'));
+    await this.updatePages(pages.filter((p) => p.name !== 'login'));
   }
 }

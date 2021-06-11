@@ -65,7 +65,7 @@ const getActive = (hooks) => {
   const result = {};
 
   ALLOWED_TRIGGER_IDS.forEach((type) => {
-    result[type] = hooks.filter(h => h.active && h.triggerId === type);
+    result[type] = hooks.filter((h) => h.active && h.triggerId === type);
   });
 
   return result;
@@ -148,9 +148,9 @@ export default class HooksHandler extends DefaultHandler {
       const hooks = await this.client.hooks.getAll();
 
       // hooks.getAll does not return code and secrets, we have to fetch hooks one-by-one
-      this.existing = await Promise.all(hooks.map(hook => this.client.hooks.get({ id: hook.id })
-        .then(hookWithCode => this.client.hooks.getSecrets({ id: hook.id })
-          .then(secrets => ({ ...hookWithCode, secrets })))));
+      this.existing = await Promise.all(hooks.map((hook) => this.client.hooks.get({ id: hook.id })
+        .then((hookWithCode) => this.client.hooks.getSecrets({ id: hook.id })
+          .then((secrets) => ({ ...hookWithCode, secrets })))));
 
       return this.existing;
     } catch (err) {
@@ -167,7 +167,7 @@ export default class HooksHandler extends DefaultHandler {
     } = await super.calcChanges(assets);
 
     // strip secrets before hooks creating/updating, secrets have to be handled separately
-    const stripSecrets = list => list.map(item => ({ ...item, secrets: undefined }));
+    const stripSecrets = (list) => list.map((item) => ({ ...item, secrets: undefined }));
 
     return {
       del,
@@ -187,7 +187,7 @@ export default class HooksHandler extends DefaultHandler {
 
     ALLOWED_TRIGGER_IDS.forEach((type) => {
       if (activeHooks[type].length > 1) { // There can be only one!
-        const conflict = activeHooks[type].map(h => h.name).join(', ');
+        const conflict = activeHooks[type].map((h) => h.name).join(', ');
         const err = new Error(`Only one active hook allowed for "${type}" extensibility point. Conflicting hooks: ${conflict}`);
         err.status = 409;
         throw err;

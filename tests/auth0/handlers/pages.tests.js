@@ -82,7 +82,6 @@ describe('#pages handler', () => {
       await stageFn.apply(handler, [ { pages: [ { name: 'password_reset', html: 'password_reset_body', enabled: false } ] } ]);
     });
 
-
     it('should update error_page page', async () => {
       const errorPageHtml = '<html>error_page_body</html>';
       const errorPageUrl = 'https://mycompany.org/error';

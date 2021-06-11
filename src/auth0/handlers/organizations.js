@@ -45,7 +45,7 @@ export default class OrganizationsHandler extends DefaultHandler {
     if (this.config('AUTH0_ALLOW_DELETE') === 'true' || this.config('AUTH0_ALLOW_DELETE') === true) {
       await this.client.pool.addEachTask({
         data: data || [],
-        generator: item => this.deleteOrganization(item).then(() => {
+        generator: (item) => this.deleteOrganization(item).then(() => {
           this.didDelete(item);
           this.deleted += 1;
         }).catch((err) => {
@@ -54,7 +54,7 @@ export default class OrganizationsHandler extends DefaultHandler {
       }).promise();
     } else {
       log.warn(`Detected the following organizations should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
-      \n${data.map(i => this.objString(i)).join('\n')}`);
+      \n${data.map((i) => this.objString(i)).join('\n')}`);
     }
   }
 
@@ -65,7 +65,7 @@ export default class OrganizationsHandler extends DefaultHandler {
     const created = await this.client.organizations.create(organization);
 
     if (typeof org.connections !== 'undefined' && org.connections.length > 0) {
-      await Promise.all(org.connections.map(conn => this.client.organizations.addEnabledConnection({ id: created.id }, conn)));
+      await Promise.all(org.connections.map((conn) => this.client.organizations.addEnabledConnection({ id: created.id }, conn)));
     }
 
     return created;
@@ -74,7 +74,7 @@ export default class OrganizationsHandler extends DefaultHandler {
   async createOrganizations(creates) {
     await this.client.pool.addEachTask({
       data: creates || [],
-      generator: item => this.createOrganization(item).then((data) => {
+      generator: (item) => this.createOrganization(item).then((data) => {
         this.didCreate(data);
         this.created += 1;
       }).catch((err) => {
@@ -84,7 +84,7 @@ export default class OrganizationsHandler extends DefaultHandler {
   }
 
   async updateOrganization(org, organizations) {
-    const { connections: existingConnections } = await organizations.find(orgToUpdate => orgToUpdate.name === org.name);
+    const { connections: existingConnections } = await organizations.find((orgToUpdate) => orgToUpdate.name === org.name);
 
     const params = { id: org.id };
     const { connections } = org;
@@ -95,25 +95,25 @@ export default class OrganizationsHandler extends DefaultHandler {
 
     await this.client.organizations.update(params, org);
 
-    const connectionsToRemove = existingConnections.filter(c => !connections.find(x => x.connection_id === c.connection_id));
-    const connectionsToAdd = connections.filter(c => !existingConnections.find(x => x.connection_id === c.connection_id));
-    const connectionsToUpdate = connections.filter(c => existingConnections.find(x => x.connection_id === c.connection_id && x.assign_membership_on_login !== c.assign_membership_on_login));
+    const connectionsToRemove = existingConnections.filter((c) => !connections.find((x) => x.connection_id === c.connection_id));
+    const connectionsToAdd = connections.filter((c) => !existingConnections.find((x) => x.connection_id === c.connection_id));
+    const connectionsToUpdate = connections.filter((c) => existingConnections.find((x) => x.connection_id === c.connection_id && x.assign_membership_on_login !== c.assign_membership_on_login));
 
     // Handle updates first
-    await Promise.all(connectionsToUpdate.map(conn => this.client.organizations
-      .updateEnabledConnection(Object.assign({ connection_id: conn.connection_id }, params), { assign_membership_on_login: conn.assign_membership_on_login })
+    await Promise.all(connectionsToUpdate.map((conn) => this.client.organizations
+      .updateEnabledConnection({ connection_id: conn.connection_id, ...params }, { assign_membership_on_login: conn.assign_membership_on_login })
       .catch(() => {
         throw new Error(`Problem updating Enabled Connection ${conn.connection_id} for organizations ${params.id}`);
       })));
 
-    await Promise.all(connectionsToAdd.map(conn => this.client.organizations
+    await Promise.all(connectionsToAdd.map((conn) => this.client.organizations
       .addEnabledConnection(params, _.omit(conn, 'connection'))
       .catch(() => {
         throw new Error(`Problem adding Enabled Connection ${conn.connection_id} for organizations ${params.id}`);
       })));
 
-    await Promise.all(connectionsToRemove.map(conn => this.client.organizations
-      .removeEnabledConnection(Object.assign({ connection_id: conn.connection_id }, params))
+    await Promise.all(connectionsToRemove.map((conn) => this.client.organizations
+      .removeEnabledConnection({ connection_id: conn.connection_id, ...params })
       .catch(() => {
         throw new Error(`Problem removing Enabled Connection ${conn.connection_id} for organizations ${params.id}`);
       })));
@@ -124,7 +124,7 @@ export default class OrganizationsHandler extends DefaultHandler {
   async updateOrganizations(updates, orgs) {
     await this.client.pool.addEachTask({
       data: updates || [],
-      generator: item => this.updateOrganization(item, orgs).then((data) => {
+      generator: (item) => this.updateOrganization(item, orgs).then((data) => {
         this.didUpdate(data);
         this.updated += 1;
       }).catch((err) => {
@@ -176,9 +176,9 @@ export default class OrganizationsHandler extends DefaultHandler {
 
         return {
           ...connection,
-          connection_id: (existingConnections.find(c => c.name === name) || {}).id
+          connection_id: (existingConnections.find((c) => c.name === name) || {}).id
         };
-      }).filter(connection => !!connection.connection_id);
+      }).filter((connection) => !!connection.connection_id);
     });
 
     const changes = calcChanges(organizations, existing, [ 'id', 'name' ]);

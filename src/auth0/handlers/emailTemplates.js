@@ -2,8 +2,8 @@ import DefaultHandler, { order } from './default';
 import constants from '../../constants';
 
 export const supportedTemplates = constants.EMAIL_TEMPLATES_NAMES
-  .filter(p => p.includes('.json'))
-  .map(p => p.replace('.json', ''));
+  .filter((p) => p.includes('.json'))
+  .map((p) => p.replace('.json', ''));
 
 export const schema = {
   type: 'array',
@@ -16,7 +16,6 @@ export const schema = {
     required: [ 'template' ]
   }
 };
-
 
 export default class EmailTemplateHandler extends DefaultHandler {
   constructor(options) {

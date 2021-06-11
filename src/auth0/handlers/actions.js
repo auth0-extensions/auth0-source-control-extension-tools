@@ -58,12 +58,12 @@ export const schema = {
 };
 
 function wait(n) {
-  return new Promise(resolve => setTimeout(resolve, n));
+  return new Promise((resolve) => setTimeout(resolve, n));
 }
 
 function mapSecrets(secrets) {
   if (secrets) {
-    return secrets.map(secret => ({ ...secret, value: HIDDEN_SECRET_VALUE }));
+    return secrets.map((secret) => ({ ...secret, value: HIDDEN_SECRET_VALUE }));
   }
 }
 
@@ -170,8 +170,8 @@ export default class ActionHandler extends DefaultHandler {
       // need to get complete current version for each action
       // the deployed_version inside the action doesn't have all the necessary information
       this.existing = await Promise.all(
-        actions.actions.map(action => this.getVersionById(action.id, action.deployed_version).then(
-          async deployedVersion => mapAction(action, deployedVersion)
+        actions.actions.map((action) => this.getVersionById(action.id, action.deployed_version).then(
+          async (deployedVersion) => mapAction(action, deployedVersion)
         ))
       );
       return this.existing;
@@ -248,7 +248,7 @@ export default class ActionHandler extends DefaultHandler {
     await this.client.pool
       .addEachTask({
         data: creates || [],
-        generator: item => this.createVersion(item)
+        generator: (item) => this.createVersion(item)
           .then((data) => {
             this.didCreate({ version_id: data.id });
             this.created += 1;
@@ -332,7 +332,7 @@ export default class ActionHandler extends DefaultHandler {
     await this.client.pool
       .addEachTask({
         data: creates || [],
-        generator: item => this.createAction(item)
+        generator: (item) => this.createAction(item)
           .then((data) => {
             this.didCreate({ action_id: data.id });
             this.created += 1;
@@ -359,7 +359,7 @@ export default class ActionHandler extends DefaultHandler {
       await this.client.pool
         .addEachTask({
           data: dels || [],
-          generator: action => this.deleteAction(action)
+          generator: (action) => this.deleteAction(action)
             .then(() => {
               this.didDelete({ action_id: action.id });
               this.deleted += 1;
@@ -375,13 +375,13 @@ export default class ActionHandler extends DefaultHandler {
         .promise();
     } else {
       log.warn(`Detected the following actions should be deleted. Doing so may be destructive.\nYou can enable deletes by setting 'AUTH0_ALLOW_DELETE' to true in the config
-      \n${dels.map(i => this.objString(i)).join('\n')}`);
+      \n${dels.map((i) => this.objString(i)).join('\n')}`);
     }
   }
 
   async updateAction(action, existing) {
     const found = existing.find(
-      existingAction => existingAction.name === action.name
+      (existingAction) => existingAction.name === action.name
     );
     // update current version
     const currentVersionChanges = await this.calcDeployedVersionChanges(
@@ -404,7 +404,7 @@ export default class ActionHandler extends DefaultHandler {
     await this.client.pool
       .addEachTask({
         data: updates || [],
-        generator: item => this.updateAction(item, actions)
+        generator: (item) => this.updateAction(item, actions)
           .then((data) => {
             this.didUpdate({ action_id: data.id });
             this.updated += 1;
@@ -428,10 +428,10 @@ export default class ActionHandler extends DefaultHandler {
     // eslint-disable-next-line no-restricted-syntax
     for (const action of actionsAssets) {
       const found = existing.find(
-        existingAction => existingAction.name === action.name
+        (existingAction) => existingAction.name === action.name
       );
       if (found) {
-        del = del.filter(e => e.id !== found.id);
+        del = del.filter((e) => e.id !== found.id);
         // current version changes
         const currentVersionChanges = await this.calcDeployedVersionChanges(
           found.id,

@@ -11,7 +11,6 @@ export const schema = {
   }
 };
 
-
 export default class ClientHandler extends DefaultHandler {
   constructor(config) {
     super({
@@ -48,10 +47,10 @@ export default class ClientHandler extends DefaultHandler {
 
     const filterClients = (list) => {
       if (excludedClients.length) {
-        return list.filter(item => item.client_id !== currentClient && !excludedClients.includes(item.name));
+        return list.filter((item) => item.client_id !== currentClient && !excludedClients.includes(item.name));
       }
 
-      return list.filter(item => item.client_id !== currentClient);
+      return list.filter((item) => item.client_id !== currentClient);
     };
 
     const changes = {

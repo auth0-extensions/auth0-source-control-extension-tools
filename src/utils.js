@@ -21,21 +21,21 @@ export function keywordReplace(input, mappings) {
 }
 
 export function convertClientNameToId(name, clients) {
-  const found = clients.find(c => c.name === name);
+  const found = clients.find((c) => c.name === name);
   return (found && found.client_id) || name;
 }
 
 export function convertClientNamesToIds(names, clients) {
-  const resolvedNames = names.map(name => ({ name, resolved: false }));
+  const resolvedNames = names.map((name) => ({ name, resolved: false }));
   const result = clients.reduce((acc, client) => {
     if (names.includes(client.name)) {
-      const index = resolvedNames.findIndex(item => item.name === client.name);
+      const index = resolvedNames.findIndex((item) => item.name === client.name);
       resolvedNames[index].resolved = true;
       acc.push(client.client_id);
     }
     return acc;
   }, []);
-  const unresolved = resolvedNames.filter(item => !item.resolved).map(item => item.name);
+  const unresolved = resolvedNames.filter((item) => !item.resolved).map((item) => item.name);
   return [ ...unresolved, ...result ];
 }
 
@@ -62,7 +62,6 @@ export function dumpJSON(obj, spacing = 0) {
   return JSON.stringify(obj, null, spacing);
 }
 
-
 export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
   // Calculate the changes required between two sets of assets.
   const update = [];
@@ -72,8 +71,8 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
 
   const findByKeyValue = (key, value, arr) => arr.find((e) => {
     if (Array.isArray(key)) {
-      const values = key.map(k => e[k]);
-      if (values.every(v => v)) {
+      const values = key.map((k) => e[k]);
+      if (values.every((v) => v)) {
         return value === values.join('-');
       }
     } else {
@@ -86,8 +85,8 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
     arr.forEach((asset) => {
       let assetIdValue;
       if (Array.isArray(id)) {
-        const values = id.map(i => asset[i]);
-        if (values.every(v => v)) {
+        const values = id.map((i) => asset[i]);
+        if (values.every((v) => v)) {
           assetIdValue = values.join('-');
         }
       } else {
@@ -98,10 +97,10 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
         const found = findByKeyValue(id, assetIdValue, del);
         if (found) {
           // Delete from existing
-          del = del.filter(e => e !== found);
+          del = del.filter((e) => e !== found);
 
           // Delete from create as it's an update
-          create = create.filter(e => e !== asset);
+          create = create.filter((e) => e !== asset);
 
           // Append identifiers to asset
           update.push({
@@ -131,9 +130,9 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
     const futureAssets = [ ...create, ...update ];
     futureAssets.forEach((a) => {
       // If the conflicting item is going to be deleted then skip
-      const inDeleted = del.filter(e => e.name === a.name && e[uniqueID] !== a[uniqueID])[0];
+      const inDeleted = del.filter((e) => e.name === a.name && e[uniqueID] !== a[uniqueID])[0];
       if (!inDeleted) {
-        const conflict = existing.filter(e => e.name === a.name && e[uniqueID] !== a[uniqueID])[0];
+        const conflict = existing.filter((e) => e.name === a.name && e[uniqueID] !== a[uniqueID])[0];
         if (conflict) {
           const temp = Math.random().toString(36).substr(2, 5);
           conflicts.push({
@@ -144,7 +143,6 @@ export function calcChanges(assets, existing, identifiers = [ 'id', 'name' ]) {
       }
     });
   }
-
 
   return {
     del,
@@ -182,7 +180,7 @@ export function getEnabledClients(assets, connection, existing, clients) {
       connection.enabled_clients || [],
       clients
     ).filter(
-      item => ![ ...excludedClientsByNames, ...excludedClients ].includes(item)
+      (item) => ![ ...excludedClientsByNames, ...excludedClients ].includes(item)
     )
   ];
   // If client is excluded and in the existing connection this client is enabled, it should keep enabled
@@ -209,9 +207,8 @@ export function duplicateItems(arr, key) {
     }
     return accum;
   }, {});
-  return Object.values(duplicates).filter(g => g.length > 1);
+  return Object.values(duplicates).filter((g) => g.length > 1);
 }
-
 
 export function filterExcluded(changes, exclude) {
   const {
@@ -222,7 +219,7 @@ export function filterExcluded(changes, exclude) {
     return changes;
   }
 
-  const filter = list => list.filter(item => !exclude.includes(item.name));
+  const filter = (list) => list.filter((item) => !exclude.includes(item.name));
 
   return {
     del: filter(del),

@@ -18,7 +18,6 @@ export const schema = {
   }
 };
 
-
 export default class ClientHandler extends DefaultHandler {
   constructor(config) {
     super({
@@ -44,7 +43,7 @@ export default class ClientHandler extends DefaultHandler {
     // As it could cause problems if the grants are deleted or updated etc
     const currentClient = this.config('AUTH0_CLIENT_ID');
 
-    this.existing = this.existing.filter(grant => grant.client_id !== currentClient);
+    this.existing = this.existing.filter((grant) => grant.client_id !== currentClient);
 
     return this.existing;
   }
@@ -64,7 +63,7 @@ export default class ClientHandler extends DefaultHandler {
     // Convert clients by name to the id
     const formatted = assets.clientGrants.map((clientGrant) => {
       const grant = { ...clientGrant };
-      const found = clients.find(c => c.name === grant.client_id);
+      const found = clients.find((c) => c.name === grant.client_id);
       if (found) grant.client_id = found.client_id;
       return grant;
     });
@@ -78,10 +77,10 @@ export default class ClientHandler extends DefaultHandler {
 
     const filterGrants = (list) => {
       if (excludedClients.length) {
-        return list.filter(item => item.client_id !== currentClient && ![ ...excludedClientsByNames, ...excludedClients ].includes(item.client_id));
+        return list.filter((item) => item.client_id !== currentClient && ![ ...excludedClientsByNames, ...excludedClients ].includes(item.client_id));
       }
 
-      return list.filter(item => item.client_id !== currentClient);
+      return list.filter((item) => item.client_id !== currentClient);
     };
 
     const changes = {

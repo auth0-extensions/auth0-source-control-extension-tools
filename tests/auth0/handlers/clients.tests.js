@@ -259,7 +259,6 @@ describe('#clients handler', () => {
         pool
       };
 
-
       const handler = new clients.default({ client: auth0, config });
       const stageFn = Object.getPrototypeOf(handler).processChanges;
 

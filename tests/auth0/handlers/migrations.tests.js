@@ -3,7 +3,7 @@ import migrations from '../../../src/auth0/handlers/migrations';
 const { expect } = require('chai');
 
 describe('#migrations handler', () => {
-  const mockClient = flags => ({
+  const mockClient = (flags) => ({
     migrations: {
       getMigrations: () => ({
         flags: {
@@ -125,7 +125,7 @@ describe('#migrations handler', () => {
     describe('when AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS=true', () => {
       it('should ignore all unavailable migration flags', async () => {
         const client = mockClient();
-        const config = name => name === 'AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS';
+        const config = (name) => name === 'AUTH0_IGNORE_UNAVAILABLE_MIGRATIONS';
 
         const handler = new migrations({ client, config });
         const stageFn = Object.getPrototypeOf(handler).processChanges;
