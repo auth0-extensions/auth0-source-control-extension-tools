@@ -1,7 +1,9 @@
 [![CircleCI](https://circleci.com/gh/auth0-extensions/auth0-source-control-extension-tools.svg?style=svg)](https://circleci.com/gh/auth0-extensions/auth0-source-control-extension-tools)
 [![npm version](https://badge.fury.io/js/auth0-source-control-extension-tools.svg)](https://badge.fury.io/js/auth0-source-control-extension-tools)
 
-# Auth0 - Source Control Extension Tools
+# [Archived] Auth0 - Source Control Extension Tools
+
+*NOTE* This repository has been archived and the code of the library has been moved into [auth0-deploy-cli](https://github.com/auth0/auth0-deploy-cli/tree/master/src/tools) repository.
 
 ## v6.x drops support for Node 8
 
